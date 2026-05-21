@@ -9,38 +9,326 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WarehouseRouteImport } from './routes/warehouse'
+import { Route as StockRouteImport } from './routes/stock'
+import { Route as SalesRouteImport } from './routes/sales'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as BillingRouteImport } from './routes/billing'
+import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RodentsSpeciesRouteImport } from './routes/rodents.species'
+import { Route as RodentsLotsRouteImport } from './routes/rodents.lots'
+import { Route as RodentsLinesRouteImport } from './routes/rodents.lines'
+import { Route as RodentsBoxesRouteImport } from './routes/rodents.boxes'
+import { Route as InsectsSpeciesRouteImport } from './routes/insects.species'
+import { Route as InsectsLotsRouteImport } from './routes/insects.lots'
+import { Route as InsectsLinesRouteImport } from './routes/insects.lines'
+import { Route as InsectsBoxesRouteImport } from './routes/insects.boxes'
 
+const WarehouseRoute = WarehouseRouteImport.update({
+  id: '/warehouse',
+  path: '/warehouse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StockRoute = StockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesRoute = SalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsRoute = ClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingRoute = BillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RodentsSpeciesRoute = RodentsSpeciesRouteImport.update({
+  id: '/rodents/species',
+  path: '/rodents/species',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsLotsRoute = RodentsLotsRouteImport.update({
+  id: '/rodents/lots',
+  path: '/rodents/lots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsLinesRoute = RodentsLinesRouteImport.update({
+  id: '/rodents/lines',
+  path: '/rodents/lines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsBoxesRoute = RodentsBoxesRouteImport.update({
+  id: '/rodents/boxes',
+  path: '/rodents/boxes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsectsSpeciesRoute = InsectsSpeciesRouteImport.update({
+  id: '/insects/species',
+  path: '/insects/species',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsectsLotsRoute = InsectsLotsRouteImport.update({
+  id: '/insects/lots',
+  path: '/insects/lots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsectsLinesRoute = InsectsLinesRouteImport.update({
+  id: '/insects/lines',
+  path: '/insects/lines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsectsBoxesRoute = InsectsBoxesRouteImport.update({
+  id: '/insects/boxes',
+  path: '/insects/boxes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai': typeof AiRoute
+  '/alerts': typeof AlertsRoute
+  '/billing': typeof BillingRoute
+  '/clients': typeof ClientsRoute
+  '/login': typeof LoginRoute
+  '/reports': typeof ReportsRoute
+  '/sales': typeof SalesRoute
+  '/stock': typeof StockRoute
+  '/warehouse': typeof WarehouseRoute
+  '/insects/boxes': typeof InsectsBoxesRoute
+  '/insects/lines': typeof InsectsLinesRoute
+  '/insects/lots': typeof InsectsLotsRoute
+  '/insects/species': typeof InsectsSpeciesRoute
+  '/rodents/boxes': typeof RodentsBoxesRoute
+  '/rodents/lines': typeof RodentsLinesRoute
+  '/rodents/lots': typeof RodentsLotsRoute
+  '/rodents/species': typeof RodentsSpeciesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai': typeof AiRoute
+  '/alerts': typeof AlertsRoute
+  '/billing': typeof BillingRoute
+  '/clients': typeof ClientsRoute
+  '/login': typeof LoginRoute
+  '/reports': typeof ReportsRoute
+  '/sales': typeof SalesRoute
+  '/stock': typeof StockRoute
+  '/warehouse': typeof WarehouseRoute
+  '/insects/boxes': typeof InsectsBoxesRoute
+  '/insects/lines': typeof InsectsLinesRoute
+  '/insects/lots': typeof InsectsLotsRoute
+  '/insects/species': typeof InsectsSpeciesRoute
+  '/rodents/boxes': typeof RodentsBoxesRoute
+  '/rodents/lines': typeof RodentsLinesRoute
+  '/rodents/lots': typeof RodentsLotsRoute
+  '/rodents/species': typeof RodentsSpeciesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai': typeof AiRoute
+  '/alerts': typeof AlertsRoute
+  '/billing': typeof BillingRoute
+  '/clients': typeof ClientsRoute
+  '/login': typeof LoginRoute
+  '/reports': typeof ReportsRoute
+  '/sales': typeof SalesRoute
+  '/stock': typeof StockRoute
+  '/warehouse': typeof WarehouseRoute
+  '/insects/boxes': typeof InsectsBoxesRoute
+  '/insects/lines': typeof InsectsLinesRoute
+  '/insects/lots': typeof InsectsLotsRoute
+  '/insects/species': typeof InsectsSpeciesRoute
+  '/rodents/boxes': typeof RodentsBoxesRoute
+  '/rodents/lines': typeof RodentsLinesRoute
+  '/rodents/lots': typeof RodentsLotsRoute
+  '/rodents/species': typeof RodentsSpeciesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ai'
+    | '/alerts'
+    | '/billing'
+    | '/clients'
+    | '/login'
+    | '/reports'
+    | '/sales'
+    | '/stock'
+    | '/warehouse'
+    | '/insects/boxes'
+    | '/insects/lines'
+    | '/insects/lots'
+    | '/insects/species'
+    | '/rodents/boxes'
+    | '/rodents/lines'
+    | '/rodents/lots'
+    | '/rodents/species'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ai'
+    | '/alerts'
+    | '/billing'
+    | '/clients'
+    | '/login'
+    | '/reports'
+    | '/sales'
+    | '/stock'
+    | '/warehouse'
+    | '/insects/boxes'
+    | '/insects/lines'
+    | '/insects/lots'
+    | '/insects/species'
+    | '/rodents/boxes'
+    | '/rodents/lines'
+    | '/rodents/lots'
+    | '/rodents/species'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai'
+    | '/alerts'
+    | '/billing'
+    | '/clients'
+    | '/login'
+    | '/reports'
+    | '/sales'
+    | '/stock'
+    | '/warehouse'
+    | '/insects/boxes'
+    | '/insects/lines'
+    | '/insects/lots'
+    | '/insects/species'
+    | '/rodents/boxes'
+    | '/rodents/lines'
+    | '/rodents/lots'
+    | '/rodents/species'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiRoute: typeof AiRoute
+  AlertsRoute: typeof AlertsRoute
+  BillingRoute: typeof BillingRoute
+  ClientsRoute: typeof ClientsRoute
+  LoginRoute: typeof LoginRoute
+  ReportsRoute: typeof ReportsRoute
+  SalesRoute: typeof SalesRoute
+  StockRoute: typeof StockRoute
+  WarehouseRoute: typeof WarehouseRoute
+  InsectsBoxesRoute: typeof InsectsBoxesRoute
+  InsectsLinesRoute: typeof InsectsLinesRoute
+  InsectsLotsRoute: typeof InsectsLotsRoute
+  InsectsSpeciesRoute: typeof InsectsSpeciesRoute
+  RodentsBoxesRoute: typeof RodentsBoxesRoute
+  RodentsLinesRoute: typeof RodentsLinesRoute
+  RodentsLotsRoute: typeof RodentsLotsRoute
+  RodentsSpeciesRoute: typeof RodentsSpeciesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/warehouse': {
+      id: '/warehouse'
+      path: '/warehouse'
+      fullPath: '/warehouse'
+      preLoaderRoute: typeof WarehouseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stock': {
+      id: '/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales': {
+      id: '/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients': {
+      id: '/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing': {
+      id: '/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof BillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +336,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rodents/species': {
+      id: '/rodents/species'
+      path: '/rodents/species'
+      fullPath: '/rodents/species'
+      preLoaderRoute: typeof RodentsSpeciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/lots': {
+      id: '/rodents/lots'
+      path: '/rodents/lots'
+      fullPath: '/rodents/lots'
+      preLoaderRoute: typeof RodentsLotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/lines': {
+      id: '/rodents/lines'
+      path: '/rodents/lines'
+      fullPath: '/rodents/lines'
+      preLoaderRoute: typeof RodentsLinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/boxes': {
+      id: '/rodents/boxes'
+      path: '/rodents/boxes'
+      fullPath: '/rodents/boxes'
+      preLoaderRoute: typeof RodentsBoxesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/species': {
+      id: '/insects/species'
+      path: '/insects/species'
+      fullPath: '/insects/species'
+      preLoaderRoute: typeof InsectsSpeciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/lots': {
+      id: '/insects/lots'
+      path: '/insects/lots'
+      fullPath: '/insects/lots'
+      preLoaderRoute: typeof InsectsLotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/lines': {
+      id: '/insects/lines'
+      path: '/insects/lines'
+      fullPath: '/insects/lines'
+      preLoaderRoute: typeof InsectsLinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/boxes': {
+      id: '/insects/boxes'
+      path: '/insects/boxes'
+      fullPath: '/insects/boxes'
+      preLoaderRoute: typeof InsectsBoxesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiRoute: AiRoute,
+  AlertsRoute: AlertsRoute,
+  BillingRoute: BillingRoute,
+  ClientsRoute: ClientsRoute,
+  LoginRoute: LoginRoute,
+  ReportsRoute: ReportsRoute,
+  SalesRoute: SalesRoute,
+  StockRoute: StockRoute,
+  WarehouseRoute: WarehouseRoute,
+  InsectsBoxesRoute: InsectsBoxesRoute,
+  InsectsLinesRoute: InsectsLinesRoute,
+  InsectsLotsRoute: InsectsLotsRoute,
+  InsectsSpeciesRoute: InsectsSpeciesRoute,
+  RodentsBoxesRoute: RodentsBoxesRoute,
+  RodentsLinesRoute: RodentsLinesRoute,
+  RodentsLotsRoute: RodentsLotsRoute,
+  RodentsSpeciesRoute: RodentsSpeciesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
