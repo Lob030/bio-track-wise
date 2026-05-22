@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ModuleStub } from "@/components/module-stub";
+import { GeneticLinesView } from "@/components/genetic-lines-view";
 export const Route = createFileRoute("/insects/lines")({
-  component: () => <ModuleStub title="Líneas Genéticas — Insectos" description="Líneas genéticas de insectos." />,
+  component: () => <GeneticLinesView kind="insect" />,
 });

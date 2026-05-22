@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ModuleStub } from "@/components/module-stub";
+import { BoxesView } from "@/components/boxes-view";
 export const Route = createFileRoute("/insects/boxes")({
-  component: () => <ModuleStub title="Cajas — Insectos" description="Cajas de insectos." />,
+  component: () => <BoxesView kind="insect" />,
 });
