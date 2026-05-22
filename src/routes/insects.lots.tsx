@@ -45,7 +45,7 @@ function Page() {
 
   const summary = useMemo(() => {
     const active = (lots ?? []).filter((l) => l.status === "active");
-    const biomass = active.reduce((s, l) => s + (+l.mass_grams || 0), 0);
+    const biomass = active.reduce((s, l) => s + (Number(l.mass_grams) || 0), 0);
     const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
     const finalizedMonth = (lots ?? []).filter((l) => l.status === "finalizado" && l.finalized_at && new Date(l.finalized_at) >= monthAgo).length;
     return { active: active.length, biomass, finalizedMonth };
