@@ -154,7 +154,7 @@ function ReportsPage() {
       threshold.setDate(threshold.getDate() - 365);
     }
 
-    const filterItem = (item: { created_at?: string; audited_at?: string }) => {
+    const filterItem = (item: { created_at?: string | null; audited_at?: string | null }) => {
       const dateStr = item.created_at || item.audited_at;
       if (!dateStr) return false;
 

@@ -119,6 +119,7 @@ export type Database = {
       }
       alert_rules: {
         Row: {
+          animal_kind: string
           created_at: string
           enabled: boolean
           frequency_days: number
@@ -131,10 +132,12 @@ export type Database = {
           owner_id: string
           priority: Database["public"]["Enums"]["alert_priority"]
           scope: string
+          species_id: string | null
           template_text: string
           threshold: number
         }
         Insert: {
+          animal_kind?: string
           created_at?: string
           enabled?: boolean
           frequency_days?: number
@@ -147,10 +150,12 @@ export type Database = {
           owner_id: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           scope?: string
+          species_id?: string | null
           template_text?: string
           threshold: number
         }
         Update: {
+          animal_kind?: string
           created_at?: string
           enabled?: boolean
           frequency_days?: number
@@ -163,6 +168,7 @@ export type Database = {
           owner_id?: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           scope?: string
+          species_id?: string | null
           template_text?: string
           threshold?: number
         }
@@ -319,6 +325,7 @@ export type Database = {
       lots: {
         Row: {
           box_id: string | null
+          children_lot_ids: string[] | null
           created_at: string
           females: number | null
           finalized_at: string | null
@@ -340,6 +347,7 @@ export type Database = {
         }
         Insert: {
           box_id?: string | null
+          children_lot_ids?: string[] | null
           created_at?: string
           females?: number | null
           finalized_at?: string | null
@@ -361,6 +369,7 @@ export type Database = {
         }
         Update: {
           box_id?: string | null
+          children_lot_ids?: string[] | null
           created_at?: string
           females?: number | null
           finalized_at?: string | null
@@ -598,6 +607,7 @@ export type Database = {
           name: string
           owner_id: string
           size_rules: Json
+          unit_price_mxn: number | null
         }
         Insert: {
           created_at?: string
@@ -606,6 +616,7 @@ export type Database = {
           name: string
           owner_id: string
           size_rules?: Json
+          unit_price_mxn?: number | null
         }
         Update: {
           created_at?: string
@@ -614,6 +625,7 @@ export type Database = {
           name?: string
           owner_id?: string
           size_rules?: Json
+          unit_price_mxn?: number | null
         }
         Relationships: []
       }

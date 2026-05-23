@@ -525,7 +525,7 @@ function ToolsTab() {
       owner_id: u.user.id,
       name: form.name,
       value: form.value ? Number(form.value) : 0,
-      condition: form.condition,
+      condition: form.condition as "bueno" | "malo" | "nuevo" | "regular" | "reparacion",
       notes: form.notes || null,
     });
     if (error) {
@@ -902,7 +902,7 @@ function PurchasesTab() {
       payload.population = null;
     }
 
-    const { error } = await supabase.from("warehouse_purchases").insert(payload);
+    const { error } = await supabase.from("warehouse_purchases").insert(payload as any);
     if (error) {
       toast.error(error.message);
       return;
