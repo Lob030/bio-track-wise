@@ -1,0 +1,1 @@
+ALTER TABLE public.species ADD COLUMN IF NOT EXISTS unit_price_mxn NUMERIC(10,2) DEFAULT 0;

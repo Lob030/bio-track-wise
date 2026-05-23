@@ -601,6 +601,7 @@ export type Database = {
           name: string
           owner_id: string
           size_rules: Json
+          unit_price_mxn: number | null
         }
         Insert: {
           created_at?: string
@@ -609,6 +610,7 @@ export type Database = {
           name: string
           owner_id: string
           size_rules?: Json
+          unit_price_mxn?: number | null
         }
         Update: {
           created_at?: string
@@ -617,6 +619,7 @@ export type Database = {
           name?: string
           owner_id?: string
           size_rules?: Json
+          unit_price_mxn?: number | null
         }
         Relationships: []
       }
