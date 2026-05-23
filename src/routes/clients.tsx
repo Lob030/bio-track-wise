@@ -82,7 +82,7 @@ function Clients() {
               <tr key={c.id} className="border-t border-border">
                 <td className="p-3 font-medium">{c.name}</td>
                 <td className="p-3 font-mono text-xs">{c.phone}</td>
-                <td className="p-3"><Badge variant="outline" className="capitalize">{c.profile.replace("_"," ")}</Badge></td>
+                <td className="p-3"><Badge variant="outline" className="capitalize">{(c.profile ?? "particular").replace("_"," ")}</Badge></td>
               </tr>
             ))}
             {(clients ?? []).length === 0 && <tr><td colSpan={3} className="p-8 text-center text-muted-foreground">Sin clientes.</td></tr>}

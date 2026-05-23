@@ -16,9 +16,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/rodents/species")({ component: Page });
 
 const LONG_EVANS: RodentRule[] = [
-  { label: "Pinky", min_days: 0, max_days: 6, min_weight_g: 0, max_weight_g: 16, daily_feed_g: 0 },
-  { label: "Fuzzy", min_days: 7, max_days: 14, min_weight_g: 16, max_weight_g: 30, daily_feed_g: 0 },
-  { label: "Jumper", min_days: 15, max_days: 21, min_weight_g: 30, max_weight_g: 50, daily_feed_g: 4 },
+  { label: "Pinky", min_days: 0, max_days: 6, min_weight_g: 0, max_weight_g: 16, daily_feed_g: 0, price_mxn: 25 },
+  { label: "Fuzzy", min_days: 7, max_days: 14, min_weight_g: 16, max_weight_g: 30, daily_feed_g: 0, price_mxn: 45 },
+  { label: "Jumper", min_days: 15, max_days: 21, min_weight_g: 30, max_weight_g: 50, daily_feed_g: 4, price_mxn: 65 },
 ];
 
 function Page() {
@@ -26,7 +26,8 @@ function Page() {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [rules, setRules] = useState<RodentRule[]>([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0 }]);
+  const [unitPrice, setUnitPrice] = useState("0");
+  const [rules, setRules] = useState<RodentRule[]>([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }]);
 
   const { data: species } = useQuery({
     queryKey: ["species", "rodent"],
@@ -37,11 +38,11 @@ function Page() {
     },
   });
 
-  const createSpecies = async (n: string, r: RodentRule[]) => {
+  const createSpecies = async (n: string, r: RodentRule[], price: number = 0) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("species").insert({
-      owner_id: u.user.id, kind: "rodent", name: n, size_rules: r as any,
+      owner_id: u.user.id, kind: "rodent", name: n, size_rules: r as any, unit_price_mxn: price,
     });
     if (error) return toast.error(error.message);
     toast.success(`Especie "${n}" creada`);
@@ -57,8 +58,8 @@ function Page() {
 
   const submit = async () => {
     if (!name.trim()) return toast.error("Nombre requerido");
-    await createSpecies(name.trim(), rules.filter((r) => r.label.trim()));
-    setOpen(false); setName(""); setRules([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0 }]);
+    await createSpecies(name.trim(), rules.filter((r) => r.label.trim()), Number(unitPrice) || 0);
+    setOpen(false); setName(""); setUnitPrice("0"); setRules([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }]);
   };
 
   return (
@@ -68,7 +69,7 @@ function Page() {
       icon={<Rat className="h-6 w-6" />}
       actions={
         <>
-          <Button variant="outline" onClick={() => createSpecies("Rata Long Evans", LONG_EVANS)}>
+          <Button variant="outline" onClick={() => createSpecies("Rata Long Evans", LONG_EVANS, 15)}>
             <Wand2 className="h-4 w-4 mr-2" /> Preset Long Evans
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
@@ -76,24 +77,28 @@ function Page() {
             <DialogContent className="max-w-3xl">
               <DialogHeader><DialogTitle>Nueva especie de roedor</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <div><Label>Nombre</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Ratón ICR" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>Nombre</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Ratón ICR" /></div>
+                  <div><Label>Precio de venta por unidad (MXN)</Label><Input type="number" step="0.01" min={0} value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="0.00" /></div>
+                </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label>Matriz de tallas</Label>
-                    <Button size="sm" variant="ghost" onClick={() => setRules([...rules, { label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0 }])}>+ Agregar fila</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setRules([...rules, { label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }])}>+ Agregar fila</Button>
                   </div>
                   <div className="space-y-2">
                     <div className="grid grid-cols-12 gap-2 text-[10px] uppercase text-muted-foreground px-1">
-                      <span className="col-span-3">Talla</span><span className="col-span-1">Día min</span><span className="col-span-1">Día max</span>
-                      <span className="col-span-2">Peso min (g)</span><span className="col-span-2">Peso max (g)</span><span className="col-span-2">Alimento (g/día)</span><span /></div>
+                      <span className="col-span-2">Talla</span><span className="col-span-1">Día min</span><span className="col-span-1">Día max</span>
+                      <span className="col-span-2">Peso min (g)</span><span className="col-span-2">Peso max (g)</span><span className="col-span-1">Alim. (g/d)</span><span className="col-span-2">Precio MXN</span><span /></div>
                     {rules.map((r, i) => (
                       <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                        <Input className="col-span-3" value={r.label} onChange={(e) => { const n = [...rules]; n[i].label = e.target.value; setRules(n); }} placeholder="Pinky" />
+                        <Input className="col-span-2" value={r.label} onChange={(e) => { const n = [...rules]; n[i].label = e.target.value; setRules(n); }} placeholder="Pinky" />
                         <Input className="col-span-1" type="number" value={r.min_days} onChange={(e) => { const n = [...rules]; n[i].min_days = +e.target.value; setRules(n); }} />
                         <Input className="col-span-1" type="number" value={r.max_days} onChange={(e) => { const n = [...rules]; n[i].max_days = +e.target.value; setRules(n); }} />
                         <Input className="col-span-2" type="number" value={r.min_weight_g} onChange={(e) => { const n = [...rules]; n[i].min_weight_g = +e.target.value; setRules(n); }} />
                         <Input className="col-span-2" type="number" value={r.max_weight_g} onChange={(e) => { const n = [...rules]; n[i].max_weight_g = +e.target.value; setRules(n); }} />
-                        <Input className="col-span-2" type="number" value={r.daily_feed_g} onChange={(e) => { const n = [...rules]; n[i].daily_feed_g = +e.target.value; setRules(n); }} />
+                        <Input className="col-span-1" type="number" value={r.daily_feed_g} onChange={(e) => { const n = [...rules]; n[i].daily_feed_g = +e.target.value; setRules(n); }} />
+                        <Input className="col-span-2" type="number" step="0.01" value={r.price_mxn} onChange={(e) => { const n = [...rules]; n[i].price_mxn = +e.target.value; setRules(n); }} placeholder="0" />
                         <Button size="icon" variant="ghost" className="col-span-1" onClick={() => setRules(rules.filter((_, j) => j !== i))}><Trash2 className="h-3 w-3" /></Button>
                       </div>
                     ))}
@@ -121,7 +126,14 @@ function Page() {
                 <div className="flex items-center gap-3">
                   {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   <div className="text-left">
-                    <div className="font-semibold">{s.name}</div>
+                    <div className="font-semibold">
+                      {s.name}
+                      {s.unit_price_mxn !== undefined && s.unit_price_mxn !== null && (
+                        <span className="text-xs text-emerald-400 font-normal ml-2">
+                          (${s.unit_price_mxn}/unidad)
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">{rs.length} tallas definidas</div>
                   </div>
                 </div>

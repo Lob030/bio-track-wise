@@ -78,7 +78,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="sidebar-scroll">
         <SidebarGroup>
           <SidebarGroupLabel>Bioterio</SidebarGroupLabel>
           <SidebarGroupContent>

@@ -17,7 +17,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/alerts")({ component: Page });
 
 type RuleForm = {
-  scope: "all" | "specific";
+  scope: "all" | "lot";
   lot_id: string;
   lot_type: "birth" | "engorda" | "breeder";
   metric: "age_days" | "days_active" | "weight";
@@ -26,15 +26,18 @@ type RuleForm = {
   priority: "high" | "medium";
   frequency: "once" | "recurrent";
   frequency_days: number;
+  animal_kind: "rodent" | "insect" | "both";
+  species_id: string;
 };
 
 const METRIC_LABEL: Record<string, string> = { age_days: "edad en días", days_active: "días activo", weight: "peso" };
 const TYPE_LABEL: Record<string, string> = { birth: "nacimiento", engorda: "engorda", breeder: "reproductor" };
-const SCOPE_LABEL: Record<string, string> = { all: "todos los lotes", specific: "el lote específico" };
+const SCOPE_LABEL: Record<string, string> = { all: "todos los lotes", lot: "el lote específico" };
 
 const DEFAULT_FORM: RuleForm = {
   scope: "all", lot_id: "", lot_type: "engorda", metric: "age_days",
   operator: ">", threshold: 21, priority: "medium", frequency: "once", frequency_days: 0,
+  animal_kind: "both", species_id: "",
 };
 
 function Page() {
@@ -52,13 +55,82 @@ function Page() {
   });
   const { data: lots } = useQuery({
     queryKey: ["lots", "all", "min"],
-    queryFn: async () => (await supabase.from("lots").select("id,lot_code,kind,lot_type").eq("status", "active")).data ?? [],
+    queryFn: async () => (await supabase.from("lots").select("id,lot_code,kind,lot_type,species_id").eq("status", "active")).data ?? [],
+  });
+  const { data: species } = useQuery({
+    queryKey: ["species"],
+    queryFn: async () => (await supabase.from("species").select("id,name,kind")).data ?? [],
   });
 
+  const handleAnimalKindChange = (kind: "rodent" | "insect" | "both") => {
+    setForm((prev) => ({
+      ...prev,
+      animal_kind: kind,
+      species_id: "",
+      lot_id: "",
+    }));
+  };
+
+  const handleSpeciesChange = (spId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      species_id: spId,
+      lot_id: "",
+    }));
+  };
+
+  const handleScopeChange = (scope: "all" | "lot") => {
+    setForm((prev) => ({
+      ...prev,
+      scope,
+      lot_id: "",
+    }));
+  };
+
+  const filteredLots = useMemo(() => {
+    const activeLots = lots ?? [];
+    if (form.animal_kind !== "both" && form.species_id) {
+      return activeLots.filter((l: any) => l.species_id === form.species_id);
+    }
+    if (form.animal_kind === "rodent") {
+      return activeLots.filter((l: any) => l.kind === "rodent");
+    }
+    if (form.animal_kind === "insect") {
+      return activeLots.filter((l: any) => l.kind === "insect");
+    }
+    return activeLots;
+  }, [lots, form.animal_kind, form.species_id]);
+
   const template = useMemo(() => {
-    const scope = form.scope === "all" ? `todos los lotes de ${TYPE_LABEL[form.lot_type]}` : `lote {lot_id}`;
-    return `${scope}: ${METRIC_LABEL[form.metric]} ${form.operator} ${form.threshold}`;
-  }, [form]);
+    const selectedSpecies = species?.find((s: any) => s.id === form.species_id);
+    const speciesName = selectedSpecies ? selectedSpecies.name : "";
+
+    let animalDesc = "";
+    if (form.animal_kind === "both") {
+      animalDesc = "Todos los animales (Roedores e Insectos)";
+    } else if (form.animal_kind === "rodent") {
+      if (!form.species_id) {
+        animalDesc = "Todos los roedores (Todas las especies)";
+      } else {
+        animalDesc = `Roedores de la especie ${speciesName || "desconocida"}`;
+      }
+    } else if (form.animal_kind === "insect") {
+      if (!form.species_id) {
+        animalDesc = "Todos los insectos (Todas las especies)";
+      } else {
+        animalDesc = `Insectos de la especie ${speciesName || "desconocida"}`;
+      }
+    }
+
+    const selectedLot = lots?.find((l: any) => l.id === form.lot_id);
+    const lotLabel = selectedLot ? selectedLot.lot_code : form.lot_id;
+
+    const scopeText = form.scope === "all"
+      ? `${animalDesc} de tipo ${TYPE_LABEL[form.lot_type] || form.lot_type}`
+      : `El lote específico ${lotLabel || "desconocido"} (${animalDesc}) de tipo ${TYPE_LABEL[form.lot_type] || form.lot_type}`;
+
+    return `${scopeText}: ${METRIC_LABEL[form.metric] || form.metric} ${form.operator} ${form.threshold}`;
+  }, [form, species, lots]);
 
   const submit = async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -66,7 +138,7 @@ function Page() {
     const { error } = await supabase.from("alert_rules").insert({
       owner_id: u.user.id,
       scope: form.scope,
-      lot_id: form.scope === "specific" ? form.lot_id || null : null,
+      lot_id: form.scope === "lot" ? form.lot_id || null : null,
       lot_type: form.lot_type,
       metric: form.metric,
       operator: form.operator,
@@ -74,6 +146,8 @@ function Page() {
       priority: form.priority,
       frequency_days: form.frequency === "once" ? 0 : form.frequency_days,
       template_text: template,
+      animal_kind: form.animal_kind,
+      species_id: form.animal_kind !== "both" && form.species_id ? form.species_id : null,
     });
     if (error) return toast.error(error.message);
     toast.success("Regla creada");
@@ -109,13 +183,30 @@ function Page() {
                 <Card className="p-4 border-border bg-card/40">
                   <p className="text-xs uppercase text-muted-foreground mb-3">Completa la oración</p>
                   <div className="flex flex-wrap items-center gap-2 text-sm leading-loose">
-                    <Pill>SI</Pill>
-                    <PillSelect value={form.scope} onChange={(v) => setForm({ ...form, scope: v as any })}
-                      options={[{ v: "all", l: "todos los lotes" }, { v: "specific", l: "un lote específico" }]} />
-                    {form.scope === "specific" && (
-                      <PillSelect value={form.lot_id} onChange={(v) => setForm({ ...form, lot_id: v })}
-                        options={(lots ?? []).map((l) => ({ v: l.id, l: l.lot_code ?? l.id.slice(0, 8) }))} placeholder="elige lote" />
+                    <Pill>SI la categoría es</Pill>
+                    <PillSelect value={form.animal_kind} onChange={(v) => handleAnimalKindChange(v as any)}
+                      options={[{ v: "both", l: "Ambos (Roedores e Insectos)" }, { v: "rodent", l: "Roedores" }, { v: "insect", l: "Insectos" }]} />
+
+                    {form.animal_kind !== "both" && (
+                      <>
+                        <Pill>y de la especie</Pill>
+                        <PillSelect value={form.species_id} onChange={handleSpeciesChange}
+                          options={[
+                            { v: "", l: form.animal_kind === "rodent" ? "Todas las especies de roedores" : "Todas las especies de insectos" },
+                            ...(species ?? []).filter((s: any) => s.kind === form.animal_kind).map((s: any) => ({ v: s.id, l: s.name }))
+                          ]} />
+                      </>
                     )}
+
+                    <Pill>para</Pill>
+                    <PillSelect value={form.scope} onChange={(v) => handleScopeChange(v as any)}
+                      options={[{ v: "all", l: "todos los lotes" }, { v: "lot", l: "un lote específico" }]} />
+
+                    {form.scope === "lot" && (
+                      <PillSelect value={form.lot_id} onChange={(v) => setForm({ ...form, lot_id: v })}
+                        options={filteredLots.map((l: any) => ({ v: l.id, l: l.lot_code ?? l.id.slice(0, 8) }))} placeholder="elige lote" />
+                    )}
+
                     <Pill>de tipo</Pill>
                     <PillSelect value={form.lot_type} onChange={(v) => setForm({ ...form, lot_type: v as any })}
                       options={[{ v: "birth", l: "nacimiento" }, { v: "engorda", l: "engorda" }, { v: "breeder", l: "reproductor" }]} />
