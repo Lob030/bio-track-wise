@@ -902,7 +902,7 @@ function PurchasesTab() {
       payload.population = null;
     }
 
-    const { error } = await supabase.from("warehouse_purchases").insert(payload);
+    const { error } = await supabase.from("warehouse_purchases").insert(payload as any);
     if (error) {
       toast.error(error.message);
       return;
