@@ -119,6 +119,7 @@ export type Database = {
       }
       alert_rules: {
         Row: {
+          animal_kind: string
           created_at: string
           enabled: boolean
           frequency_days: number
@@ -131,10 +132,12 @@ export type Database = {
           owner_id: string
           priority: Database["public"]["Enums"]["alert_priority"]
           scope: string
+          species_id: string | null
           template_text: string
           threshold: number
         }
         Insert: {
+          animal_kind?: string
           created_at?: string
           enabled?: boolean
           frequency_days?: number
@@ -147,10 +150,12 @@ export type Database = {
           owner_id: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           scope?: string
+          species_id?: string | null
           template_text?: string
           threshold: number
         }
         Update: {
+          animal_kind?: string
           created_at?: string
           enabled?: boolean
           frequency_days?: number
@@ -163,6 +168,7 @@ export type Database = {
           owner_id?: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           scope?: string
+          species_id?: string | null
           template_text?: string
           threshold?: number
         }
