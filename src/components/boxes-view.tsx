@@ -50,7 +50,7 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
   // Split states
   const [splittingLot, setSplittingLot] = useState<any | null>(null);
   const [sublotsCount, setSublotsCount] = useState<number>(2);
-  const [sublots, setSublots] = useState<Array<{ box_id: string; males: number; females: number; unsexed: number; mass_grams: number }>>([]);
+  const [sublots, setSublots] = useState<Array<{ lot_code: string; box_id: string; males: number; females: number; unsexed: number; mass_grams: number }>>([]);
   const [submittingSplit, setSubmittingSplit] = useState(false);
 
   // Delete states
