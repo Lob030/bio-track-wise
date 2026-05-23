@@ -319,6 +319,7 @@ export type Database = {
       lots: {
         Row: {
           box_id: string | null
+          children_lot_ids: string[] | null
           created_at: string
           females: number | null
           finalized_at: string | null
@@ -340,6 +341,7 @@ export type Database = {
         }
         Insert: {
           box_id?: string | null
+          children_lot_ids?: string[] | null
           created_at?: string
           females?: number | null
           finalized_at?: string | null
@@ -361,6 +363,7 @@ export type Database = {
         }
         Update: {
           box_id?: string | null
+          children_lot_ids?: string[] | null
           created_at?: string
           females?: number | null
           finalized_at?: string | null
