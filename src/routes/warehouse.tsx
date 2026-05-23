@@ -525,7 +525,7 @@ function ToolsTab() {
       owner_id: u.user.id,
       name: form.name,
       value: form.value ? Number(form.value) : 0,
-      condition: form.condition,
+      condition: form.condition as "bueno" | "malo" | "nuevo" | "regular" | "reparacion",
       notes: form.notes || null,
     });
     if (error) {
