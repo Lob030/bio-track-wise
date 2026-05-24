@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { RefreshCw, Rat, Bug } from "lucide-react";
+import { RefreshCw, Rat, Bug, Download } from "lucide-react";
+import html2canvas from "html2canvas";
 
 type KindType = "rodent" | "insect";
 
@@ -208,6 +209,36 @@ function StockPage() {
     setSelectedSpeciesId(null);
   };
 
+  // ── Download species card as image ───────────────────────────────────
+  const [downloadingSpeciesId, setDownloadingSpeciesId] = useState<string | null>(null);
+
+  const downloadSpeciesCard = async (
+    speciesId: string,
+    speciesName: string,
+    cardElement: HTMLDivElement | null
+  ) => {
+    if (!cardElement) return;
+    setDownloadingSpeciesId(speciesId);
+    try {
+      const canvas = await html2canvas(cardElement, {
+        backgroundColor: "oklch(0.12 0.015 250)",
+        scale: 2,
+        useCORS: true,
+      });
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      const today = new Date().toISOString().split("T")[0];
+      link.download = `stock-${speciesName.replace(/\s+/g, "-")}-${today}.png`;
+      link.click();
+      toast.success("Imagen descargada");
+    } catch (err) {
+      console.error("Download failed:", err);
+      toast.error("Error al descargar imagen");
+    } finally {
+      setDownloadingSpeciesId(null);
+    }
+  };
+
   // ── Render ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-6 space-y-6">
@@ -300,11 +331,14 @@ function StockPage() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {rodentStockData.map(({ species, rows, totalIndividuals }) => (
-                <Card
-                  key={species.id}
-                  className="border-border bg-card/60 overflow-hidden"
-                >
+              {rodentStockData.map(({ species, rows, totalIndividuals }) => {
+                const cardRef = useRef<HTMLDivElement>(null);
+                return (
+                  <Card
+                    ref={cardRef}
+                    key={species.id}
+                    className="border-border bg-card/60 overflow-hidden"
+                  >
                   <div className="px-4 py-3 border-b border-border">
                     <h3 className="text-sm font-semibold text-foreground">
                       🐭 {species.name}{" "}
@@ -331,6 +365,9 @@ function StockPage() {
                           <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
                             Peso (g)
                           </th>
+                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
+                            Precio (MXN)
+                          </th>
                           <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">
                             Stock
                           </th>
@@ -351,6 +388,9 @@ function StockPage() {
                             <td className="px-4 py-2 text-muted-foreground">
                               {row.weight_g ?? "—"}
                             </td>
+                            <td className="px-4 py-2 text-emerald-400 font-medium">
+                              {row.price_mxn != null ? `$${row.price_mxn}/unidad` : "—"}
+                            </td>
                             <td className="px-4 py-2 text-right font-medium text-foreground">
                               {row.stock > 0
                                 ? row.stock.toLocaleString("es-MX")
@@ -361,7 +401,7 @@ function StockPage() {
                         {rows.length === 0 && (
                           <tr>
                             <td
-                              colSpan={4}
+                              colSpan={5}
                               className="px-4 py-4 text-center text-muted-foreground text-xs"
                             >
                               Sin reglas de tamaño configuradas.
@@ -371,8 +411,21 @@ function StockPage() {
                       </tbody>
                     </table>
                   </div>
+                  <div className="px-4 py-3 border-t border-border flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadSpeciesCard(species.id, species.name, cardRef.current)}
+                      disabled={downloadingSpeciesId === species.id}
+                      className="text-xs"
+                    >
+                      <Download className="h-3 w-3 mr-2" />
+                      {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
+                    </Button>
+                  </div>
                 </Card>
-              ))}
+              );
+            })}
             </div>
           )}
         </>
@@ -386,11 +439,14 @@ function StockPage() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {insectStockData.map(({ species, rows, totalGrams }) => (
-                <Card
-                  key={species.id}
-                  className="border-border bg-card/60 overflow-hidden"
-                >
+              {insectStockData.map(({ species, rows, totalGrams }) => {
+                const cardRef = useRef<HTMLDivElement>(null);
+                return (
+                  <Card
+                    ref={cardRef}
+                    key={species.id}
+                    className="border-border bg-card/60 overflow-hidden"
+                  >
                   <div className="px-4 py-3 border-b border-border">
                     <h3 className="text-sm font-semibold text-foreground">
                       🐛 {species.name}{" "}
@@ -422,6 +478,9 @@ function StockPage() {
                           <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
                             Cant. ind por 1g
                           </th>
+                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
+                            Precio (MXN)
+                          </th>
                           <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">
                             Stock (g)
                           </th>
@@ -442,6 +501,9 @@ function StockPage() {
                             <td className="px-4 py-2 text-muted-foreground">
                               {row.individuals_per_gram ?? "—"}
                             </td>
+                            <td className="px-4 py-2 text-emerald-400 font-medium">
+                              {row.price_mxn != null ? `$${row.price_mxn}/gramo` : "—"}
+                            </td>
                             <td className="px-4 py-2 text-right font-medium text-foreground">
                               {row.stock > 0
                                 ? row.stock.toLocaleString("es-MX", {
@@ -455,7 +517,7 @@ function StockPage() {
                         {rows.length === 0 && (
                           <tr>
                             <td
-                              colSpan={4}
+                              colSpan={5}
                               className="px-4 py-4 text-center text-muted-foreground text-xs"
                             >
                               Sin reglas de tamaño configuradas.
@@ -465,8 +527,21 @@ function StockPage() {
                       </tbody>
                     </table>
                   </div>
+                  <div className="px-4 py-3 border-t border-border flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadSpeciesCard(species.id, species.name, cardRef.current)}
+                      disabled={downloadingSpeciesId === species.id}
+                      className="text-xs"
+                    >
+                      <Download className="h-3 w-3 mr-2" />
+                      {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
+                    </Button>
+                  </div>
                 </Card>
-              ))}
+              );
+            })}
             </div>
           )}
         </>
