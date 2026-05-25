@@ -27,7 +27,6 @@ function Page() {
   const [editingSpecies, setEditingSpecies] = useState<any | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [unitPrice, setUnitPrice] = useState("0");
   const [rules, setRules] = useState<RodentRule[]>([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }]);
 
   const { data: species } = useQuery({
@@ -39,11 +38,11 @@ function Page() {
     },
   });
 
-  const createSpecies = async (n: string, r: RodentRule[], price: number = 0) => {
+  const createSpecies = async (n: string, r: RodentRule[]) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("species").insert({
-      owner_id: u.user.id, kind: "rodent", name: n, size_rules: r as any, unit_price_mxn: price,
+      owner_id: u.user.id, kind: "rodent", name: n, size_rules: r as any,
     });
     if (error) return toast.error(error.message);
     toast.success(`Especie "${n}" creada`);
@@ -60,20 +59,19 @@ function Page() {
   const submit = async () => {
     if (!name.trim()) return toast.error("Nombre requerido");
     const filteredRules = rules.filter((r) => r.label.trim());
-    const finalPrice = Number(unitPrice) || 0;
 
     if (editingSpecies) {
       const { error } = await supabase.from("species").update({
-        name: name.trim(), size_rules: filteredRules as any, unit_price_mxn: finalPrice,
+        name: name.trim(), size_rules: filteredRules as any,
       }).eq("id", editingSpecies.id);
       if (error) return toast.error(error.message);
       toast.success("Especie actualizada");
       qc.invalidateQueries({ queryKey: ["species", "rodent"] });
     } else {
-      await createSpecies(name.trim(), filteredRules, finalPrice);
+      await createSpecies(name.trim(), filteredRules);
     }
 
-    setOpen(false); setEditingSpecies(null); setName(""); setUnitPrice("0"); setRules([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }]);
+    setOpen(false); setEditingSpecies(null); setName(""); setRules([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }]);
   };
 
   return (
@@ -83,7 +81,7 @@ function Page() {
       icon={<Rat className="h-6 w-6" />}
       actions={
         <>
-          <Button variant="outline" onClick={() => createSpecies("Rata Long Evans", LONG_EVANS, 15)}>
+          <Button variant="outline" onClick={() => createSpecies("Rata Long Evans", LONG_EVANS)}>
             <Wand2 className="h-4 w-4 mr-2" /> Preset Long Evans
           </Button>
           <Dialog open={open} onOpenChange={(v) => {
@@ -91,7 +89,6 @@ function Page() {
             if (!v) {
               setEditingSpecies(null);
               setName("");
-              setUnitPrice("0");
               setRules([{ label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }]);
             }
           }}>
@@ -99,9 +96,9 @@ function Page() {
             <DialogContent className="max-w-3xl">
               <DialogHeader><DialogTitle>{editingSpecies ? "Editar especie de roedor" : "Nueva especie de roedor"}</DialogTitle></DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Nombre</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Ratón ICR" /></div>
-                  <div><Label>Precio de venta por unidad (MXN)</Label><Input type="number" step="0.01" min={0} value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="0.00" /></div>
+                <div>
+                  <Label>Nombre</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Ratón ICR" className="w-full" />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -150,11 +147,6 @@ function Page() {
                   <div className="text-left">
                     <div className="font-semibold">
                       {s.name}
-                      {s.unit_price_mxn !== undefined && s.unit_price_mxn !== null && (
-                        <span className="text-xs text-emerald-400 font-normal ml-2">
-                          (${s.unit_price_mxn}/unidad)
-                        </span>
-                      )}
                     </div>
                     <div className="text-xs text-muted-foreground">{rs.length} tallas definidas</div>
                   </div>
@@ -165,7 +157,6 @@ function Page() {
                     e.stopPropagation();
                     setEditingSpecies(s);
                     setName(s.name);
-                    setUnitPrice(String(s.unit_price_mxn ?? 0));
                     setRules(s.size_rules as RodentRule[] ?? []);
                     setOpen(true);
                   }}><Edit2 className="h-3 w-3" /></Button>

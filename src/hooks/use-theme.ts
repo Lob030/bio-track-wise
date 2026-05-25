@@ -51,27 +51,61 @@ export function useTheme() {
     if (!theme) return;
     const root = document.documentElement;
 
-    // Set CSS variables
-    Object.entries(theme.colors).forEach(([key, value]) => {
+    // Apply color variables
+    const colorEntries = Object.entries(theme.colors);
+    colorEntries.forEach(([key, value]) => {
       root.style.setProperty(`--color-${key}`, value);
     });
 
+    // Apply typography
     root.style.setProperty("--font-family", theme.typography.family);
-    if (theme.typography.headingFamily) {
-      root.style.setProperty("--font-family-heading", theme.typography.headingFamily);
-    }
+    root.style.setProperty("--font-family-heading", theme.typography.headingFamily || theme.typography.family);
 
-    // Apply data attribute for conditional styling
-    root.setAttribute("data-theme", themeId);
+    Object.entries(theme.typography.weights || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--font-weight-${key}`, String(value));
+    });
+
+    Object.entries(theme.typography.sizes || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--font-size-${key}`, value);
+    });
+
+    Object.entries(theme.typography.lineHeight || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--line-height-${key}`, String(value));
+    });
+
+    Object.entries(theme.typography.letterSpacing || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--letter-spacing-${key}`, value);
+    });
 
     // Apply effects
-    if (theme.effects.glow) {
+    if (theme.effects?.shadows) {
+      Object.entries(theme.effects.shadows).forEach(([key, value]) => {
+        root.style.setProperty(`--shadow-${key}`, value);
+      });
+    }
+
+    if (theme.effects?.borderRadius) {
+      Object.entries(theme.effects.borderRadius).forEach(([key, value]) => {
+        root.style.setProperty(`--radius-${key}`, value);
+      });
+    }
+
+    if (theme.effects?.transitions) {
+      Object.entries(theme.effects.transitions).forEach(([key, value]) => {
+        root.style.setProperty(`--transition-${key}`, value);
+      });
+    }
+
+    // Apply theme flags
+    root.setAttribute("data-theme", themeId);
+
+    if (theme.effects?.glow) {
       root.classList.add("theme-glow");
     } else {
       root.classList.remove("theme-glow");
     }
 
-    if (theme.effects.glitch) {
+    if (theme.effects?.glitch) {
       root.classList.add("theme-glitch");
     } else {
       root.classList.remove("theme-glitch");
