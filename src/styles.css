@@ -49,64 +49,86 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* BioTrack — dark-first palette (Slate-950 base, emerald/amber/red accents) */
+/* BioTrack — dynamic responsive theme variable mapping */
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.12 0.015 250);          /* strict slate-950 */
-  --foreground: oklch(0.96 0.01 240);
+  --background: var(--color-background);
+  --foreground: var(--color-text);
 
-  --card: oklch(0.14 0.02 250);                 /* glassmorphic dark slate */
-  --card-foreground: oklch(0.96 0.01 240);
-  --popover: oklch(0.14 0.02 250);
-  --popover-foreground: oklch(0.96 0.01 240);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
 
-  --primary: oklch(0.72 0.17 158);             /* emerald */
-  --primary-foreground: oklch(0.15 0.02 250);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-background);
 
-  --secondary: oklch(0.20 0.02 250);
-  --secondary-foreground: oklch(0.96 0.01 240);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-text);
 
-  --muted: oklch(0.20 0.02 250);                /* clean slate-800 background for inactive tracks/muted elements */
-  --muted-foreground: oklch(0.55 0.03 250);     /* clean text-slate-500 */
+  --muted: var(--color-surface);
+  --muted-foreground: var(--color-text-muted);
 
-  --accent: oklch(0.22 0.02 250);
-  --accent-foreground: oklch(0.96 0.01 240);
+  --accent: var(--color-surface);
+  --accent-foreground: var(--color-text);
 
   --destructive: oklch(0.60 0.22 15);          /* vivid rose-500 */
   --destructive-foreground: oklch(0.98 0.01 240);
 
-  --success: oklch(0.72 0.17 158);             /* emerald */
-  --success-foreground: oklch(0.15 0.02 250);
-  --warning: oklch(0.70 0.16 75);              /* amber-500 */
-  --warning-foreground: oklch(0.18 0.02 250);
+  --success: var(--color-success);
+  --success-foreground: var(--color-background);
+  --warning: var(--color-warning);
+  --warning-foreground: var(--color-background);
   --info: oklch(0.70 0.16 280);                /* violet */
   --info-foreground: oklch(0.98 0.01 240);
 
-  --border: oklch(0.18 0.02 250);              /* slate-900 border */
-  --input: oklch(0.18 0.02 250);
-  --ring: oklch(0.72 0.17 158);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-primary);
 
-  --chart-1: oklch(0.72 0.17 158);
+  --chart-1: var(--color-primary);
   --chart-2: oklch(0.70 0.16 280);
-  --chart-3: oklch(0.70 0.16 75);
+  --chart-3: var(--color-warning);
   --chart-4: oklch(0.60 0.22 15);
-  --chart-5: oklch(0.65 0.15 220);
+  --chart-5: var(--color-secondary);
 
-  --sidebar: oklch(0.12 0.015 250);            /* clean bg-slate-950 */
-  --sidebar-foreground: oklch(0.85 0.02 240);
-  --sidebar-primary: oklch(0.72 0.17 158);
-  --sidebar-primary-foreground: oklch(0.15 0.02 250);
-  --sidebar-accent: oklch(0.16 0.02 250);
-  --sidebar-accent-foreground: oklch(0.96 0.01 240);
-  --sidebar-border: oklch(0.18 0.02 250);       /* subtle right border border-slate-900 */
-  --sidebar-ring: oklch(0.72 0.17 158);
+  --sidebar: var(--color-surface);
+  --sidebar-foreground: var(--color-text);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-primary-foreground: var(--color-background);
+  --sidebar-accent: var(--color-surface);
+  --sidebar-accent-foreground: var(--color-text);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-primary);
 }
 
 .dark {
-  /* same as :root — always dark */
-  --background: oklch(0.12 0.015 250);
-  --foreground: oklch(0.96 0.01 240);
+  --background: var(--color-background);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-background);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-text);
+  --muted: var(--color-surface);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-surface);
+  --accent-foreground: var(--color-text);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-primary);
+  --sidebar: var(--color-surface);
+  --sidebar-foreground: var(--color-text);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-primary-foreground: var(--color-background);
+  --sidebar-accent: var(--color-surface);
+  --sidebar-accent-foreground: var(--color-text);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-primary);
 }
 
 html, body { background-color: var(--color-background); color: var(--color-foreground); }
@@ -133,10 +155,10 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 .bg-slate-900\/60,
 .card,
 .tabs-content > div {
-  background-color: rgba(15, 23, 42, 0.6) !important;
+  background-color: color-mix(in srgb, var(--card) 65%, transparent) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border-color: rgba(30, 41, 59, 0.6) !important;
+  border-color: color-mix(in srgb, var(--border) 45%, transparent) !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -145,24 +167,25 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 .bg-slate-900\/60:hover,
 .card:hover {
   transform: translateY(-2px) !important;
-  border-color: rgba(16, 185, 129, 0.35) !important; /* Subtle Emerald glow on hover */
-  box-shadow: 0 12px 30px -10px rgba(2, 6, 23, 0.7), 0 0 15px 0 rgba(16, 185, 129, 0.08) !important;
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent) !important; /* Dynamic Primary glow on hover */
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.45), 0 0 15px 0 color-mix(in srgb, var(--primary) 12%, transparent) !important;
 }
 
-/* Sidebar clean bg-slate-950 overrides */
+/* Sidebar clean bg-sidebar overrides */
 [data-sidebar="sidebar"],
 [data-sidebar="sidebar"] .bg-sidebar {
-  background-color: oklch(0.12 0.015 250) !important;
+  background-color: var(--sidebar) !important;
+  border-color: var(--sidebar-border) !important;
 }
 
 /* Sidebar Active Item Premium Styling */
 [data-sidebar="menu-button"][data-active="true"],
 [data-sidebar="menu-sub-button"][data-active="true"] {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-  color: oklch(0.79 0.17 158) !important; /* emerald-400 */
-  border-left: 2.5px solid oklch(0.64 0.17 158) !important;
+  background-color: color-mix(in srgb, var(--primary) 12%, transparent) !important;
+  color: var(--primary) !important; /* Dynamic theme primary */
+  border-left: 3px solid var(--primary) !important;
   border-radius: 0 6px 6px 0 !important;
-  box-shadow: inset 6px 0 12px -6px rgba(16, 185, 129, 0.25) !important;
+  box-shadow: inset 6px 0 12px -6px color-mix(in srgb, var(--primary) 25%, transparent) !important;
 }
 
 /* Unified Crimson/Rose for Critical / Expired / High Priority */
@@ -202,13 +225,13 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 /* Switch unchecked track clean bg-slate-800 override */
 .peer[data-state="unchecked"],
 [data-state="unchecked"].peer {
-  background-color: oklch(0.25 0.03 250) !important; /* slate-800 */
+  background-color: color-mix(in srgb, var(--border) 60%, transparent) !important;
 }
 
 /* Recharts Tooltip Glassmorphic Global Support */
 .recharts-default-tooltip {
-  background-color: rgba(15, 23, 42, 0.9) !important;
-  border: 1px solid rgba(30, 41, 59, 0.6) !important;
+  background-color: color-mix(in srgb, var(--card) 90%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent) !important;
   border-radius: 8px !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -217,26 +240,26 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 
 /* Interactive Active elements glow */
 .emerald-glow-interactive {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15) !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
 }
 
 /* Biological Structure Toggles Accents */
 .text-cyan-glow,
 .text-cyan-400 {
-  color: oklch(0.79 0.15 200) !important; /* cyan-400 */
+  color: var(--primary) !important;
 }
 .text-indigo-glow,
 .text-indigo-400 {
-  color: oklch(0.72 0.16 280) !important; /* indigo-400 */
+  color: var(--secondary) !important;
 }
 .bg-cyan-glow,
 .bg-cyan-500 {
-  background-color: oklch(0.65 0.17 200) !important;
+  background-color: var(--primary) !important;
 }
 .bg-indigo-glow,
 .bg-indigo-500 {
-  background-color: oklch(0.58 0.18 280) !important;
+  background-color: var(--secondary) !important;
 }
 
 /* Sidebar scrollbar */
@@ -245,16 +268,16 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 }
 
 .sidebar-scroll::-webkit-scrollbar-track {
-  background: oklch(0.18 0.02 250); /* slate-950 base */
+  background: var(--sidebar);
   border-radius: 4px;
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, oklch(0.55 0.15 160), oklch(0.45 0.15 160)); /* emerald glow */
+  background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 70%, transparent));
   border-radius: 4px;
-  border: 2px solid oklch(0.18 0.02 250);
+  border: 2px solid var(--sidebar);
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, oklch(0.65 0.18 160), oklch(0.55 0.18 160)); /* brighter emerald */
+  background: var(--primary);
 }
