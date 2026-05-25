@@ -79,7 +79,6 @@ Fecha de hoy: ${data.today}.`;
         system,
         prompt: data.userMessage,
         schema: ActionSchema,
-        mode: "json",
       });
       return object;
     } catch (err: any) {
