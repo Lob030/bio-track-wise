@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { Bug, Plus, Scale, Layers, CheckCircle2 } from "lucide-react";
+import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -246,6 +246,24 @@ function Page() {
     return map;
   }, [lots, lotCodeMap]);
 
+  const speciesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (species ?? []).forEach((s) => { map[s.id] = s.name; });
+    return map;
+  }, [species]);
+
+  const linesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (lines ?? []).forEach((ln) => { map[ln.id] = ln.name; });
+    return map;
+  }, [lines]);
+
+  const boxesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (boxes ?? []).forEach((bx) => { map[bx.id] = bx.code; });
+    return map;
+  }, [boxes]);
+
   const summary = useMemo(() => {
     const active = (lots ?? []).filter((l) => l.status === "active");
     const biomass = active.reduce((s, l) => s + (Number(l.mass_grams) || 0), 0);
@@ -352,62 +370,99 @@ function Page() {
         <Card className="p-4 border-border bg-card/60"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase">Finalizados (mes)</div><div className="text-2xl font-bold mt-1">{summary.finalizedMonth}</div></div><CheckCircle2 className="h-6 w-6 text-info" /></div></Card>
       </div>
 
-      <Card className="p-0 border-border bg-card/60 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-accent/30 text-[10px] uppercase text-muted-foreground">
-            <tr><th className="text-left p-3">Código</th><th className="text-left p-3">Tipo</th><th className="text-left p-3">Peso (g)</th><th className="text-left p-3">Lote Padre</th><th className="text-left p-3">Estado</th><th className="text-left p-3">Inicio</th><th className="text-right p-3">Acciones</th></tr>
-          </thead>
-          <tbody>
-            {(lots ?? []).map((l) => {
-              const childNames = childrenNamesMap[l.id];
-              return (
-                <tr key={l.id} className="border-t border-border hover:bg-accent/20">
-                  <td className="p-3 font-mono text-xs">
+      <div className="space-y-3">
+        {(lots ?? []).map((l) => {
+          const childNames = childrenNamesMap[l.id];
+          const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
+          const speciesName = speciesMap[l.species_id] ?? "";
+          const lineName = linesMap[l.line_id] ?? "—";
+          const boxCode = boxesMap[l.box_id] ?? "—";
+          
+          return (
+            <Card key={l.id} className="p-4 border-border bg-card/60 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden transition-all hover:translate-y-[-2px] hover:border-primary/50 hover:shadow-lg">
+              {/* Left Column: Code, Badges, Gender Population */}
+              <div className="space-y-2 md:w-1/3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg font-bold tracking-tight text-foreground font-heading">
                     {l.lot_code ?? l.id.slice(0, 8)}
-                    {childNames && childNames.length > 0 && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="ml-1.5 text-[9px] cursor-help">
-                              {childNames.length} sub
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">Sublotes: {childNames.join(", ")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </td>
-                  <td className="p-3"><Badge variant="outline" className="capitalize text-[10px]">{l.lot_type}</Badge></td>
-                  <td className="p-3 font-bold text-emerald-glow">{(+(l.mass_grams ?? 0)).toFixed(1)} g</td>
-                  <td className="p-3 text-xs text-muted-foreground">
-                    {(l as any).parent_lot_id ? (
-                      <Badge variant="secondary" className="text-[9px]">{lotCodeMap[(l as any).parent_lot_id] ?? "—"}</Badge>
-                    ) : "—"}
-                  </td>
-                  <td className="p-3"><Badge variant={l.status === "active" ? "default" : "secondary"} className="text-[10px]">{l.status}</Badge></td>
-                  <td className="p-3 text-muted-foreground text-xs">{new Date(l.started_at).toLocaleDateString("es-MX")}</td>
-                  <td className="p-3 text-right space-x-1 shrink-0 whitespace-nowrap">
-                    {l.status === "active" && (
-                      <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => initSplit(l)}>
-                        Dividir
-                      </Button>
-                    )}
-                    <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-foreground" onClick={() => initEdit(l)}>
-                      Editar
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-destructive hover:text-destructive" onClick={() => setDeletingLot(l)}>
-                      Eliminar
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-            {(lots ?? []).length === 0 && <tr><td colSpan={7} className="p-10 text-center text-muted-foreground">Sin lotes registrados.</td></tr>}
-          </tbody>
-        </table>
-      </Card>
+                  </span>
+                  {parentCode && (
+                    <Badge variant="outline" className="text-[9px] text-muted-foreground border-border">
+                      sub-lote de {parentCode}
+                    </Badge>
+                  )}
+                  {childNames && childNames.length > 0 && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="secondary" className="text-[9px] cursor-help">
+                            {childNames.length} sublotes
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Sublotes: {childNames.join(", ")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="secondary" className="text-[10px] capitalize font-medium px-2 py-0.5 rounded-md">
+                    {l.lot_type === "breeder" ? "Reproductor" : l.lot_type === "engorda" ? "Engorda" : "Nacimiento"}
+                  </Badge>
+                  {speciesName && (
+                    <Badge variant="outline" className="text-[10px] border-border text-muted-foreground px-2 py-0.5 rounded-md">
+                      {speciesName}
+                    </Badge>
+                  )}
+                  <Badge className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    l.status === "active" 
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" 
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {l.status === "active" ? "Activo" : "Finalizado"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Center-Left Column: Genetic Line & Box */}
+              <div className="space-y-1 md:w-1/4">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Línea genética</div>
+                <div className="text-sm font-semibold text-foreground">{lineName}</div>
+                <div className="text-xs text-muted-foreground">Caja: <span className="font-medium text-foreground">{boxCode}</span></div>
+              </div>
+
+              {/* Center-Right Column: Current Stage & Individuals */}
+              <div className="space-y-1 md:w-1/4">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Biomasa / Info</div>
+                <div className="text-sm font-semibold text-foreground">{(+(l.mass_grams ?? 0)).toFixed(1)} g</div>
+                <div className="text-xs text-muted-foreground">Iniciado: <span className="font-medium">{new Date(l.started_at).toLocaleDateString("es-MX")}</span></div>
+              </div>
+
+              {/* Right Column: Actions */}
+              <div className="flex items-center md:flex-col gap-2 shrink-0 md:items-end justify-between md:justify-center">
+                {l.status === "active" && (
+                  <Button size="sm" variant="secondary" className="h-8 text-[11px] gap-1 px-3" onClick={() => initSplit(l)}>
+                    <Split className="h-3.5 w-3.5" /> Dividir
+                  </Button>
+                )}
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => initEdit(l)}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeletingLot(l)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+        {(lots ?? []).length === 0 && (
+          <Card className="p-10 text-center text-muted-foreground border-dashed">Sin lotes registrados.</Card>
+        )}
+      </div>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingLot} onOpenChange={(v) => !v && setEditingLot(null)}>

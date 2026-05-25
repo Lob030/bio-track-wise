@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2 } from "lucide-react";
+import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -698,41 +698,70 @@ export function BoxesView({ kind }: { kind: Kind }) {
           const occupied = occupants.length > 0;
           const feed = feedFor(b.id);
           return (
-            <Card key={b.id} className="p-4 border-border bg-card/60 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="font-mono font-bold text-emerald-glow">{b.code}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{roomRack}</div>
+            <Card key={b.id} className="p-4 border-border bg-card/60 space-y-3 relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold tracking-tight text-foreground font-heading">{b.code}</span>
+                    {usage && (
+                      <Badge variant="secondary" className="text-[9px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-md">
+                        {usage}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    {occupied ? (
+                      <PopoverOpenableBadge occupants={occupants} kind={kind} qc={qc} boxes={boxes ?? []} />
+                    ) : (
+                      <Badge className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                        Libre
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => {
-                    setEditingBox(b);
-                    const unpacked = unpackLocation(b.location);
-                    setForm({
-                      code: b.code,
-                      roomRack: unpacked.roomRack,
-                      usage: unpacked.usage || "engorda",
-                      capacity: b.capacity ? String(b.capacity) : "",
-                    });
-                    setOpen(true);
-                  }}><Edit2 className="h-3 w-3" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => remove(b.id)}><Trash2 className="h-3 w-3" /></Button>
+
+                <div className="mt-2.5 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 text-rose-500 fill-rose-500/20 shrink-0" />
+                    <span>{roomRack}</span>
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span>Capacidad:</span>
+                    <span className="font-semibold text-foreground">{b.capacity ?? "—"}</span>
+                  </div>
                 </div>
+
+                {kind === "rodent" && occupied && (
+                  <div className="flex items-center gap-2 text-xs pt-2 mt-2 border-t border-border/40">
+                    <Utensils className="h-3 w-3 text-warning shrink-0" />
+                    <span className="text-muted-foreground">Consumo diario:</span>
+                    <span className="font-semibold text-warning">{feed.toFixed(1)} g</span>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {usage && <Badge variant="outline" className="text-[10px] capitalize">{usage}</Badge>}
-                {occupied
-                  ? <PopoverOpenableBadge occupants={occupants} kind={kind} qc={qc} boxes={boxes ?? []} />
-                  : <Badge className="text-[10px] bg-success text-success-foreground">Libre</Badge>}
-                {b.capacity && <Badge variant="outline" className="text-[10px]">cap. {b.capacity}</Badge>}
+
+              <div className="flex items-center justify-between pt-2 mt-3 border-t border-border/40">
+                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 px-1.5 text-muted-foreground hover:text-primary">
+                  <QrCode className="h-3.5 w-3.5" /> QR
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 px-1.5 text-muted-foreground hover:text-primary" onClick={() => {
+                  setEditingBox(b);
+                  const unpacked = unpackLocation(b.location);
+                  setForm({
+                    code: b.code,
+                    roomRack: unpacked.roomRack,
+                    usage: unpacked.usage || "engorda",
+                    capacity: b.capacity ? String(b.capacity) : "",
+                  });
+                  setOpen(true);
+                }}>
+                  <Edit2 className="h-3.5 w-3.5" /> Editar
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 px-1.5 text-muted-foreground hover:text-destructive" onClick={() => remove(b.id)}>
+                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                </Button>
               </div>
-              {kind === "rodent" && occupied && (
-                <div className="flex items-center gap-2 text-xs pt-2 border-t border-border">
-                  <Utensils className="h-3 w-3 text-amber-glow" />
-                  <span className="text-muted-foreground">Consumo diario:</span>
-                  <span className="font-semibold text-amber-glow">{feed.toFixed(1)} g</span>
-                </div>
-              )}
             </Card>
           );
         })}
