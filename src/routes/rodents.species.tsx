@@ -93,22 +93,23 @@ function Page() {
             }
           }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva especie</Button></DialogTrigger>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
               <DialogHeader><DialogTitle>{editingSpecies ? "Editar especie de roedor" : "Nueva especie de roedor"}</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div>
+              <div className="flex flex-col gap-4 overflow-hidden min-h-0 flex-1">
+                <div className="shrink-0">
                   <Label>Nombre</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Ratón ICR" className="w-full" />
                 </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col min-h-0 flex-1">
+                  <div className="flex items-center justify-between mb-2 shrink-0">
                     <Label>Matriz de tallas</Label>
                     <Button size="sm" variant="ghost" onClick={() => setRules([...rules, { label: "", min_days: 0, max_days: 0, min_weight_g: 0, max_weight_g: 0, daily_feed_g: 0, price_mxn: 0 }])}>+ Agregar fila</Button>
                   </div>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-12 gap-2 text-[10px] uppercase text-muted-foreground px-1">
-                      <span className="col-span-2">Talla</span><span className="col-span-1">Día min</span><span className="col-span-1">Día max</span>
-                      <span className="col-span-2">Peso min (g)</span><span className="col-span-2">Peso max (g)</span><span className="col-span-1">Alim. (g/d)</span><span className="col-span-2">Precio MXN</span><span /></div>
+                  <div className="grid grid-cols-12 gap-2 text-[10px] uppercase text-muted-foreground px-1 shrink-0">
+                    <span className="col-span-2">Talla</span><span className="col-span-1">Día min</span><span className="col-span-1">Día max</span>
+                    <span className="col-span-2">Peso min (g)</span><span className="col-span-2">Peso max (g)</span><span className="col-span-1">Alim. (g/d)</span><span className="col-span-2">Precio MXN</span><span />
+                  </div>
+                  <div className="space-y-2 overflow-y-auto flex-1 mt-1 pr-1">
                     {rules.map((r, i) => (
                       <div key={i} className="grid grid-cols-12 gap-2 items-center">
                         <Input className="col-span-2" value={r.label} onChange={(e) => { const n = [...rules]; n[i].label = e.target.value; setRules(n); }} placeholder="Pinky" />
