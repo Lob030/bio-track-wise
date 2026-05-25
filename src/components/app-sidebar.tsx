@@ -44,6 +44,67 @@ const MENU: Item[] = [
   { title: "Asistente IA", url: "/ai", icon: Sparkles, minTier: "gold" },
 ];
 
+const sidebarStyle: React.CSSProperties = {
+  backgroundColor: "var(--color-surface)",
+  borderRight: "1px solid var(--color-surface-border)",
+  color: "var(--color-text)",
+};
+
+const headerStyle: React.CSSProperties = {
+  borderBottom: "1px solid var(--color-surface-border)",
+  padding: "1rem",
+};
+
+const groupLabelStyle: React.CSSProperties = {
+  color: "var(--color-text-muted)",
+  fontSize: "0.7rem",
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+};
+
+function getMenuBtnStyle(active: boolean): React.CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.625rem",
+    padding: "0.5rem 0.75rem",
+    borderRadius: "0.5rem",
+    cursor: "pointer",
+    transition: "all 200ms cubic-bezier(0.4,0,0.2,1)",
+    backgroundColor: active
+      ? `color-mix(in srgb, var(--color-primary) 15%, transparent)`
+      : "transparent",
+    color: active ? "var(--color-primary)" : "var(--color-text)",
+    borderLeft: active ? "3px solid var(--color-primary)" : "3px solid transparent",
+    fontWeight: active ? 600 : 400,
+    boxShadow: active
+      ? `inset 6px 0 12px -6px color-mix(in srgb, var(--color-primary) 20%, transparent)`
+      : "none",
+    fontFamily: "var(--font-family)",
+  };
+}
+
+function getSubBtnStyle(active: boolean): React.CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "0.375rem 0.75rem 0.375rem 1.5rem",
+    borderRadius: "0.375rem",
+    cursor: "pointer",
+    transition: "all 200ms cubic-bezier(0.4,0,0.2,1)",
+    backgroundColor: active
+      ? `color-mix(in srgb, var(--color-primary) 12%, transparent)`
+      : "transparent",
+    color: active ? "var(--color-primary)" : "var(--color-text-muted)",
+    fontSize: "0.875rem",
+    fontWeight: active ? 500 : 400,
+    fontFamily: "var(--font-family)",
+    textDecoration: "none",
+  };
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -61,15 +122,27 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarHeader className="border-b border-border p-4">
+    <Sidebar collapsible="icon" style={sidebarStyle as any}>
+      <SidebarHeader style={headerStyle}>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-emerald grid place-items-center text-primary-foreground font-bold">
+          <div
+            className="h-9 w-9 rounded-xl grid place-items-center font-bold text-base shrink-0"
+            style={{
+              background: "var(--color-gradient, linear-gradient(135deg, var(--color-primary), var(--color-secondary)))",
+              color: "var(--color-text-inverse)",
+              boxShadow: "0 4px 12px color-mix(in srgb, var(--color-primary) 35%, transparent)",
+            }}
+          >
             B
           </div>
           {!collapsed && (
             <div>
-              <div className="font-bold text-base tracking-tight">BioTrack</div>
+              <div
+                className="font-bold text-base tracking-tight"
+                style={{ color: "var(--color-text)", fontFamily: "var(--font-family-heading)" }}
+              >
+                BioTrack
+              </div>
               <Badge variant="outline" className={`mt-0.5 text-[10px] capitalize ${tierColor[tier]}`}>
                 {tier}
               </Badge>
@@ -78,9 +151,12 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="sidebar-scroll">
+      <SidebarContent
+        className="sidebar-scroll"
+        style={{ backgroundColor: "var(--color-surface)" }}
+      >
         <SidebarGroup>
-          <SidebarGroupLabel>Bioterio</SidebarGroupLabel>
+          <SidebarGroupLabel style={groupLabelStyle}>Bioterio</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {MENU.map((item) => {
@@ -90,19 +166,28 @@ export function AppSidebar() {
                     <Collapsible key={item.title} defaultOpen={isActive(item.url)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton tooltip={item.title}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                            <ChevronDown className="ml-auto h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                          </SidebarMenuButton>
+                          <button
+                            style={getMenuBtnStyle(isActive(item.url))}
+                            className="w-full"
+                            title={item.title}
+                          >
+                            <item.icon className="h-4 w-4 shrink-0" style={{ color: isActive(item.url) ? "var(--color-primary)" : "var(--color-text-muted)" }} />
+                            {!collapsed && <span className="flex-1 text-left text-sm">{item.title}</span>}
+                            {!collapsed && (
+                              <ChevronDown
+                                className="ml-auto h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180"
+                                style={{ color: "var(--color-text-muted)" }}
+                              />
+                            )}
+                          </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <SidebarMenuSub>
+                          <SidebarMenuSub style={{ borderLeft: "1px solid var(--color-surface-border)", marginLeft: "1rem" }}>
                             {item.children.map((c) => (
                               <SidebarMenuSubItem key={c.url}>
-                                <SidebarMenuSubButton asChild isActive={isActive(c.url)}>
-                                  <Link to={c.url}>{c.title}</Link>
-                                </SidebarMenuSubButton>
+                                <Link to={c.url} style={getSubBtnStyle(isActive(c.url))}>
+                                  {c.title}
+                                </Link>
                               </SidebarMenuSubItem>
                             ))}
                           </SidebarMenuSub>
@@ -113,13 +198,14 @@ export function AppSidebar() {
                 }
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                        {!allowed && <Lock className="ml-auto h-3 w-3 text-muted-foreground" />}
-                      </Link>
-                    </SidebarMenuButton>
+                    <Link to={item.url} style={getMenuBtnStyle(isActive(item.url))} className="w-full" title={item.title}>
+                      <item.icon
+                        className="h-4 w-4 shrink-0"
+                        style={{ color: isActive(item.url) ? "var(--color-primary)" : "var(--color-text-muted)" }}
+                      />
+                      {!collapsed && <span className="flex-1 text-sm">{item.title}</span>}
+                      {!allowed && !collapsed && <Lock className="ml-auto h-3 w-3" style={{ color: "var(--color-text-muted)" }} />}
+                    </Link>
                   </SidebarMenuItem>
                 );
               })}
@@ -128,21 +214,24 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-2">
+      <SidebarFooter style={{ borderTop: "1px solid var(--color-surface-border)", padding: "0.5rem", backgroundColor: "var(--color-surface)" }}>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Configuración">
-              <Link to="/settings">
-                <Settings className="h-4 w-4" />
-                <span>Configuración</span>
-              </Link>
-            </SidebarMenuButton>
+            <Link to="/settings" style={getMenuBtnStyle(isActive("/settings"))} className="w-full" title="Configuración">
+              <Settings className="h-4 w-4 shrink-0" style={{ color: isActive("/settings") ? "var(--color-primary)" : "var(--color-text-muted)" }} />
+              {!collapsed && <span className="text-sm">Configuración</span>}
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => supabase.auth.signOut()} tooltip="Cerrar sesión">
-              <LogOut className="h-4 w-4" />
-              <span>Cerrar sesión</span>
-            </SidebarMenuButton>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              style={getMenuBtnStyle(false)}
+              className="w-full"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-4 w-4 shrink-0" style={{ color: "var(--color-text-muted)" }} />
+              {!collapsed && <span className="text-sm">Cerrar sesión</span>}
+            </button>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

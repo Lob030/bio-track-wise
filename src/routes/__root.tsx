@@ -51,7 +51,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "BioTrack — Gestión de Bioterio" },
       { name: "description", content: "Plataforma profesional de gestión de bioterio: roedores, insectos, ventas, alertas y reportes." },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -63,7 +67,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className="dark">
       <head><HeadContent /></head>
-      <body className="dark bg-background text-foreground">
+      <body className="bg-background text-foreground antialiased">
         {children}
         <Scripts />
       </body>
@@ -87,12 +91,20 @@ function AuthBridge() {
 function AppShell() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full" style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }}>
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b border-border bg-card/40 backdrop-blur px-4 sticky top-0 z-30">
+          <header
+            className="h-14 flex items-center gap-3 px-4 sticky top-0 z-30"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-surface) 80%, transparent)',
+              borderBottom: '1px solid var(--color-surface-border)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
+          >
             <SidebarTrigger />
-            <div className="text-sm text-muted-foreground">BioTrack · Gestión de Bioterio</div>
+            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>BioTrack · Gestión de Bioterio</div>
           </header>
           <main className="flex-1 overflow-auto">
             <Outlet />

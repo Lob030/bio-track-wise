@@ -50,9 +50,14 @@
 }
 
 /* BioTrack — dynamic responsive theme variable mapping */
+/* Note: --color-background, --color-text, --color-surface, --color-primary,
+   --color-secondary, --color-text-muted, --color-surface-border, etc. are
+   injected dynamically by use-theme.ts into :root element style.
+   Here we create Tailwind-compatible aliases pointing to those dynamic vars. */
 :root {
   --radius: 0.625rem;
 
+  /* Tailwind shadcn tokens → dynamic theme vars */
   --background: var(--color-background);
   --foreground: var(--color-text);
 
@@ -62,7 +67,7 @@
   --popover-foreground: var(--color-text);
 
   --primary: var(--color-primary);
-  --primary-foreground: var(--color-background);
+  --primary-foreground: var(--color-text-inverse);
 
   --secondary: var(--color-secondary);
   --secondary-foreground: var(--color-text);
@@ -70,36 +75,37 @@
   --muted: var(--color-surface);
   --muted-foreground: var(--color-text-muted);
 
-  --accent: var(--color-surface);
+  --accent: var(--color-surface-hover);
   --accent-foreground: var(--color-text);
 
-  --destructive: oklch(0.60 0.22 15);          /* vivid rose-500 */
-  --destructive-foreground: oklch(0.98 0.01 240);
+  --destructive: var(--color-error);
+  --destructive-foreground: var(--color-text-inverse);
 
   --success: var(--color-success);
-  --success-foreground: var(--color-background);
+  --success-foreground: var(--color-text-inverse);
   --warning: var(--color-warning);
-  --warning-foreground: var(--color-background);
-  --info: oklch(0.70 0.16 280);                /* violet */
-  --info-foreground: oklch(0.98 0.01 240);
+  --warning-foreground: var(--color-text-inverse);
+  --info: var(--color-info);
+  --info-foreground: var(--color-text-inverse);
 
-  --border: var(--color-border);
-  --input: var(--color-border);
+  /* --border uses --color-surface-border (injected by JS as --color-border alias too) */
+  --border: var(--color-surface-border);
+  --input: var(--color-surface-border);
   --ring: var(--color-primary);
 
   --chart-1: var(--color-primary);
-  --chart-2: oklch(0.70 0.16 280);
+  --chart-2: var(--color-secondary);
   --chart-3: var(--color-warning);
-  --chart-4: oklch(0.60 0.22 15);
-  --chart-5: var(--color-secondary);
+  --chart-4: var(--color-error);
+  --chart-5: var(--color-accent);
 
   --sidebar: var(--color-surface);
   --sidebar-foreground: var(--color-text);
   --sidebar-primary: var(--color-primary);
-  --sidebar-primary-foreground: var(--color-background);
-  --sidebar-accent: var(--color-surface);
+  --sidebar-primary-foreground: var(--color-text-inverse);
+  --sidebar-accent: var(--color-surface-hover);
   --sidebar-accent-foreground: var(--color-text);
-  --sidebar-border: var(--color-border);
+  --sidebar-border: var(--color-surface-border);
   --sidebar-ring: var(--color-primary);
 }
 
@@ -111,23 +117,23 @@
   --popover: var(--color-surface);
   --popover-foreground: var(--color-text);
   --primary: var(--color-primary);
-  --primary-foreground: var(--color-background);
+  --primary-foreground: var(--color-text-inverse);
   --secondary: var(--color-secondary);
   --secondary-foreground: var(--color-text);
   --muted: var(--color-surface);
   --muted-foreground: var(--color-text-muted);
-  --accent: var(--color-surface);
+  --accent: var(--color-surface-hover);
   --accent-foreground: var(--color-text);
-  --border: var(--color-border);
-  --input: var(--color-border);
+  --border: var(--color-surface-border);
+  --input: var(--color-surface-border);
   --ring: var(--color-primary);
   --sidebar: var(--color-surface);
   --sidebar-foreground: var(--color-text);
   --sidebar-primary: var(--color-primary);
-  --sidebar-primary-foreground: var(--color-background);
-  --sidebar-accent: var(--color-surface);
+  --sidebar-primary-foreground: var(--color-text-inverse);
+  --sidebar-accent: var(--color-surface-hover);
   --sidebar-accent-foreground: var(--color-text);
-  --sidebar-border: var(--color-border);
+  --sidebar-border: var(--color-surface-border);
   --sidebar-ring: var(--color-primary);
 }
 
