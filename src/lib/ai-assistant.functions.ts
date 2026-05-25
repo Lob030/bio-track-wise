@@ -74,18 +74,20 @@ Reglas:
 Fecha de hoy: ${data.today}.`;
 
     try {
-      const { experimental_output } = await generateText({
+      const { object } = await generateObject({
         model,
         system,
         prompt: data.userMessage,
-        experimental_output: Output.object({ schema: ActionSchema }),
+        schema: ActionSchema,
+        mode: "json",
       });
-      return experimental_output;
+      return object;
     } catch (err: any) {
-      console.error("[parseAiCommand]", err);
+      console.error("[parseAiCommand]", err?.message ?? err);
+      if (err?.text) console.error("[parseAiCommand raw text]", err.text);
       return {
         type: "clarify",
-        description: "No pude procesar tu mensaje. Intenta reformularlo.",
+        description: `No pude interpretar tu mensaje (${err?.message?.slice(0, 120) ?? "error desconocido"}). Intenta reformularlo de forma más simple.`,
         requiresConfirmation: false,
       };
     }
