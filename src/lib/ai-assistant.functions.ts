@@ -169,7 +169,6 @@ export const parseAiCommand = createServerFn({ method: "POST" })
         system: buildSystemPrompt(data.today),
         prompt: data.userMessage,
         schema: ParsedActionSchema,
-        mode: "json",
       });
       return object;
     } catch (err: any) {
