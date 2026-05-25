@@ -43,6 +43,7 @@ const DEFAULT_FORM: RuleForm = {
 function Page() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [alertName, setAlertName] = useState("");
   const [form, setForm] = useState<RuleForm>(DEFAULT_FORM);
 
   const { data: rules } = useQuery({
@@ -137,6 +138,7 @@ function Page() {
     if (!u.user) return;
     const { error } = await supabase.from("alert_rules").insert({
       owner_id: u.user.id,
+      name: alertName.trim() || null,
       scope: form.scope,
       lot_id: form.scope === "lot" ? form.lot_id || null : null,
       lot_type: form.lot_type,
@@ -151,7 +153,7 @@ function Page() {
     });
     if (error) return toast.error(error.message);
     toast.success("Regla creada");
-    setOpen(false); setForm(DEFAULT_FORM);
+    setOpen(false); setForm(DEFAULT_FORM); setAlertName("");
     qc.invalidateQueries({ queryKey: ["alert_rules"] });
   };
 
@@ -180,6 +182,15 @@ function Page() {
             <DialogHeader><DialogTitle>Construye tu regla</DialogTitle></DialogHeader>
             <div className="grid lg:grid-cols-[1fr_320px] gap-4">
               <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="alertName">Nombre de la alerta</Label>
+                  <Input 
+                    id="alertName"
+                    placeholder="Ej: Lotes en engorda > 21 días" 
+                    value={alertName} 
+                    onChange={(e) => setAlertName(e.target.value)} 
+                  />
+                </div>
                 <Card className="p-4 border-border bg-card/40">
                   <p className="text-xs uppercase text-muted-foreground mb-3">Completa la oración</p>
                   <div className="flex flex-wrap items-center gap-2 text-sm leading-loose">
@@ -190,9 +201,9 @@ function Page() {
                     {form.animal_kind !== "both" && (
                       <>
                         <Pill>y de la especie</Pill>
-                        <PillSelect value={form.species_id} onChange={handleSpeciesChange}
+                        <PillSelect value={form.species_id || "todas"} onChange={(v) => handleSpeciesChange(v === "todas" ? "" : v)}
                           options={[
-                            { v: "", l: form.animal_kind === "rodent" ? "Todas las especies de roedores" : "Todas las especies de insectos" },
+                            { v: "todas", l: form.animal_kind === "rodent" ? "Todas las especies de roedores" : "Todas las especies de insectos" },
                             ...(species ?? []).filter((s: any) => s.kind === form.animal_kind).map((s: any) => ({ v: s.id, l: s.name }))
                           ]} />
                       </>
@@ -252,8 +263,9 @@ function Page() {
               <Card key={r.id} className="p-3 border-border bg-card/60 flex items-center gap-3">
                 <AlertDot priority={r.priority as any} />
                 <div className="flex-1">
-                  <div className="text-sm">{r.template_text}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                  <div className="text-sm font-semibold">{r.name || r.template_text}</div>
+                  {r.name && <div className="text-xs text-muted-foreground mt-0.5">{r.template_text}</div>}
+                  <div className="text-[10px] text-muted-foreground mt-1">
                     {r.frequency_days > 0 ? `Recurrente cada ${r.frequency_days} días` : "Una sola vez"} · prioridad {r.priority}
                   </div>
                 </div>

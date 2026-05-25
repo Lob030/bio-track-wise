@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Bug, Plus, Trash2, Wand2, ChevronDown, ChevronRight } from "lucide-react";
+import { Bug, Plus, Trash2, Wand2, ChevronDown, ChevronRight, Edit2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { InsectSizeMatrix, type InsectRule } from "@/components/size-matrix";
@@ -25,6 +25,7 @@ const TENEBRIOS: InsectRule[] = [
 function Page() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingSpecies, setEditingSpecies] = useState<any | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [unitPrice, setUnitPrice] = useState("0");
@@ -58,8 +59,21 @@ function Page() {
 
   const submit = async () => {
     if (!name.trim()) return toast.error("Nombre requerido");
-    await create(name.trim(), rules.filter((r) => r.label.trim()), Number(unitPrice) || 0);
-    setOpen(false); setName(""); setUnitPrice("0"); setRules([{ label: "", min_days: 0, max_days: 0, individuals_per_gram: 0, price_mxn: 0 }]);
+    const filteredRules = rules.filter((r) => r.label.trim());
+    const finalPrice = Number(unitPrice) || 0;
+
+    if (editingSpecies) {
+      const { error } = await supabase.from("species").update({
+        name: name.trim(), size_rules: filteredRules as any, unit_price_mxn: finalPrice,
+      }).eq("id", editingSpecies.id);
+      if (error) return toast.error(error.message);
+      toast.success("Especie actualizada");
+      qc.invalidateQueries({ queryKey: ["species", "insect"] });
+    } else {
+      await create(name.trim(), filteredRules, finalPrice);
+    }
+
+    setOpen(false); setEditingSpecies(null); setName(""); setUnitPrice("0"); setRules([{ label: "", min_days: 0, max_days: 0, individuals_per_gram: 0, price_mxn: 0 }]);
   };
 
   return (
@@ -72,10 +86,18 @@ function Page() {
           <Button variant="outline" onClick={() => create("Tenebrios", TENEBRIOS, 8)}>
             <Wand2 className="h-4 w-4 mr-2" /> Preset Tenebrios
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) {
+              setEditingSpecies(null);
+              setName("");
+              setUnitPrice("0");
+              setRules([{ label: "", min_days: 0, max_days: 0, individuals_per_gram: 0, price_mxn: 0 }]);
+            }
+          }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva especie</Button></DialogTrigger>
             <DialogContent className="max-w-3xl">
-              <DialogHeader><DialogTitle>Nueva especie de insecto</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingSpecies ? "Editar especie de insecto" : "Nueva especie de insecto"}</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>Nombre</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Grillos" /></div>
@@ -103,7 +125,7 @@ function Page() {
                   </div>
                 </div>
               </div>
-              <DialogFooter><Button onClick={submit}>Crear especie</Button></DialogFooter>
+              <DialogFooter><Button onClick={submit}>{editingSpecies ? "Guardar cambios" : "Crear especie"}</Button></DialogFooter>
             </DialogContent>
           </Dialog>
         </>
@@ -137,6 +159,14 @@ function Page() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-[10px]">insecto</Badge>
+                  <Button size="icon" variant="ghost" onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingSpecies(s);
+                    setName(s.name);
+                    setUnitPrice(String(s.unit_price_mxn ?? 0));
+                    setRules(s.size_rules as InsectRule[] ?? []);
+                    setOpen(true);
+                  }}><Edit2 className="h-3 w-3" /></Button>
                   <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); remove(s.id); }}><Trash2 className="h-3 w-3" /></Button>
                 </div>
               </button>

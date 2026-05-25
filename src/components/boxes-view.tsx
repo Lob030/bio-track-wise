@@ -534,6 +534,7 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
 export function BoxesView({ kind }: { kind: Kind }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingBox, setEditingBox] = useState<any | null>(null);
   const [form, setForm] = useState({ code: "", roomRack: "", usage: "engorda", capacity: "" });
 
   const { data: boxes } = useQuery({
@@ -590,14 +591,28 @@ export function BoxesView({ kind }: { kind: Kind }) {
     if (!form.code.trim() || !form.roomRack.trim()) return toast.error("Código y ubicación requeridos");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const { error } = await supabase.from("boxes").insert({
-      owner_id: u.user.id, kind, code: form.code.trim(),
-      location: packLocation(form.roomRack.trim(), form.usage),
-      capacity: form.capacity ? +form.capacity : null,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Caja registrada");
-    setOpen(false); setForm({ code: "", roomRack: "", usage: "engorda", capacity: "" });
+
+    if (editingBox) {
+      const { error } = await supabase.from("boxes").update({
+        code: form.code.trim(),
+        location: packLocation(form.roomRack.trim(), form.usage),
+        capacity: form.capacity ? +form.capacity : null,
+      }).eq("id", editingBox.id);
+      if (error) return toast.error(error.message);
+      toast.success("Caja actualizada");
+    } else {
+      const { error } = await supabase.from("boxes").insert({
+        owner_id: u.user.id, kind, code: form.code.trim(),
+        location: packLocation(form.roomRack.trim(), form.usage),
+        capacity: form.capacity ? +form.capacity : null,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Caja registrada");
+    }
+
+    setOpen(false);
+    setEditingBox(null);
+    setForm({ code: "", roomRack: "", usage: "engorda", capacity: "" });
     qc.invalidateQueries({ queryKey: ["boxes", kind] });
   };
 
@@ -643,10 +658,16 @@ export function BoxesView({ kind }: { kind: Kind }) {
         <>
           <Button variant="outline" size="sm" onClick={importCSV}><Upload className="h-4 w-4 mr-2" /> Importar</Button>
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-2" /> Exportar</Button>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) {
+              setEditingBox(null);
+              setForm({ code: "", roomRack: "", usage: "engorda", capacity: "" });
+            }
+          }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva caja</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Nueva caja</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingBox ? "Editar caja" : "Nueva caja"}</DialogTitle></DialogHeader>
               <div className="grid gap-3">
                 <div><Label>Código *</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="C-01" /></div>
                 <div><Label>Ubicación (Sala / Rack) *</Label><Input value={form.roomRack} onChange={(e) => setForm({ ...form, roomRack: e.target.value })} placeholder="Sala A / Rack 2" /></div>
@@ -661,7 +682,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 </div>
                 <div><Label>Capacidad</Label><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></div>
               </div>
-              <DialogFooter><Button onClick={submit}>Registrar</Button></DialogFooter>
+              <DialogFooter><Button onClick={submit}>{editingBox ? "Guardar cambios" : "Registrar"}</Button></DialogFooter>
             </DialogContent>
           </Dialog>
         </>
@@ -683,7 +704,20 @@ export function BoxesView({ kind }: { kind: Kind }) {
                   <div className="font-mono font-bold text-emerald-glow">{b.code}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{roomRack}</div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => remove(b.id)}><Trash2 className="h-3 w-3" /></Button>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    setEditingBox(b);
+                    const unpacked = unpackLocation(b.location);
+                    setForm({
+                      code: b.code,
+                      roomRack: unpacked.roomRack,
+                      usage: unpacked.usage || "engorda",
+                      capacity: b.capacity ? String(b.capacity) : "",
+                    });
+                    setOpen(true);
+                  }}><Edit2 className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => remove(b.id)}><Trash2 className="h-3 w-3" /></Button>
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {usage && <Badge variant="outline" className="text-[10px] capitalize">{usage}</Badge>}

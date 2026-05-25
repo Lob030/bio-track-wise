@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
 import { Route as StockRouteImport } from './routes/stock'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesRouteImport } from './routes/sales'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as LoginRouteImport } from './routes/login'
@@ -36,6 +37,11 @@ const WarehouseRoute = WarehouseRouteImport.update({
 const StockRoute = StockRouteImport.update({
   id: '/stock',
   path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalesRoute = SalesRouteImport.update({
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
+  '/settings': typeof SettingsRoute
   '/stock': typeof StockRoute
   '/warehouse': typeof WarehouseRoute
   '/insects/boxes': typeof InsectsBoxesRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
+  '/settings': typeof SettingsRoute
   '/stock': typeof StockRoute
   '/warehouse': typeof WarehouseRoute
   '/insects/boxes': typeof InsectsBoxesRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
+  '/settings': typeof SettingsRoute
   '/stock': typeof StockRoute
   '/warehouse': typeof WarehouseRoute
   '/insects/boxes': typeof InsectsBoxesRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reports'
     | '/sales'
+    | '/settings'
     | '/stock'
     | '/warehouse'
     | '/insects/boxes'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reports'
     | '/sales'
+    | '/settings'
     | '/stock'
     | '/warehouse'
     | '/insects/boxes'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reports'
     | '/sales'
+    | '/settings'
     | '/stock'
     | '/warehouse'
     | '/insects/boxes'
@@ -252,6 +264,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ReportsRoute: typeof ReportsRoute
   SalesRoute: typeof SalesRoute
+  SettingsRoute: typeof SettingsRoute
   StockRoute: typeof StockRoute
   WarehouseRoute: typeof WarehouseRoute
   InsectsBoxesRoute: typeof InsectsBoxesRoute
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/stock'
       fullPath: '/stock'
       preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sales': {
@@ -404,6 +424,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ReportsRoute: ReportsRoute,
   SalesRoute: SalesRoute,
+  SettingsRoute: SettingsRoute,
   StockRoute: StockRoute,
   WarehouseRoute: WarehouseRoute,
   InsectsBoxesRoute: InsectsBoxesRoute,
@@ -418,3 +439,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

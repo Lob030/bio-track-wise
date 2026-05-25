@@ -131,10 +131,10 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-border p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Suscripción">
-              <Link to="/billing">
+            <SidebarMenuButton asChild tooltip="Configuración">
+              <Link to="/settings">
                 <Settings className="h-4 w-4" />
-                <span>Suscripción</span>
+                <span>Configuración</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

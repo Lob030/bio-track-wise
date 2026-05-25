@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dna, Plus, Trash2, Download, Upload } from "lucide-react";
+import { Dna, Plus, Trash2, Download, Upload, Edit2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -28,6 +28,7 @@ function unpackMeta(raw: string | null) {
 export function GeneticLinesView({ kind }: { kind: Kind }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingLine, setEditingLine] = useState<any | null>(null);
   const [form, setForm] = useState({ name: "", species_id: "", date: new Date().toISOString().slice(0, 10), origin: "", notes: "" });
 
   const { data: species } = useQuery({
@@ -55,13 +56,25 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
     if (!form.name.trim() || !form.species_id) return toast.error("Nombre y especie son requeridos");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const { error } = await supabase.from("genetic_lines").insert({
-      owner_id: u.user.id, name: form.name.trim(), species_id: form.species_id,
-      notes: packMeta(form.date, form.origin, form.notes),
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Línea genética creada");
+
+    if (editingLine) {
+      const { error } = await supabase.from("genetic_lines").update({
+        name: form.name.trim(), species_id: form.species_id,
+        notes: packMeta(form.date, form.origin, form.notes),
+      }).eq("id", editingLine.id);
+      if (error) return toast.error(error.message);
+      toast.success("Línea genética actualizada");
+    } else {
+      const { error } = await supabase.from("genetic_lines").insert({
+        owner_id: u.user.id, name: form.name.trim(), species_id: form.species_id,
+        notes: packMeta(form.date, form.origin, form.notes),
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Línea genética creada");
+    }
+
     setOpen(false);
+    setEditingLine(null);
     setForm({ name: "", species_id: "", date: new Date().toISOString().slice(0, 10), origin: "", notes: "" });
     qc.invalidateQueries({ queryKey: ["lines", kind] });
   };
@@ -111,10 +124,16 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
         <>
           <Button variant="outline" size="sm" onClick={importCSV}><Upload className="h-4 w-4 mr-2" /> Importar</Button>
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-2" /> Exportar</Button>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) {
+              setEditingLine(null);
+              setForm({ name: "", species_id: "", date: new Date().toISOString().slice(0, 10), origin: "", notes: "" });
+            }
+          }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva línea</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Nueva línea genética</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingLine ? "Editar línea genética" : "Nueva línea genética"}</DialogTitle></DialogHeader>
               <div className="grid gap-3">
                 <div><Label>Nombre *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
                 <div><Label>Especie *</Label>
@@ -127,7 +146,7 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
                 <div><Label>Origen</Label><Input value={form.origin} onChange={(e) => setForm({ ...form, origin: e.target.value })} placeholder="Proveedor / colonia origen" /></div>
                 <div><Label>Notas</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
               </div>
-              <DialogFooter><Button onClick={submit}>Registrar</Button></DialogFooter>
+              <DialogFooter><Button onClick={submit}>{editingLine ? "Guardar cambios" : "Registrar"}</Button></DialogFooter>
             </DialogContent>
           </Dialog>
         </>
@@ -147,7 +166,20 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
                   <div className="font-semibold">{l.name}</div>
                   <Badge variant="outline" className="mt-1 text-[10px]">{sp?.name ?? "—"}</Badge>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => remove(l.id)}><Trash2 className="h-3 w-3" /></Button>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    setEditingLine(l);
+                    setForm({
+                      name: l.name,
+                      species_id: l.species_id,
+                      date: meta.date || new Date().toISOString().slice(0, 10),
+                      origin: meta.origin,
+                      notes: meta.notes,
+                    });
+                    setOpen(true);
+                  }}><Edit2 className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => remove(l.id)}><Trash2 className="h-3 w-3" /></Button>
+                </div>
               </div>
               <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t border-border">
                 {meta.date && <div>📅 {meta.date}</div>}
