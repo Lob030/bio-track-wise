@@ -28,6 +28,9 @@ interface Message {
   timestamp: Date;
 }
 
+const requiresConfirmation = (a: ParsedAction) =>
+  a.type === "create_box" || a.type === "create_lot";
+
 function AIAssistantPage() {
   const qc = useQueryClient();
   const parseFn = useServerFn(parseAiCommand);
@@ -37,7 +40,7 @@ function AIAssistantPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "¡Hola! Soy tu asistente de bioterio. Puedo ayudarte a:\n• Crear cajas nuevas\n• Registrar lotes de nacimiento o engorda\n• Actualizar datos de un lote\n• Consultar inventario\n\nDescríbeme qué necesitas en lenguaje natural.",
+        "¡Hola! Soy tu asistente de bioterio. Puedo ayudarte a:\n• Crear cajas nuevas\n• Registrar lotes de nacimiento o engorda\n• Consultar inventario\n\nDescríbeme qué necesitas en lenguaje natural.",
       timestamp: new Date(),
     },
   ]);
@@ -80,8 +83,8 @@ function AIAssistantPage() {
       ]);
 
       if (action.type === "query") {
-        await runQuery(action, msgId);
-      } else if (action.requiresConfirmation) {
+        await runQuery(action);
+      } else if (requiresConfirmation(action)) {
         setPending({ msgId, action });
       }
     } catch (e: any) {
@@ -91,14 +94,14 @@ function AIAssistantPage() {
     }
   };
 
-  const runQuery = async (action: ParsedAction, msgId: string) => {
+  const runQuery = async (action: Extract<ParsedAction, { type: "query" }>) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const kind = action.data?.queryKind;
+    const q = action.queryType;
     let result = "";
     try {
-      if (kind === "count_rodents" || kind === "count_insects") {
-        const k = kind === "count_rodents" ? "rodent" : "insect";
+      if (q === "active_rodents" || q === "active_insects") {
+        const k = q === "active_rodents" ? "rodent" : "insect";
         const { data } = await supabase
           .from("lots")
           .select("males,females,unsexed,mass_grams")
@@ -114,21 +117,19 @@ function AIAssistantPage() {
           k === "rodent"
             ? `📊 Tienes **${total}** roedores activos en ${data?.length ?? 0} lotes.`
             : `📊 Tienes **${mass.toFixed(1)} g** de biomasa de insectos en ${data?.length ?? 0} lotes.`;
-      } else if (kind === "count_boxes") {
+      } else if (q === "total_boxes") {
         const { count } = await supabase
           .from("boxes")
           .select("*", { count: "exact", head: true })
           .eq("owner_id", u.user.id);
         result = `📦 Tienes **${count ?? 0}** cajas registradas.`;
-      } else if (kind === "count_lots") {
+      } else if (q === "total_lots") {
         const { count } = await supabase
           .from("lots")
           .select("*", { count: "exact", head: true })
           .eq("owner_id", u.user.id)
           .eq("status", "active");
         result = `🧬 Tienes **${count ?? 0}** lotes activos.`;
-      } else {
-        result = "No pude determinar la consulta.";
       }
       addMessage({ role: "assistant", content: result });
     } catch (e: any) {
@@ -146,88 +147,77 @@ function AIAssistantPage() {
       const ownerId = u.user.id;
 
       if (action.type === "create_box") {
-        const codes = action.data?.boxCodes ?? [];
+        const codes = action.boxCodes;
         if (!codes.length) throw new Error("Sin códigos de caja");
+        const location = [
+          action.room ? `Cuarto ${action.room}` : null,
+          action.furniture ? `Mueble ${action.furniture}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
         const rows = codes.map((code) => ({
           owner_id: ownerId,
           code,
-          location: action.data?.location ?? null,
-          kind: (action.data?.kind ?? "rodent") as "rodent" | "insect",
-          capacity: action.data?.capacity ?? null,
+          location: location || null,
+          kind: (action.kind ?? "rodent") as "rodent" | "insect",
         }));
         const { error } = await supabase.from("boxes").insert(rows);
         if (error) throw error;
         qc.invalidateQueries({ queryKey: ["boxes"] });
         toast.success(`${codes.length} caja(s) creadas`);
       } else if (action.type === "create_lot") {
-        const d = action.data ?? {};
-        const k = (d.kind ?? "rodent") as "rodent" | "insect";
+        const k = action.kind;
 
-        // Resolve species
-        let speciesQuery = supabase
+        // Resolve species (best-effort fuzzy)
+        let spQuery = supabase
           .from("species")
           .select("id,name")
           .eq("owner_id", ownerId)
           .eq("kind", k);
-        if (d.speciesName) speciesQuery = speciesQuery.ilike("name", `%${d.speciesName}%`);
-        const { data: sp } = await speciesQuery.limit(1).maybeSingle();
-        if (!sp) throw new Error(`No se encontró especie ${k}${d.speciesName ? ` "${d.speciesName}"` : ""}`);
+        if (action.speciesName) spQuery = spQuery.ilike("name", `%${action.speciesName}%`);
+        const { data: sp } = await spQuery.limit(1).maybeSingle();
+        if (!sp) throw new Error(`No se encontró especie ${k}${action.speciesName ? ` "${action.speciesName}"` : ""}`);
 
         // Resolve box
-        let boxId: string | null = null;
-        if (d.boxCode) {
-          const { data: b } = await supabase
-            .from("boxes")
-            .select("id")
-            .eq("owner_id", ownerId)
-            .eq("code", d.boxCode)
-            .maybeSingle();
-          if (!b) throw new Error(`Caja "${d.boxCode}" no encontrada`);
-          boxId = b.id;
-        }
+        const { data: b } = await supabase
+          .from("boxes")
+          .select("id")
+          .eq("owner_id", ownerId)
+          .eq("code", action.boxCode)
+          .maybeSingle();
+        if (!b) throw new Error(`Caja "${action.boxCode}" no encontrada`);
 
         // Resolve line (optional)
         let lineId: string | null = null;
-        let lq = supabase
-          .from("genetic_lines")
-          .select("id")
-          .eq("owner_id", ownerId)
-          .eq("species_id", sp.id);
-        if (d.lineName) lq = lq.ilike("name", `%${d.lineName}%`);
-        const { data: ln } = await lq.limit(1).maybeSingle();
-        if (ln) lineId = ln.id;
+        if (action.lineName) {
+          const { data: ln } = await supabase
+            .from("genetic_lines")
+            .select("id")
+            .eq("owner_id", ownerId)
+            .eq("species_id", sp.id)
+            .ilike("name", `%${action.lineName}%`)
+            .limit(1)
+            .maybeSingle();
+          if (ln) lineId = ln.id;
+        }
 
         const { error } = await supabase.from("lots").insert({
           owner_id: ownerId,
           kind: k,
-          lot_type: (d.lotType ?? "engorda") as any,
+          lot_type: "birth" as any,
           species_id: sp.id,
           line_id: lineId,
-          box_id: boxId,
-          males: d.males ?? 0,
-          females: d.females ?? 0,
-          unsexed: d.unsexed ?? 0,
-          mass_grams: d.massGrams ?? 0,
-          notes: d.notes ?? null,
-          started_at: d.startedAt ?? new Date().toISOString().slice(0, 10),
+          box_id: b.id,
+          males: 0,
+          females: 0,
+          unsexed: k === "rodent" ? action.quantity : 0,
+          mass_grams: k === "insect" ? action.quantity : 0,
+          notes: action.notes ?? null,
+          started_at: action.startedAt,
         });
         if (error) throw error;
         qc.invalidateQueries({ queryKey: ["lots"] });
         toast.success("Lote creado");
-      } else if (action.type === "update_lot") {
-        const d = action.data ?? {};
-        if (!d.lotCode) throw new Error("Falta lot_code");
-        const { data: lot } = await supabase
-          .from("lots")
-          .select("id")
-          .eq("owner_id", ownerId)
-          .eq("lot_code", d.lotCode)
-          .maybeSingle();
-        if (!lot) throw new Error(`Lote "${d.lotCode}" no encontrado`);
-        const { error } = await supabase.from("lots").update(d.updates ?? {}).eq("id", lot.id);
-        if (error) throw error;
-        qc.invalidateQueries({ queryKey: ["lots"] });
-        toast.success("Lote actualizado");
       }
 
       setConfirmed((s) => new Set(s).add(msgId));
@@ -267,6 +257,12 @@ function AIAssistantPage() {
           const isPending = pending?.msgId === m.id;
           const wasConfirmed = confirmed.has(m.id);
           const wasCancelled = cancelled.has(m.id);
+          const showCard = m.action && requiresConfirmation(m.action);
+          const { action: _omit, ...rest } = m.action ?? ({} as any);
+          const payload = m.action ? (() => {
+            const { description: _d, type: _t, ...p } = m.action as any;
+            return p;
+          })() : null;
           return (
             <div key={m.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] ${isUser ? "" : "w-full"}`}>
@@ -277,7 +273,7 @@ function AIAssistantPage() {
                 ) : (
                   <div className="space-y-2">
                     <p className="text-sm whitespace-pre-wrap text-foreground">{m.content}</p>
-                    {m.action && m.action.requiresConfirmation && m.action.type !== "query" && (
+                    {showCard && m.action && (
                       <Card className="border-amber-700/40 bg-amber-500/5 p-4 space-y-3">
                         <div className="flex items-center gap-2 text-sm font-semibold">
                           <AlertTriangle className="h-4 w-4 text-amber-glow" />
@@ -287,7 +283,7 @@ function AIAssistantPage() {
                           </Badge>
                         </div>
                         <pre className="text-xs bg-background/60 border border-border rounded-md p-3 overflow-x-auto max-h-60">
-{JSON.stringify(m.action.data ?? {}, null, 2)}
+{JSON.stringify(payload, null, 2)}
                         </pre>
                         {isPending && (
                           <div className="flex gap-2 justify-end">
