@@ -26,6 +26,176 @@ interface SizeRuleInsect {
   individuals_per_gram?: number;
 }
 
+// ── Extracted card components so useRef is at the top level ──────────────────
+
+interface RodentCardProps {
+  species: any;
+  rows: any[];
+  totalIndividuals: number;
+  downloadingSpeciesId: string | null;
+  onDownload: (id: string, name: string, el: HTMLDivElement | null) => void;
+}
+
+function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpeciesId, onDownload }: RodentCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  return (
+    <Card
+      ref={cardRef}
+      key={species.id}
+      className="border-border bg-card/60 overflow-hidden"
+    >
+      <div className="px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground">
+          🐭 {species.name}{" "}
+          {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
+            <span className="text-xs text-emerald-400 font-normal ml-1 mr-1">
+              (${species.unit_price_mxn}/unidad)
+            </span>
+          )}{" "}
+          <span className="text-muted-foreground font-normal">
+            ({totalIndividuals.toLocaleString("es-MX")} individuos)
+          </span>
+        </h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-accent/30">
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Tamaño</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Días</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Peso (g)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Precio (MXN)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row: any, i: number) => (
+              <tr key={i} className="border-t border-border/50 hover:bg-accent/10 transition-colors">
+                <td className="px-4 py-2 text-foreground">{row.label}</td>
+                <td className="px-4 py-2 text-muted-foreground">
+                  {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
+                </td>
+                <td className="px-4 py-2 text-muted-foreground">{row.weight_g ?? "—"}</td>
+                <td className="px-4 py-2 text-emerald-400 font-medium">
+                  {row.price_mxn != null ? `$${row.price_mxn}/unidad` : "—"}
+                </td>
+                <td className="px-4 py-2 text-right font-medium text-foreground">
+                  {row.stock > 0 ? row.stock.toLocaleString("es-MX") : "--"}
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-4 text-center text-muted-foreground text-xs">
+                  Sin reglas de tamaño configuradas.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-4 py-3 border-t border-border flex justify-end">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onDownload(species.id, species.name, cardRef.current)}
+          disabled={downloadingSpeciesId === species.id}
+          className="text-xs"
+        >
+          <Download className="h-3 w-3 mr-2" />
+          {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+interface InsectCardProps {
+  species: any;
+  rows: any[];
+  totalGrams: number;
+  downloadingSpeciesId: string | null;
+  onDownload: (id: string, name: string, el: HTMLDivElement | null) => void;
+}
+
+function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, onDownload }: InsectCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  return (
+    <Card
+      ref={cardRef}
+      key={species.id}
+      className="border-border bg-card/60 overflow-hidden"
+    >
+      <div className="px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground">
+          🐛 {species.name}{" "}
+          {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
+            <span className="text-xs text-emerald-400 font-normal ml-1 mr-1">
+              (${species.unit_price_mxn}/gramo)
+            </span>
+          )}{" "}
+          <span className="text-muted-foreground font-normal">
+            ({totalGrams.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}g en total)
+          </span>
+        </h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-accent/30">
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Tamaño</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Días</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Cant. ind por 1g</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Precio (MXN)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">Stock (g)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row: any, i: number) => (
+              <tr key={i} className="border-t border-border/50 hover:bg-accent/10 transition-colors">
+                <td className="px-4 py-2 text-foreground">{row.label}</td>
+                <td className="px-4 py-2 text-muted-foreground">
+                  {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
+                </td>
+                <td className="px-4 py-2 text-muted-foreground">{row.individuals_per_gram ?? "—"}</td>
+                <td className="px-4 py-2 text-emerald-400 font-medium">
+                  {row.price_mxn != null ? `$${row.price_mxn}/gramo` : "—"}
+                </td>
+                <td className="px-4 py-2 text-right font-medium text-foreground">
+                  {row.stock > 0
+                    ? row.stock.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                    : "--"}
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-4 text-center text-muted-foreground text-xs">
+                  Sin reglas de tamaño configuradas.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-4 py-3 border-t border-border flex justify-end">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onDownload(species.id, species.name, cardRef.current)}
+          disabled={downloadingSpeciesId === species.id}
+          className="text-xs"
+        >
+          <Download className="h-3 w-3 mr-2" />
+          {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
+
 function StockPage() {
   const [activeKind, setActiveKind] = useState<KindType>("rodent");
   const [selectedSpeciesId, setSelectedSpeciesId] = useState<string | null>(null);
@@ -331,101 +501,16 @@ function StockPage() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {rodentStockData.map(({ species, rows, totalIndividuals }) => {
-                const cardRef = useRef<HTMLDivElement>(null);
-                return (
-                  <Card
-                    ref={cardRef}
-                    key={species.id}
-                    className="border-border bg-card/60 overflow-hidden"
-                  >
-                  <div className="px-4 py-3 border-b border-border">
-                    <h3 className="text-sm font-semibold text-foreground">
-                      🐭 {species.name}{" "}
-                      {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
-                        <span className="text-xs text-emerald-400 font-normal ml-1 mr-1">
-                          (${species.unit_price_mxn}/unidad)
-                        </span>
-                      )}{" "}
-                      <span className="text-muted-foreground font-normal">
-                        ({totalIndividuals.toLocaleString("es-MX")} individuos)
-                      </span>
-                    </h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-accent/30">
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Tamaño
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Días
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Peso (g)
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Precio (MXN)
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">
-                            Stock
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row: any, i: number) => (
-                          <tr
-                            key={i}
-                            className="border-t border-border/50 hover:bg-accent/10 transition-colors"
-                          >
-                            <td className="px-4 py-2 text-foreground">
-                              {row.label}
-                            </td>
-                            <td className="px-4 py-2 text-muted-foreground">
-                              {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
-                            </td>
-                            <td className="px-4 py-2 text-muted-foreground">
-                              {row.weight_g ?? "—"}
-                            </td>
-                            <td className="px-4 py-2 text-emerald-400 font-medium">
-                              {row.price_mxn != null ? `$${row.price_mxn}/unidad` : "—"}
-                            </td>
-                            <td className="px-4 py-2 text-right font-medium text-foreground">
-                              {row.stock > 0
-                                ? row.stock.toLocaleString("es-MX")
-                                : "--"}
-                            </td>
-                          </tr>
-                        ))}
-                        {rows.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={5}
-                              className="px-4 py-4 text-center text-muted-foreground text-xs"
-                            >
-                              Sin reglas de tamaño configuradas.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-4 py-3 border-t border-border flex justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => downloadSpeciesCard(species.id, species.name, cardRef.current)}
-                      disabled={downloadingSpeciesId === species.id}
-                      className="text-xs"
-                    >
-                      <Download className="h-3 w-3 mr-2" />
-                      {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
+              {rodentStockData.map(({ species, rows, totalIndividuals }) => (
+                <RodentSpeciesCard
+                  key={species.id}
+                  species={species}
+                  rows={rows}
+                  totalIndividuals={totalIndividuals}
+                  downloadingSpeciesId={downloadingSpeciesId}
+                  onDownload={downloadSpeciesCard}
+                />
+              ))}
             </div>
           )}
         </>
@@ -439,109 +524,16 @@ function StockPage() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {insectStockData.map(({ species, rows, totalGrams }) => {
-                const cardRef = useRef<HTMLDivElement>(null);
-                return (
-                  <Card
-                    ref={cardRef}
-                    key={species.id}
-                    className="border-border bg-card/60 overflow-hidden"
-                  >
-                  <div className="px-4 py-3 border-b border-border">
-                    <h3 className="text-sm font-semibold text-foreground">
-                      🐛 {species.name}{" "}
-                      {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
-                        <span className="text-xs text-emerald-400 font-normal ml-1 mr-1">
-                          (${species.unit_price_mxn}/gramo)
-                        </span>
-                      )}{" "}
-                      <span className="text-muted-foreground font-normal">
-                        (
-                        {totalGrams.toLocaleString("es-MX", {
-                          minimumFractionDigits: 1,
-                          maximumFractionDigits: 1,
-                        })}
-                        g en total)
-                      </span>
-                    </h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-accent/30">
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Tamaño
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Días
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Cant. ind por 1g
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">
-                            Precio (MXN)
-                          </th>
-                          <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">
-                            Stock (g)
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row: any, i: number) => (
-                          <tr
-                            key={i}
-                            className="border-t border-border/50 hover:bg-accent/10 transition-colors"
-                          >
-                            <td className="px-4 py-2 text-foreground">
-                              {row.label}
-                            </td>
-                            <td className="px-4 py-2 text-muted-foreground">
-                              {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
-                            </td>
-                            <td className="px-4 py-2 text-muted-foreground">
-                              {row.individuals_per_gram ?? "—"}
-                            </td>
-                            <td className="px-4 py-2 text-emerald-400 font-medium">
-                              {row.price_mxn != null ? `$${row.price_mxn}/gramo` : "—"}
-                            </td>
-                            <td className="px-4 py-2 text-right font-medium text-foreground">
-                              {row.stock > 0
-                                ? row.stock.toLocaleString("es-MX", {
-                                    minimumFractionDigits: 1,
-                                    maximumFractionDigits: 1,
-                                  })
-                                : "--"}
-                            </td>
-                          </tr>
-                        ))}
-                        {rows.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={5}
-                              className="px-4 py-4 text-center text-muted-foreground text-xs"
-                            >
-                              Sin reglas de tamaño configuradas.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-4 py-3 border-t border-border flex justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => downloadSpeciesCard(species.id, species.name, cardRef.current)}
-                      disabled={downloadingSpeciesId === species.id}
-                      className="text-xs"
-                    >
-                      <Download className="h-3 w-3 mr-2" />
-                      {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
+              {insectStockData.map(({ species, rows, totalGrams }) => (
+                <InsectSpeciesCard
+                  key={species.id}
+                  species={species}
+                  rows={rows}
+                  totalGrams={totalGrams}
+                  downloadingSpeciesId={downloadingSpeciesId}
+                  onDownload={downloadSpeciesCard}
+                />
+              ))}
             </div>
           )}
         </>
