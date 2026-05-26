@@ -393,9 +393,9 @@ function Page() {
           const t = (l.males ?? 0) + (l.females ?? 0) + (l.unsexed ?? 0);
           const childNames = childrenNamesMap[l.id];
           const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
-          const speciesName = speciesMap[l.species_id] ?? "";
-          const lineName = linesMap[l.line_id] ?? "—";
-          const boxCode = boxesMap[l.box_id] ?? "—";
+          const speciesName = l.species_id ? speciesMap[l.species_id] ?? "" : "";
+          const lineName = l.line_id ? linesMap[l.line_id] ?? "—" : "—";
+          const boxCode = l.box_id ? boxesMap[l.box_id] ?? "—" : "—";
           
           return (
             <Card key={l.id} className="p-4 border-border bg-card/60 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden transition-all hover:translate-y-[-2px] hover:border-primary/50 hover:shadow-lg">
