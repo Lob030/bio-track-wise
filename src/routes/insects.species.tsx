@@ -31,7 +31,7 @@ function Page() {
   const [rules, setRules] = useState<InsectRule[]>([{ label: "", min_days: 0, max_days: 0, individuals_per_gram: 0, price_mxn: 0 }]);
 
   const { data: species } = useQuery({
-    queryKey: ["species", "insect"],
+    queryKey: ["species"],
     queryFn: async () => {
       const { data, error } = await supabase.from("species").select("*").eq("kind", "insect").order("created_at");
       if (error) throw error;
@@ -47,13 +47,13 @@ function Page() {
     });
     if (error) return toast.error(error.message);
     toast.success(`Especie "${n}" creada`);
-    qc.invalidateQueries({ queryKey: ["species", "insect"] });
+    qc.invalidateQueries({ queryKey: ["species"] });
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("species").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["species", "insect"] });
+    qc.invalidateQueries({ queryKey: ["species"] });
   };
 
   const submit = async () => {
@@ -66,7 +66,7 @@ function Page() {
       }).eq("id", editingSpecies.id);
       if (error) return toast.error(error.message);
       toast.success("Especie actualizada");
-      qc.invalidateQueries({ queryKey: ["species", "insect"] });
+      qc.invalidateQueries({ queryKey: ["species"] });
     } else {
       await create(name.trim(), filteredRules);
     }
@@ -93,9 +93,9 @@ function Page() {
             }
           }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva especie</Button></DialogTrigger>
-            <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
+            <DialogContent className="max-w-4xl flex flex-col max-h-[90vh]">
               <DialogHeader><DialogTitle>{editingSpecies ? "Editar especie de insecto" : "Nueva especie de insecto"}</DialogTitle></DialogHeader>
-              <div className="flex flex-col gap-4 overflow-hidden min-h-0 flex-1">
+              <div className="flex flex-col gap-6 overflow-hidden min-h-0 flex-1">
                 <div className="shrink-0">
                   <Label>Nombre</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Grillos" className="w-full" />

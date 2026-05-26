@@ -42,9 +42,9 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
     <Card
       ref={cardRef}
       key={species.id}
-      className="border-border bg-card/60 overflow-hidden"
+      className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
     >
-      <div className="px-4 py-3 border-b border-border">
+      <div className="px-4 py-4 border-b border-border/50 bg-accent/5">
         <h3 className="text-sm font-semibold text-foreground">
           🐭 {species.name}{" "}
           {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
@@ -61,25 +61,25 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-accent/30">
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Tamaño</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Días</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Peso (g)</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Precio (MXN)</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">Stock</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Tamaño</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Días</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Peso (g)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Precio (MXN)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-3">Stock</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
-              <tr key={i} className="border-t border-border/50 hover:bg-accent/10 transition-colors">
-                <td className="px-4 py-2 text-foreground">{row.label}</td>
-                <td className="px-4 py-2 text-muted-foreground">
+              <tr key={i} className={`border-t border-border/50 hover:bg-accent/15 transition-colors ${i % 2 === 0 ? "bg-accent/5" : ""}`}>
+                <td className="px-4 py-3 text-foreground">{row.label}</td>
+                <td className="px-4 py-3 text-muted-foreground">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
-                <td className="px-4 py-2 text-muted-foreground">{row.weight_g ?? "—"}</td>
-                <td className="px-4 py-2 text-emerald-400 font-medium">
+                <td className="px-4 py-3 text-muted-foreground">{row.weight_g ?? "—"}</td>
+                <td className="px-4 py-3 text-emerald-400 font-medium">
                   {row.price_mxn != null ? `$${row.price_mxn}/unidad` : "—"}
                 </td>
-                <td className="px-4 py-2 text-right font-medium text-foreground">
+                <td className="px-4 py-3 text-right font-medium text-foreground">
                   {row.stock > 0 ? row.stock.toLocaleString("es-MX") : "--"}
                 </td>
               </tr>
@@ -94,7 +94,7 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-3 border-t border-border flex justify-end">
+      <div className="px-4 py-4 border-t border-border/50 bg-accent/5 flex justify-end">
         <Button
           size="sm"
           variant="outline"
@@ -124,9 +124,9 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
     <Card
       ref={cardRef}
       key={species.id}
-      className="border-border bg-card/60 overflow-hidden"
+      className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
     >
-      <div className="px-4 py-3 border-b border-border">
+      <div className="px-4 py-4 border-b border-border/50 bg-accent/5">
         <h3 className="text-sm font-semibold text-foreground">
           🐛 {species.name}{" "}
           {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
@@ -143,25 +143,25 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-accent/30">
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Tamaño</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Días</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Cant. ind por 1g</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-2">Precio (MXN)</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-2">Stock (g)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Tamaño</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Días</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Cant. ind por 1g</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Precio (MXN)</th>
+              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-3">Stock (g)</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
-              <tr key={i} className="border-t border-border/50 hover:bg-accent/10 transition-colors">
-                <td className="px-4 py-2 text-foreground">{row.label}</td>
-                <td className="px-4 py-2 text-muted-foreground">
+              <tr key={i} className={`border-t border-border/50 hover:bg-accent/15 transition-colors ${i % 2 === 0 ? "bg-accent/5" : ""}`}>
+                <td className="px-4 py-3 text-foreground">{row.label}</td>
+                <td className="px-4 py-3 text-muted-foreground">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
-                <td className="px-4 py-2 text-muted-foreground">{row.individuals_per_gram ?? "—"}</td>
-                <td className="px-4 py-2 text-emerald-400 font-medium">
+                <td className="px-4 py-3 text-muted-foreground">{row.individuals_per_gram ?? "—"}</td>
+                <td className="px-4 py-3 text-emerald-400 font-medium">
                   {row.price_mxn != null ? `$${row.price_mxn}/gramo` : "—"}
                 </td>
-                <td className="px-4 py-2 text-right font-medium text-foreground">
+                <td className="px-4 py-3 text-right font-medium text-foreground">
                   {row.stock > 0
                     ? row.stock.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
                     : "--"}
@@ -178,7 +178,7 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-3 border-t border-border flex justify-end">
+      <div className="px-4 py-4 border-t border-border/50 bg-accent/5 flex justify-end">
         <Button
           size="sm"
           variant="outline"
@@ -194,6 +194,92 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
   );
 }
 
+// ── Pure compute helpers (kept outside useMemo so hook count is stable) ─────
+
+function computeRodentStock(species: any, lotsForKind: any[], getLotAge: (lot: any) => number) {
+  const rules = (species.size_rules as any[] | null) ?? [];
+  const speciesLots = lotsForKind.filter((l: any) => l.species_id === species.id);
+
+  let totalIndividuals = 0;
+  let unmatchedIndividuals = 0;
+  const matchedLotIds = new Set<string>();
+
+  const rows = rules.map((rule: SizeRuleRodent) => {
+    const stock = speciesLots.reduce((sum: number, lot: any) => {
+      const age = getLotAge(lot);
+      if (age >= rule.min_days && age <= rule.max_days) {
+        matchedLotIds.add(lot.id);
+        return sum + (Number(lot.males) || 0) + (Number(lot.females) || 0) + (Number(lot.unsexed) || 0);
+      }
+      return sum;
+    }, 0);
+    totalIndividuals += stock;
+    return { ...rule, stock };
+  });
+
+  speciesLots.forEach((lot: any) => {
+    if (!matchedLotIds.has(lot.id)) {
+      unmatchedIndividuals += (Number(lot.males) || 0) + (Number(lot.females) || 0) + (Number(lot.unsexed) || 0);
+    }
+  });
+
+  if (unmatchedIndividuals > 0) {
+    rows.push({
+      label: "Fuera de rango / Rezagados",
+      min_days: 0,
+      max_days: 0,
+      weight_g: "—",
+      stock: unmatchedIndividuals,
+      isUnmatched: true,
+    } as any);
+    totalIndividuals += unmatchedIndividuals;
+  }
+
+  return { species, rows, totalIndividuals };
+}
+
+function computeInsectStock(species: any, lotsForKind: any[], getLotAge: (lot: any) => number) {
+  const rules = (species.size_rules as any[] | null) ?? [];
+  const speciesLots = lotsForKind.filter((l: any) => l.species_id === species.id);
+
+  let totalGrams = 0;
+  let unmatchedGrams = 0;
+  const matchedLotIds = new Set<string>();
+
+  const rows = rules.map((rule: SizeRuleInsect) => {
+    const stock = speciesLots.reduce((sum: number, lot: any) => {
+      const age = getLotAge(lot);
+      if (age >= rule.min_days && age <= rule.max_days) {
+        matchedLotIds.add(lot.id);
+        return sum + (Number(lot.mass_grams) || 0);
+      }
+      return sum;
+    }, 0);
+    totalGrams += stock;
+    return { ...rule, stock };
+  });
+
+  speciesLots.forEach((lot: any) => {
+    if (!matchedLotIds.has(lot.id)) {
+      unmatchedGrams += Number(lot.mass_grams) || 0;
+    }
+  });
+
+  if (unmatchedGrams > 0) {
+    rows.push({
+      label: "Fuera de rango / Rezagados",
+      min_days: 0,
+      max_days: 0,
+      individuals_per_gram: undefined,
+      stock: unmatchedGrams,
+      isUnmatched: true,
+    } as any);
+    totalGrams += unmatchedGrams;
+  }
+
+  return { species, rows, totalGrams };
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 function StockPage() {
@@ -202,7 +288,7 @@ function StockPage() {
 
   // ── Queries ──────────────────────────────────────────────────────────
   const { data: allSpecies, refetch: refetchSpecies } = useQuery({
-    queryKey: ["species", "stock"],
+    queryKey: ["species"],
     queryFn: async () =>
       (await supabase.from("species").select("*")).data ?? [],
   });
@@ -270,108 +356,16 @@ function StockPage() {
   };
 
   // ── Rodent stock computation ─────────────────────────────────────────
-  const rodentStockData = useMemo(() => {
-    if (activeKind !== "rodent") return [];
-    return filteredSpecies.map((species: any) => {
-      const rules = (species.size_rules as any[] | null) ?? [];
-      const speciesLots = lotsForKind.filter(
-        (l: any) => l.species_id === species.id,
-      );
-
-      let totalIndividuals = 0;
-      let unmatchedIndividuals = 0;
-      const matchedLotIds = new Set<string>();
-
-      const rows = rules.map((rule: SizeRuleRodent) => {
-        const stock = speciesLots.reduce((sum: number, lot: any) => {
-          const age = getLotAge(lot);
-          if (age >= rule.min_days && age <= rule.max_days) {
-            matchedLotIds.add(lot.id);
-            return (
-              sum +
-              (Number(lot.males) || 0) +
-              (Number(lot.females) || 0) +
-              (Number(lot.unsexed) || 0)
-            );
-          }
-          return sum;
-        }, 0);
-        totalIndividuals += stock;
-        return { ...rule, stock };
-      });
-
-      speciesLots.forEach((lot: any) => {
-        if (!matchedLotIds.has(lot.id)) {
-          unmatchedIndividuals +=
-            (Number(lot.males) || 0) +
-            (Number(lot.females) || 0) +
-            (Number(lot.unsexed) || 0);
-        }
-      });
-
-      if (unmatchedIndividuals > 0) {
-        rows.push({
-          label: "Fuera de rango / Rezagados",
-          min_days: 0,
-          max_days: 0,
-          weight_g: "—",
-          stock: unmatchedIndividuals,
-          isUnmatched: true,
-        } as any);
-        totalIndividuals += unmatchedIndividuals;
-      }
-
-      return { species, rows, totalIndividuals };
-    });
-  }, [filteredSpecies, lotsForKind, activeKind]);
+  const rodentStockData = useMemo(
+    () => (activeKind === "rodent" ? filteredSpecies.map((s: any) => computeRodentStock(s, lotsForKind, getLotAge)) : []),
+    [filteredSpecies, lotsForKind, activeKind],
+  );
 
   // ── Insect stock computation ─────────────────────────────────────────
-  const insectStockData = useMemo(() => {
-    if (activeKind !== "insect") return [];
-    return filteredSpecies.map((species: any) => {
-      const rules = (species.size_rules as any[] | null) ?? [];
-      const speciesLots = lotsForKind.filter(
-        (l: any) => l.species_id === species.id,
-      );
-
-      let totalGrams = 0;
-      let unmatchedGrams = 0;
-      const matchedLotIds = new Set<string>();
-
-      const rows = rules.map((rule: SizeRuleInsect) => {
-        const stock = speciesLots.reduce((sum: number, lot: any) => {
-          const age = getLotAge(lot);
-          if (age >= rule.min_days && age <= rule.max_days) {
-            matchedLotIds.add(lot.id);
-            return sum + (Number(lot.mass_grams) || 0);
-          }
-          return sum;
-        }, 0);
-        totalGrams += stock;
-        return { ...rule, stock };
-      });
-
-      speciesLots.forEach((lot: any) => {
-        if (!matchedLotIds.has(lot.id)) {
-          unmatchedGrams += Number(lot.mass_grams) || 0;
-        }
-      });
-
-      if (unmatchedGrams > 0) {
-        rows.push({
-          label: "Fuera de rango / Rezagados",
-          min_days: 0,
-          max_days: 0,
-          individuals_per_gram: undefined,
-          stock: unmatchedGrams,
-          isUnmatched: true,
-        } as any);
-        totalGrams += unmatchedGrams;
-      }
-
-      return { species, rows, totalGrams };
-    });
-  }, [filteredSpecies, lotsForKind, activeKind]);
+  const insectStockData = useMemo(
+    () => (activeKind === "insect" ? filteredSpecies.map((s: any) => computeInsectStock(s, lotsForKind, getLotAge)) : []),
+    [filteredSpecies, lotsForKind, activeKind],
+  );
 
   // ── Reset species filter when switching kind ─────────────────────────
   const handleKindSwitch = (kind: KindType) => {
