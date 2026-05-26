@@ -128,7 +128,6 @@ export type Database = {
           lot_id: string | null
           lot_type: Database["public"]["Enums"]["lot_type"] | null
           metric: string
-          name: string | null
           operator: string
           owner_id: string
           priority: Database["public"]["Enums"]["alert_priority"]
@@ -147,7 +146,6 @@ export type Database = {
           lot_id?: string | null
           lot_type?: Database["public"]["Enums"]["lot_type"] | null
           metric: string
-          name?: string | null
           operator: string
           owner_id: string
           priority?: Database["public"]["Enums"]["alert_priority"]
@@ -166,7 +164,6 @@ export type Database = {
           lot_id?: string | null
           lot_type?: Database["public"]["Enums"]["lot_type"] | null
           metric?: string
-          name?: string | null
           operator?: string
           owner_id?: string
           priority?: Database["public"]["Enums"]["alert_priority"]
@@ -577,7 +574,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          preferred_theme: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
           tier_renewed_at: string | null
         }
@@ -588,7 +584,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          preferred_theme?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           tier_renewed_at?: string | null
         }
@@ -599,7 +594,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          preferred_theme?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           tier_renewed_at?: string | null
         }
