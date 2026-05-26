@@ -93,9 +93,9 @@ function Page() {
             }
           }}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva especie</Button></DialogTrigger>
-            <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
+            <DialogContent className="max-w-4xl flex flex-col max-h-[90vh]">
               <DialogHeader><DialogTitle>{editingSpecies ? "Editar especie de roedor" : "Nueva especie de roedor"}</DialogTitle></DialogHeader>
-              <div className="flex flex-col gap-4 overflow-hidden min-h-0 flex-1">
+              <div className="flex flex-col gap-6 overflow-hidden min-h-0 flex-1">
                 <div className="shrink-0">
                   <Label>Nombre</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Ratón ICR" className="w-full" />
