@@ -31,7 +31,7 @@ function Page() {
   const [rules, setRules] = useState<InsectRule[]>([{ label: "", min_days: 0, max_days: 0, individuals_per_gram: 0, price_mxn: 0 }]);
 
   const { data: species } = useQuery({
-    queryKey: ["species", "insect"],
+    queryKey: ["species"],
     queryFn: async () => {
       const { data, error } = await supabase.from("species").select("*").eq("kind", "insect").order("created_at");
       if (error) throw error;
