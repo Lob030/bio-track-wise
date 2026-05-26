@@ -288,7 +288,7 @@ function StockPage() {
 
   // ── Queries ──────────────────────────────────────────────────────────
   const { data: allSpecies, refetch: refetchSpecies } = useQuery({
-    queryKey: ["species", "stock"],
+    queryKey: ["species"],
     queryFn: async () =>
       (await supabase.from("species").select("*")).data ?? [],
   });
