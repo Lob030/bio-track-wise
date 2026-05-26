@@ -186,7 +186,7 @@ function FoodTab() {
   return (
     <div className="space-y-4">
       {/* KPI */}
-      <Card className="border-border bg-card/60 p-4 flex items-center gap-3">
+      <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-4 flex items-center gap-3">
         <div className="rounded-md bg-emerald-500/20 p-2">
           <DollarSign className="h-5 w-5 text-emerald-400" />
         </div>
@@ -245,13 +245,13 @@ function FoodTab() {
 
       {/* List */}
       {!data || data.length === 0 ? (
-        <Card className="p-8 text-center border-dashed border-border bg-card/40 text-muted-foreground">
+        <Card className="p-8 text-center border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 text-muted-foreground shadow-sm">
           Sin alimentos registrados.
         </Card>
       ) : (
         <div className="grid gap-2">
           {data.map((r) => (
-            <Card key={r.id} className="border-border bg-card/60 p-3 flex items-center justify-between">
+            <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <p className="font-medium text-sm">{r.name}</p>
                 <div className="flex gap-3 text-xs text-muted-foreground">
@@ -438,13 +438,13 @@ function CleaningTab() {
       </div>
 
       {!data || data.length === 0 ? (
-        <Card className="p-8 text-center border-dashed border-border bg-card/40 text-muted-foreground">
+        <Card className="p-8 text-center border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 text-muted-foreground shadow-sm">
           Sin productos de limpieza registrados.
         </Card>
       ) : (
         <div className="grid gap-2">
           {data.map((r) => (
-            <Card key={r.id} className="border-border bg-card/60 p-3 flex items-center justify-between">
+            <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm">{r.name}</p>
@@ -599,13 +599,13 @@ function ToolsTab() {
       </div>
 
       {!data || data.length === 0 ? (
-        <Card className="p-8 text-center border-dashed border-border bg-card/40 text-muted-foreground">
+        <Card className="p-8 text-center border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 text-muted-foreground shadow-sm">
           Sin herramientas registradas.
         </Card>
       ) : (
         <div className="grid gap-2">
           {data.map((r) => (
-            <Card key={r.id} className="border-border bg-card/60 p-3 flex items-center justify-between">
+            <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm">{r.name}</p>
@@ -738,7 +738,7 @@ function PackagingTab() {
       </div>
 
       {!data || data.length === 0 ? (
-        <Card className="p-8 text-center border-dashed border-border bg-card/40 text-muted-foreground">
+        <Card className="p-8 text-center border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 text-muted-foreground shadow-sm">
           Sin insumos de entrega registrados.
         </Card>
       ) : (
@@ -746,7 +746,7 @@ function PackagingTab() {
           {data.map((r) => {
             const total = (Number(r.units) || 0) * (Number(r.unit_cost) || 0);
             return (
-              <Card key={r.id} className="border-border bg-card/60 p-3 flex items-center justify-between">
+              <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
                 <div className="space-y-0.5">
                   <p className="font-medium text-sm">{r.name}</p>
                   <div className="flex gap-3 text-xs text-muted-foreground">
@@ -936,7 +936,7 @@ function PurchasesTab() {
   return (
     <div className="space-y-4">
       {/* KPI */}
-      <Card className="border-border bg-card/60 p-4 flex items-center gap-3">
+      <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-4 flex items-center gap-3">
         <div className="rounded-md bg-emerald-500/20 p-2">
           <DollarSign className="h-5 w-5 text-emerald-400" />
         </div>
@@ -1084,55 +1084,57 @@ function PurchasesTab() {
 
       {/* Table list */}
       {!data || data.length === 0 ? (
-        <Card className="p-8 text-center border-dashed border-border bg-card/40 text-muted-foreground">
+        <Card className="p-8 text-center border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 text-muted-foreground shadow-sm">
           Sin adquisiciones registradas.
         </Card>
       ) : (
-        <Card className="border-border bg-card/60 overflow-hidden">
-          <Table>
-            <TableHeader className="bg-accent/30">
-              <TableRow>
-                <TableHead className="text-[10px] uppercase text-muted-foreground">Folio</TableHead>
-                <TableHead className="text-[10px] uppercase text-muted-foreground">Especie</TableHead>
-                <TableHead className="text-[10px] uppercase text-muted-foreground">Proveedor</TableHead>
-                <TableHead className="text-[10px] uppercase text-muted-foreground">Costo</TableHead>
-                <TableHead className="text-[10px] uppercase text-muted-foreground">Fecha</TableHead>
-                <TableHead className="text-[10px] uppercase text-muted-foreground w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="text-sm">{r.invoice_id || "—"}</TableCell>
-                  <TableCell className="text-sm">
-                    {(r as any).species?.name ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-sm">{r.provider || "—"}</TableCell>
-                  <TableCell className="text-sm">{fmtMXN(Number(r.total_cost) || 0)}</TableCell>
-                  <TableCell className="text-sm">{fmtDate(r.created_at)}</TableCell>
-                  <TableCell>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                          <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
+        <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-accent/20 border-b border-border/30">
+                <TableRow>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Folio</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Especie</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Proveedor</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Costo</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Fecha</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3 w-10" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {data.map((r, i) => (
+                  <TableRow key={r.id} className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}>
+                    <TableCell className="text-sm px-4 py-3 font-medium text-foreground">{r.invoice_id || "—"}</TableCell>
+                    <TableCell className="text-sm px-4 py-3 text-foreground">
+                      {(r as any).species?.name ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-sm px-4 py-3 text-muted-foreground">{r.provider || "—"}</TableCell>
+                    <TableCell className="text-sm px-4 py-3 font-semibold text-emerald-400">{fmtMXN(Number(r.total_cost) || 0)}</TableCell>
+                    <TableCell className="text-sm px-4 py-3 text-muted-foreground">{fmtDate(r.created_at)}</TableCell>
+                    <TableCell className="px-4 py-3">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-all">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
+                            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
       )}
     </div>

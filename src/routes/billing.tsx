@@ -48,21 +48,21 @@ function Billing() {
         {PLANS.map((p) => {
           const active = current === p.tier;
           return (
-            <Card key={p.tier} className={`p-5 border bg-card/60 ${p.accent} ${active ? "ring-2 ring-primary" : ""}`}>
+            <Card key={p.tier} className={`p-5 border bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 ${p.accent} ${active ? "ring-2 ring-primary" : ""}`}>
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-lg font-bold flex items-center gap-2">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
                   {p.tier === "diamond" && <Crown className="h-4 w-4 text-cyan-300" />}
                   {p.name}
                 </h3>
-                {active && <Badge className="bg-primary text-primary-foreground">Actual</Badge>}
+                {active && <Badge className="bg-primary text-primary-foreground font-semibold">Actual</Badge>}
               </div>
-              <div className="text-2xl font-bold mb-4">{p.price}</div>
+              <div className="text-2xl font-bold mb-4 text-foreground">{p.price}</div>
               <ul className="space-y-1.5 mb-5 text-sm">
                 {p.features.map((f) => (
-                  <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-emerald-glow mt-0.5 shrink-0" /> {f}</li>
+                  <li key={f} className="flex gap-2 text-muted-foreground"><Check className="h-4 w-4 text-emerald-glow mt-0.5 shrink-0" /> {f}</li>
                 ))}
               </ul>
-              <Button variant={active ? "outline" : "default"} className="w-full" disabled={active} onClick={() => setTier(p.tier)}>
+              <Button variant={active ? "outline" : "default"} className="w-full h-10 transition-all duration-200" disabled={active} onClick={() => setTier(p.tier)}>
                 {active ? "Plan actual" : "Cambiar a " + p.name}
               </Button>
             </Card>

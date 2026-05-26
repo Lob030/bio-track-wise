@@ -476,22 +476,22 @@ function ReportsPage() {
       >
         <div className="space-y-6">
           <div className="flex justify-end">
-            <div className="h-9 w-64 bg-slate-800/40 animate-pulse rounded-lg" />
+            <div className="h-9 w-64 bg-card/60 animate-pulse rounded-lg" />
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {[1, 2, 3].map((n) => (
-              <Card key={n} className="p-6 bg-slate-900/60 border-slate-800/60 space-y-3">
-                <div className="h-4 w-24 bg-slate-800/40 animate-pulse rounded" />
-                <div className="h-8 w-32 bg-slate-800/40 animate-pulse rounded" />
-                <div className="h-3 w-16 bg-slate-800/40 animate-pulse rounded" />
+              <Card key={n} className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-3 shadow-sm animate-pulse">
+                <div className="h-4 w-24 bg-card/60 rounded" />
+                <div className="h-8 w-32 bg-card/60 rounded" />
+                <div className="h-3 w-16 bg-card/60 rounded" />
               </Card>
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-4">
             {[1, 2].map((n) => (
-              <Card key={n} className="p-6 bg-slate-900/60 border-slate-800/60 h-80 space-y-4">
-                <div className="h-5 w-48 bg-slate-800/40 animate-pulse rounded" />
-                <div className="h-56 bg-slate-800/20 animate-pulse rounded-md" />
+              <Card key={n} className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 h-80 space-y-4 shadow-sm animate-pulse">
+                <div className="h-5 w-48 bg-card/60 rounded" />
+                <div className="h-56 bg-card/40 rounded-md" />
               </Card>
             ))}
           </div>
@@ -506,7 +506,7 @@ function ReportsPage() {
       subtitle="Inteligencia de negocio, control financiero y rendimiento biológico."
       icon={<BarChart3 className="h-6 w-6 text-emerald-glow" />}
       actions={
-        <div className="bg-slate-900/80 p-0.5 rounded-lg border border-slate-800 flex shadow-inner">
+        <div className="bg-card/80 p-0.5 rounded-lg border border-border/40 flex shadow-inner">
           {(["day", "week", "month", "year"] as const).map((t) => (
             <Button
               key={t}
@@ -528,9 +528,9 @@ function ReportsPage() {
       <div className="space-y-6">
         {/* ── CORE KPI ROW ── */}
         <div className="grid md:grid-cols-3 gap-4">
-          <Card className="p-6 bg-slate-950/40 border-slate-800/60 flex items-center justify-between hover:border-slate-700/60 transition-all duration-300 shadow-lg">
+          <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center justify-between hover:border-primary/40 transition-all duration-300 shadow-md hover:shadow-lg">
             <div className="space-y-1">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                 Ganancias Netas
               </span>
               <div className="text-2xl font-black text-emerald-glow tracking-tight">
@@ -545,9 +545,9 @@ function ReportsPage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-slate-950/40 border-slate-800/60 flex items-center justify-between hover:border-slate-700/60 transition-all duration-300 shadow-lg">
+          <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center justify-between hover:border-primary/40 transition-all duration-300 shadow-md hover:shadow-lg">
             <div className="space-y-1">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                 Volumen de Pedidos
               </span>
               <div className="text-2xl font-bold tracking-tight text-foreground">
@@ -562,9 +562,9 @@ function ReportsPage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-slate-950/40 border-slate-800/60 flex items-center justify-between hover:border-slate-700/60 transition-all duration-300 shadow-lg">
+          <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center justify-between hover:border-primary/40 transition-all duration-300 shadow-md hover:shadow-lg">
             <div className="space-y-1">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                 Nuevos Clientes
               </span>
               <div className="text-2xl font-bold tracking-tight text-foreground">
@@ -582,8 +582,8 @@ function ReportsPage() {
 
         {/* ── EMPTY STATE OR CHARTS GRID ── */}
         {isPeriodEmpty ? (
-          <Card className="p-12 text-center border-dashed border-2 border-slate-800 bg-slate-950/10 rounded-xl space-y-3 max-w-xl mx-auto my-6">
-            <div className="h-12 w-12 bg-slate-900/60 border border-slate-800 rounded-full flex items-center justify-center mx-auto text-muted-foreground">
+          <Card className="p-12 text-center border-dashed border-2 border-border/40 bg-gradient-to-br from-card to-card/40 rounded-xl space-y-3 max-w-xl mx-auto my-6 shadow-sm">
+            <div className="h-12 w-12 bg-accent/20 border border-border/40 rounded-full flex items-center justify-center mx-auto text-muted-foreground">
               <Calendar className="h-6 w-6" />
             </div>
             <h3 className="font-semibold text-foreground text-sm">No hay datos analíticos para este período</h3>
@@ -594,8 +594,8 @@ function ReportsPage() {
         ) : (
           <div className="grid lg:grid-cols-2 gap-4">
             {/* WIDGET 1: DISTRIBUTION OF SALES BY PROFILE */}
-            <Card className="p-5 bg-slate-950/40 border-slate-800/60 space-y-4 shadow-lg hover:border-slate-800 transition-all duration-200">
-              <div className="flex items-center gap-2 border-b border-slate-800/40 pb-3">
+            <Card className="p-5 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-4 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center gap-2 border-b border-border/40 pb-3">
                 <PieChartIcon className="h-4 w-4 text-emerald-glow" />
                 <h3 className="font-semibold text-sm text-foreground">Ventas por Perfil de Cliente</h3>
               </div>
@@ -605,7 +605,7 @@ function ReportsPage() {
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
+                       <Pie
                         data={clientProfileChartData}
                         cx="50%"
                         cy="50%"
@@ -620,10 +620,10 @@ function ReportsPage() {
                       </Pie>
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "rgba(15, 23, 42, 0.9)",
-                          border: "1px solid rgba(30, 41, 59, 0.6)",
+                          backgroundColor: "var(--color-surface, rgba(15, 23, 42, 0.9))",
+                          border: "1px solid border-border/40",
                           borderRadius: "8px",
-                          color: "#e2e8f0",
+                          color: "var(--color-text, #e2e8f0)",
                           fontSize: "11px",
                           backdropFilter: "blur(4px)",
                         }}
@@ -643,28 +643,28 @@ function ReportsPage() {
             </Card>
 
             {/* WIDGET 2: FEED COST VS SALES VALUE */}
-            <Card className="p-5 bg-slate-950/40 border-slate-800/60 space-y-4 shadow-lg hover:border-slate-800 transition-all duration-200">
-              <div className="flex items-center justify-between border-b border-slate-800/40 pb-3">
+            <Card className="p-5 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-4 shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between border-b border-border/40 pb-3">
                 <div className="flex items-center gap-2">
                   <Utensils className="h-4 w-4 text-emerald-glow" />
                   <h3 className="font-semibold text-sm text-foreground">Costo de Alimento vs Ventas</h3>
                 </div>
-                <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase tracking-widest border-slate-800">
+                <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase tracking-widest border-border/40">
                   {timeframe === "day" ? "24 Horas" : timeframe === "week" ? "Semanal" : timeframe === "month" ? "Mensual" : "Anual"}
                 </Badge>
               </div>
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={feedCostChartData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.5} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #1e293b)" opacity={0.25} />
                     <XAxis dataKey="label" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
                     <YAxis stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "rgba(15, 23, 42, 0.9)",
-                        border: "1px solid rgba(30, 41, 59, 0.6)",
+                        backgroundColor: "var(--color-surface, rgba(15, 23, 42, 0.9))",
+                        border: "1px solid border-border/40",
                         borderRadius: "8px",
-                        color: "#e2e8f0",
+                        color: "var(--color-text, #e2e8f0)",
                         fontSize: "11px",
                         backdropFilter: "blur(4px)",
                       }}
@@ -683,8 +683,8 @@ function ReportsPage() {
         {/* ── BIOLOGICAL BREEDER PERFORMANCE SECTION ── */}
         <div className="grid lg:grid-cols-2 gap-4">
           {/* WIDGET 3: RODENT BREEDER BOX PERFORMANCE */}
-          <Card className="bg-slate-950/40 border-slate-800/60 overflow-hidden shadow-lg">
-            <div className="p-4 border-b border-slate-800/60 bg-accent/20 flex items-center justify-between">
+          <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="p-4 border-b border-border/40 bg-accent/15 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-glow" />
                 <h3 className="font-semibold text-sm text-foreground">Rendimiento de Cajas (Roedores)</h3>
@@ -695,14 +695,14 @@ function ReportsPage() {
             </div>
             <div className="overflow-x-auto max-h-[300px] overflow-y-auto custom-scrollbar">
               <table className="w-full text-xs">
-                <thead className="bg-slate-950 text-[10px] uppercase text-muted-foreground sticky top-0 border-b border-slate-800">
+                <thead className="bg-accent/25 text-[11px] uppercase text-muted-foreground font-semibold sticky top-0 border-b border-border/40">
                   <tr>
                     <th className="text-left p-3">Caja Reproductora</th>
                     <th className="text-left p-3">Ubicación</th>
                     <th className="text-right p-3">Total Crías Producidas</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40">
+                <tbody className="divide-y divide-border/30">
                   {rodentBreederPerformance.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="p-8 text-center text-muted-foreground">
@@ -711,13 +711,13 @@ function ReportsPage() {
                     </tr>
                   ) : (
                     rodentBreederPerformance.map((box, idx) => (
-                      <tr key={idx} className="hover:bg-slate-900/40 transition-colors">
+                      <tr key={idx} className={`hover:bg-accent/15 transition-colors ${idx % 2 === 0 ? "bg-accent/5" : ""}`}>
                         <td className="p-3 font-mono font-bold text-emerald-glow flex items-center gap-1.5">
                           <span className="w-4 text-[9px] text-muted-foreground">#{idx + 1}</span>
                           {box.boxCode}
                         </td>
-                        <td className="p-3 text-muted-foreground">{box.location}</td>
-                        <td className="p-3 text-right font-black text-foreground">
+                        <td className="p-3 text-muted-foreground font-medium">{box.location}</td>
+                        <td className="p-3 text-right font-bold text-foreground">
                           {box.totalOffspring} <span className="text-[10px] font-normal text-muted-foreground">ind.</span>
                         </td>
                       </tr>
@@ -729,8 +729,8 @@ function ReportsPage() {
           </Card>
 
           {/* WIDGET 4: INSECT COLONY PROLIFERATION INDICATOR */}
-          <Card className="bg-slate-950/40 border-slate-800/60 overflow-hidden shadow-lg">
-            <div className="p-4 border-b border-slate-800/60 bg-accent/20 flex items-center justify-between">
+          <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="p-4 border-b border-border/40 bg-accent/15 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Layers className="h-4 w-4 text-emerald-glow" />
                 <h3 className="font-semibold text-sm text-foreground">Desempeño de Lotes Insectos</h3>
@@ -741,14 +741,14 @@ function ReportsPage() {
             </div>
             <div className="overflow-x-auto max-h-[300px] overflow-y-auto custom-scrollbar">
               <table className="w-full text-xs">
-                <thead className="bg-slate-950 text-[10px] uppercase text-muted-foreground sticky top-0 border-b border-slate-800">
+                <thead className="bg-accent/25 text-[11px] uppercase text-muted-foreground font-semibold sticky top-0 border-b border-border/40">
                   <tr>
                     <th className="text-left p-3">Lote Reproductor Origen</th>
                     <th className="text-left p-3">Especie</th>
                     <th className="text-right p-3">Sub-lotes de Engorda Generados</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40">
+                <tbody className="divide-y divide-border/30">
                   {insectBreederPerformance.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="p-8 text-center text-muted-foreground">
@@ -757,13 +757,13 @@ function ReportsPage() {
                     </tr>
                   ) : (
                     insectBreederPerformance.map((parent, idx) => (
-                      <tr key={idx} className="hover:bg-slate-900/40 transition-colors">
+                      <tr key={idx} className={`hover:bg-accent/15 transition-colors ${idx % 2 === 0 ? "bg-accent/5" : ""}`}>
                         <td className="p-3 font-mono font-bold text-amber-glow flex items-center gap-1.5">
                           <span className="w-4 text-[9px] text-muted-foreground">#{idx + 1}</span>
                           {parent.parentCode}
                         </td>
-                        <td className="p-3 text-muted-foreground">{parent.speciesName}</td>
-                        <td className="p-3 text-right font-black text-foreground flex items-center justify-end gap-1.5">
+                        <td className="p-3 text-muted-foreground font-medium">{parent.speciesName}</td>
+                        <td className="p-3 text-right font-bold text-foreground flex items-center justify-end gap-1.5">
                           {parent.count}
                           <ChevronRight className="h-3 w-3 text-muted-foreground opacity-55" />
                         </td>

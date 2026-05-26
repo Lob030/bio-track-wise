@@ -177,10 +177,16 @@ function Page() {
       icon={<Bell className="h-6 w-6" />}
       actions={
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva Regla de Alerta</Button></DialogTrigger>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader><DialogTitle>Construye tu regla</DialogTitle></DialogHeader>
-            <div className="grid lg:grid-cols-[1fr_320px] gap-4">
+          <DialogTrigger asChild>
+            <Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200">
+              <Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nueva Regla de Alerta
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Construye tu regla</DialogTitle>
+            </DialogHeader>
+            <div className="grid lg:grid-cols-[1fr_320px] gap-6">
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="alertName">Nombre de la alerta</Label>
@@ -191,8 +197,8 @@ function Page() {
                     onChange={(e) => setAlertName(e.target.value)} 
                   />
                 </div>
-                <Card className="p-4 border-border bg-card/40">
-                  <p className="text-xs uppercase text-muted-foreground mb-3">Completa la oración</p>
+                <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
+                  <p className="text-xs uppercase text-muted-foreground mb-3 font-semibold tracking-wider">Completa la oración</p>
                   <div className="flex flex-wrap items-center gap-2 text-sm leading-loose">
                     <Pill>SI la categoría es</Pill>
                     <PillSelect value={form.animal_kind} onChange={(v) => handleAnimalKindChange(v as any)}
@@ -249,7 +255,10 @@ function Page() {
                 <AlertPreview priority={form.priority} text={template} frequency={form.frequency === "once" ? "Una sola vez" : `Cada ${form.frequency_days} días`} />
               </div>
             </div>
-            <DialogFooter><Button onClick={submit}>Crear regla</Button></DialogFooter>
+            <DialogFooter className="border-t border-border/20 pt-4 flex gap-2">
+              <Button variant="outline" className="h-10 transition-all duration-200" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button className="h-10 transition-all duration-200" onClick={submit}>Crear regla</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       }
@@ -258,19 +267,25 @@ function Page() {
         <div>
           <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Reglas configuradas</h2>
           <div className="space-y-2">
-            {(rules ?? []).length === 0 && <Card className="p-8 text-center text-muted-foreground border-dashed">Aún no hay reglas.</Card>}
+            {(rules ?? []).length === 0 && (
+              <Card className="p-8 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
+                Aún no hay reglas.
+              </Card>
+            )}
             {(rules ?? []).map((r) => (
-              <Card key={r.id} className="p-3 border-border bg-card/60 flex items-center gap-3">
+              <Card key={r.id} className="p-3 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-200">
                 <AlertDot priority={r.priority as any} />
                 <div className="flex-1">
-                  <div className="text-sm font-semibold">{r.name || r.template_text}</div>
+                  <div className="text-sm font-semibold text-foreground">{r.name || r.template_text}</div>
                   {r.name && <div className="text-xs text-muted-foreground mt-0.5">{r.template_text}</div>}
-                  <div className="text-[10px] text-muted-foreground mt-1">
+                  <div className="text-[10px] text-muted-foreground mt-1 font-medium">
                     {r.frequency_days > 0 ? `Recurrente cada ${r.frequency_days} días` : "Una sola vez"} · prioridad {r.priority}
                   </div>
                 </div>
                 <Switch checked={r.enabled} onCheckedChange={(v) => toggleEnabled(r.id, v)} />
-                <Button size="icon" variant="ghost" onClick={() => deleteRule(r.id)}><Trash2 className="h-3 w-3" /></Button>
+                <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive transition-all duration-200" onClick={() => deleteRule(r.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </Card>
             ))}
           </div>
@@ -278,17 +293,25 @@ function Page() {
         <div>
           <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Alertas activas</h2>
           <div className="space-y-2">
-            {(alerts ?? []).length === 0 && <Card className="p-8 text-center text-muted-foreground border-dashed">Sin alertas recientes.</Card>}
+            {(alerts ?? []).length === 0 && (
+              <Card className="p-8 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
+                Sin alertas recientes.
+              </Card>
+            )}
             {(alerts ?? []).map((a) => (
-              <Card key={a.id} className="p-3 border-border bg-card/60 flex items-center gap-3">
+              <Card key={a.id} className="p-3 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-200">
                 <AlertDot priority={a.priority as any} />
                 <div className="flex-1">
-                  <div className="text-sm">{a.message}</div>
+                  <div className="text-sm text-foreground font-medium">{a.message}</div>
                   <div className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleString("es-MX")}</div>
                 </div>
-                {a.acknowledged
-                  ? <Badge variant="outline" className="text-[10px]">✓ vista</Badge>
-                  : <Button size="sm" variant="ghost" onClick={() => ack(a.id)}><Check className="h-3 w-3 mr-1" />Marcar</Button>}
+                {a.acknowledged ? (
+                  <Badge variant="outline" className="text-[10px] border-border/40 bg-accent/15">✓ vista</Badge>
+                ) : (
+                  <Button size="sm" variant="ghost" className="h-9 min-h-9 transition-all duration-200" onClick={() => ack(a.id)}>
+                    <Check className="h-4 w-4 mr-1 text-emerald-400" />Marcar
+                  </Button>
+                )}
               </Card>
             ))}
           </div>
@@ -322,7 +345,7 @@ function AlertPreview({ priority, text, frequency }: { priority: "high" | "mediu
   const ring = priority === "high" ? "border-destructive/50 bg-destructive/10" : "border-warning/50 bg-warning/10";
   const dotCol = priority === "high" ? "bg-destructive" : "bg-warning";
   return (
-    <Card className={`p-4 border-2 ${ring}`}>
+    <Card className={`p-4 border-2 shadow-sm transition-all duration-200 ${ring}`}>
       <div className="flex items-start gap-3">
         <div className="relative mt-1">
           <span className={`absolute inset-0 ${dotCol} rounded-full animate-ping opacity-40`} />

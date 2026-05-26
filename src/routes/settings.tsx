@@ -18,8 +18,8 @@ function SettingsPage() {
     >
       <div className="space-y-6 max-w-4xl">
         {/* Theme Settings Section */}
-        <Card className="p-6 border-border bg-card/60">
-          <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
+        <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200">
+          <h2 className="text-lg font-semibold mb-1 flex items-center gap-2 text-foreground">
             🎨 Personalización Visual
           </h2>
           <p className="text-xs text-muted-foreground mb-4">
@@ -29,16 +29,16 @@ function SettingsPage() {
         </Card>
 
         {/* Account & Billing quick link Section */}
-        <Card className="p-6 border-border bg-card/60">
-          <h2 className="text-lg font-semibold mb-1 flex items-center gap-2">
+        <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200">
+          <h2 className="text-lg font-semibold mb-1 flex items-center gap-2 text-foreground">
             💳 Suscripción y Cuenta
           </h2>
           <p className="text-xs text-muted-foreground mb-4">
             Consulta y cambia tu plan actual de BioTrack (Bronze, Silver, Gold, Diamond).
           </p>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="h-10 sm:h-9 min-h-10 sm:min-h-9 transition-all duration-200">
             <Link to="/billing" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
+              <CreditCard className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
               Ver Planes de Suscripción
             </Link>
           </Button>

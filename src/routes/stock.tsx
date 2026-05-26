@@ -44,49 +44,53 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
       key={species.id}
       className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
     >
-      <div className="px-4 py-4 border-b border-border/50 bg-accent/5">
-        <h3 className="text-sm font-semibold text-foreground">
-          🐭 {species.name}{" "}
+      <div className="px-4 py-3.5 border-b border-border/40">
+        <h3 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-1.5">
+          <span>🐭</span>
+          <span className="font-semibold">{species.name}</span>
           {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
-            <span className="text-xs text-emerald-400 font-normal ml-1 mr-1">
+            <span className="text-xs text-emerald-400 font-medium ml-1">
               (${species.unit_price_mxn}/unidad)
             </span>
           )}{" "}
-          <span className="text-muted-foreground font-normal">
-            ({totalIndividuals.toLocaleString("es-MX")} individuos)
+          <span className="text-xs text-muted-foreground font-normal ml-auto">
+            ({totalIndividuals.toLocaleString("es-MX")} ind.)
           </span>
         </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-accent/30">
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Tamaño</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Días</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Peso (g)</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Precio (MXN)</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-3">Stock</th>
+            <tr className="bg-accent/20 border-b border-border/30">
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Tamaño</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Días</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Peso (g)</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Precio (MXN)</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-right px-4 py-3">Stock</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
-              <tr key={i} className={`border-t border-border/50 hover:bg-accent/15 transition-colors ${i % 2 === 0 ? "bg-accent/5" : ""}`}>
-                <td className="px-4 py-3 text-foreground">{row.label}</td>
+              <tr 
+                key={i} 
+                className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+              >
+                <td className="px-4 py-3 text-foreground font-medium">{row.label}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{row.weight_g ?? "—"}</td>
-                <td className="px-4 py-3 text-emerald-400 font-medium">
+                <td className="px-4 py-3 text-emerald-400 font-semibold">
                   {row.price_mxn != null ? `$${row.price_mxn}/unidad` : "—"}
                 </td>
-                <td className="px-4 py-3 text-right font-medium text-foreground">
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
                   {row.stock > 0 ? row.stock.toLocaleString("es-MX") : "--"}
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-4 text-center text-muted-foreground text-xs">
+                <td colSpan={5} className="px-4 py-5 text-center text-muted-foreground text-xs">
                   Sin reglas de tamaño configuradas.
                 </td>
               </tr>
@@ -94,15 +98,15 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-4 border-t border-border/50 bg-accent/5 flex justify-end">
+      <div className="px-4 py-3.5 border-t border-border/40 flex justify-end">
         <Button
           size="sm"
           variant="outline"
           onClick={() => onDownload(species.id, species.name, cardRef.current)}
           disabled={downloadingSpeciesId === species.id}
-          className="text-xs"
+          className="text-xs h-9 min-h-9 px-3 transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
         >
-          <Download className="h-3 w-3 mr-2" />
+          <Download className="h-4 w-4 mr-2" />
           {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
         </Button>
       </div>
@@ -126,42 +130,46 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
       key={species.id}
       className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
     >
-      <div className="px-4 py-4 border-b border-border/50 bg-accent/5">
-        <h3 className="text-sm font-semibold text-foreground">
-          🐛 {species.name}{" "}
+      <div className="px-4 py-3.5 border-b border-border/40">
+        <h3 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-1.5">
+          <span>🐛</span>
+          <span className="font-semibold">{species.name}</span>
           {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
-            <span className="text-xs text-emerald-400 font-normal ml-1 mr-1">
+            <span className="text-xs text-emerald-400 font-medium ml-1">
               (${species.unit_price_mxn}/gramo)
             </span>
           )}{" "}
-          <span className="text-muted-foreground font-normal">
-            ({totalGrams.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}g en total)
+          <span className="text-xs text-muted-foreground font-normal ml-auto">
+            ({totalGrams.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}g total)
           </span>
         </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-accent/30">
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Tamaño</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Días</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Cant. ind por 1g</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-left px-4 py-3">Precio (MXN)</th>
-              <th className="text-[10px] uppercase text-muted-foreground font-medium text-right px-4 py-3">Stock (g)</th>
+            <tr className="bg-accent/20 border-b border-border/30">
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Tamaño</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Días</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Cant. ind por 1g</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Precio (MXN)</th>
+              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-right px-4 py-3">Stock (g)</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
-              <tr key={i} className={`border-t border-border/50 hover:bg-accent/15 transition-colors ${i % 2 === 0 ? "bg-accent/5" : ""}`}>
-                <td className="px-4 py-3 text-foreground">{row.label}</td>
+              <tr 
+                key={i} 
+                className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+              >
+                <td className="px-4 py-3 text-foreground font-medium">{row.label}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{row.individuals_per_gram ?? "—"}</td>
-                <td className="px-4 py-3 text-emerald-400 font-medium">
+                <td className="px-4 py-3 text-emerald-400 font-semibold">
                   {row.price_mxn != null ? `$${row.price_mxn}/gramo` : "—"}
                 </td>
-                <td className="px-4 py-3 text-right font-medium text-foreground">
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
                   {row.stock > 0
                     ? row.stock.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
                     : "--"}
@@ -170,7 +178,7 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-4 text-center text-muted-foreground text-xs">
+                <td colSpan={5} className="px-4 py-5 text-center text-muted-foreground text-xs">
                   Sin reglas de tamaño configuradas.
                 </td>
               </tr>
@@ -178,15 +186,15 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-4 border-t border-border/50 bg-accent/5 flex justify-end">
+      <div className="px-4 py-3.5 border-t border-border/40 flex justify-end">
         <Button
           size="sm"
           variant="outline"
           onClick={() => onDownload(species.id, species.name, cardRef.current)}
           disabled={downloadingSpeciesId === species.id}
-          className="text-xs"
+          className="text-xs h-9 min-h-9 px-3 transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
         >
-          <Download className="h-3 w-3 mr-2" />
+          <Download className="h-4 w-4 mr-2" />
           {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
         </Button>
       </div>
@@ -488,7 +496,7 @@ function StockPage() {
       {activeKind === "rodent" ? (
         <>
           {filteredSpecies.length === 0 ? (
-            <Card className="border-dashed border-border bg-card/60 p-8 text-center">
+            <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center shadow-sm">
               <p className="text-muted-foreground">
                 No hay especies de roedores registradas.
               </p>
@@ -511,7 +519,7 @@ function StockPage() {
       ) : (
         <>
           {filteredSpecies.length === 0 ? (
-            <Card className="border-dashed border-border bg-card/60 p-8 text-center">
+            <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center shadow-sm">
               <p className="text-muted-foreground">
                 No hay especies de insectos registradas.
               </p>

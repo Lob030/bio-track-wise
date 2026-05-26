@@ -305,15 +305,21 @@ function Page() {
       icon={<Bug className="h-6 w-6" />}
       actions={
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
-          <DialogContent className="max-w-xl">
-            <DialogHeader><DialogTitle>Nuevo lote de insectos</DialogTitle></DialogHeader>
-            <div className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Código de lote</Label><Input value={form.lot_code} onChange={(e) => setForm({ ...form, lot_code: e.target.value })} placeholder="I-01" /></div>
-                <div><Label>Tipo *</Label>
+          <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
+          <DialogContent className="max-w-3xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo lote de insectos</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Código de lote</Label>
+                  <Input className="h-10 focus-visible:ring-2 focus-visible:ring-primary" value={form.lot_code} onChange={(e) => setForm({ ...form, lot_code: e.target.value })} placeholder="Ej. I-01" />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Tipo *</Label>
                   <Select value={form.lot_type} onValueChange={(v) => setForm({ ...form, lot_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="breeder">Reproductor</SelectItem>
                       <SelectItem value="engorda">Engorda</SelectItem>
@@ -322,52 +328,64 @@ function Page() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div><Label>Especie</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Especie</Label>
                   <Select value={form.species_id} onValueChange={(v) => setForm({ ...form, species_id: v, line_id: "" })}>
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectTrigger className="h-10"><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>{(species ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>Línea</Label>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Línea genética</Label>
                   <Select value={form.line_id} onValueChange={(v) => setForm({ ...form, line_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectTrigger className="h-10"><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>{linesForSp.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>Caja</Label>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Caja</Label>
                   <Select value={form.box_id} onValueChange={(v) => setForm({ ...form, box_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectTrigger className="h-10"><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>{(boxes ?? []).map((b) => <SelectItem key={b.id} value={b.id}>{b.code}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Peso en gramos del lote *</Label>
-                  <Input type="number" step="0.1" value={form.mass_grams} onChange={(e) => setForm({ ...form, mass_grams: e.target.value })} placeholder="Ej. 250" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Peso en gramos del lote *</Label>
+                  <Input type="number" step="0.1" className="h-10 focus-visible:ring-2 focus-visible:ring-primary" value={form.mass_grams} onChange={(e) => setForm({ ...form, mass_grams: e.target.value })} placeholder="Ej. 250" />
                 </div>
-                <div><Label>Edad actual en días</Label>
-                  <Input type="number" min={0} value={form.age_days} onChange={(e) => setForm({ ...form, age_days: +e.target.value })} />
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Si nació hace días, ingresa los días transcurridos.</p>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Edad actual en días</Label>
+                  <Input type="number" min={0} className="h-10 focus-visible:ring-2 focus-visible:ring-primary" value={form.age_days} onChange={(e) => setForm({ ...form, age_days: +e.target.value })} />
+                  <p className="text-[11px] text-muted-foreground mt-1">Si nació hace días, ingresa los días transcurridos.</p>
                 </div>
               </div>
-              <div><Label>Lote padre (subdivisión)</Label>
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Lote padre (subdivisión)</Label>
                 <Select value={form.parent_lot_id} onValueChange={(v) => setForm({ ...form, parent_lot_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectTrigger className="h-10"><SelectValue placeholder="—" /></SelectTrigger>
                   <SelectContent>{(lots ?? []).filter((l) => l.status === "active").map((l) => <SelectItem key={l.id} value={l.id}>{l.lot_code ?? l.id.slice(0, 8)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Notas</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Notas</Label>
+                <Textarea className="min-h-20 focus-visible:ring-2 focus-visible:ring-primary" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Detalles u observaciones..." />
+              </div>
             </div>
-            <DialogFooter><Button onClick={submit}>Registrar lote</Button></DialogFooter>
+            <DialogFooter className="mt-2 border-t border-border/20 pt-4 flex gap-2">
+              <Button variant="outline" className="h-10 transition-all duration-200" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button className="h-10 transition-all duration-200" onClick={submit}>Registrar lote</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className="p-4 border-border bg-card/60"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase">Lotes activos</div><div className="text-2xl font-bold mt-1">{summary.active}</div></div><Layers className="h-6 w-6 text-emerald-glow" /></div></Card>
-        <Card className="p-4 border-border bg-card/60"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase">Biomasa total</div><div className="text-2xl font-bold mt-1">{summary.biomass.toLocaleString("es-MX")} g</div></div><Scale className="h-6 w-6 text-amber-glow" /></div></Card>
-        <Card className="p-4 border-border bg-card/60"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase">Finalizados (mes)</div><div className="text-2xl font-bold mt-1">{summary.finalizedMonth}</div></div><CheckCircle2 className="h-6 w-6 text-info" /></div></Card>
+        <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Lotes activos</div><div className="text-2xl font-bold mt-1 text-foreground">{summary.active}</div></div><Layers className="h-6 w-6 text-emerald-glow" /></div></Card>
+        <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Biomasa total</div><div className="text-2xl font-bold mt-1 text-foreground">{summary.biomass.toLocaleString("es-MX")} g</div></div><Scale className="h-6 w-6 text-amber-glow" /></div></Card>
+        <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Finalizados (mes)</div><div className="text-2xl font-bold mt-1 text-foreground">{summary.finalizedMonth}</div></div><CheckCircle2 className="h-6 w-6 text-info" /></div></Card>
       </div>
 
       <div className="space-y-3">
@@ -379,7 +397,7 @@ function Page() {
           const boxCode = l.box_id ? boxesMap[l.box_id] ?? "—" : "—";
           
           return (
-            <Card key={l.id} className="p-4 border-border bg-card/60 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden transition-all hover:translate-y-[-2px] hover:border-primary/50 hover:shadow-lg">
+            <Card key={l.id} className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden transition-all duration-200 hover:translate-y-[-2px] hover:border-primary/50 hover:shadow-lg shadow-sm hover:shadow-md">
               {/* Left Column: Code, Badges, Gender Population */}
               <div className="space-y-2 md:w-1/3">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -387,7 +405,7 @@ function Page() {
                     {l.lot_code ?? l.id.slice(0, 8)}
                   </span>
                   {parentCode && (
-                    <Badge variant="outline" className="text-[9px] text-muted-foreground border-border">
+                    <Badge variant="outline" className="text-[9px] text-muted-foreground border-border/40 bg-accent/10">
                       sub-lote de {parentCode}
                     </Badge>
                   )}
@@ -395,7 +413,7 @@ function Page() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant="secondary" className="text-[9px] cursor-help">
+                          <Badge variant="secondary" className="text-[9px] cursor-help bg-accent/20 text-foreground">
                             {childNames.length} sublotes
                           </Badge>
                         </TooltipTrigger>
@@ -408,11 +426,11 @@ function Page() {
                 </div>
                 
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge variant="secondary" className="text-[10px] capitalize font-medium px-2 py-0.5 rounded-md">
+                  <Badge variant="secondary" className="text-[10px] capitalize font-medium px-2 py-0.5 rounded-md bg-accent/30 text-foreground">
                     {l.lot_type === "breeder" ? "Reproductor" : l.lot_type === "engorda" ? "Engorda" : "Nacimiento"}
                   </Badge>
                   {speciesName && (
-                    <Badge variant="outline" className="text-[10px] border-border text-muted-foreground px-2 py-0.5 rounded-md">
+                    <Badge variant="outline" className="text-[10px] border-border/40 text-muted-foreground px-2 py-0.5 rounded-md">
                       {speciesName}
                     </Badge>
                   )}
@@ -428,30 +446,30 @@ function Page() {
 
               {/* Center-Left Column: Genetic Line & Box */}
               <div className="space-y-1 md:w-1/4">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Línea genética</div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">Línea genética</div>
                 <div className="text-sm font-semibold text-foreground">{lineName}</div>
-                <div className="text-xs text-muted-foreground">Caja: <span className="font-medium text-foreground">{boxCode}</span></div>
+                <div className="text-xs text-muted-foreground">Caja: <span className="font-semibold text-foreground">{boxCode}</span></div>
               </div>
 
               {/* Center-Right Column: Current Stage & Individuals */}
               <div className="space-y-1 md:w-1/4">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Biomasa / Info</div>
-                <div className="text-sm font-semibold text-foreground">{(+(l.mass_grams ?? 0)).toFixed(1)} g</div>
-                <div className="text-xs text-muted-foreground">Iniciado: <span className="font-medium">{new Date(l.started_at).toLocaleDateString("es-MX")}</span></div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">Biomasa / Info</div>
+                <div className="text-sm font-bold text-foreground">{(+(l.mass_grams ?? 0)).toFixed(1)} g</div>
+                <div className="text-xs text-muted-foreground">Iniciado: <span className="font-medium text-foreground/85">{new Date(l.started_at).toLocaleDateString("es-MX")}</span></div>
               </div>
 
               {/* Right Column: Actions */}
               <div className="flex items-center md:flex-col gap-2 shrink-0 md:items-end justify-between md:justify-center">
                 {l.status === "active" && (
-                  <Button size="sm" variant="secondary" className="h-8 text-[11px] gap-1 px-3" onClick={() => initSplit(l)}>
-                    <Split className="h-3.5 w-3.5" /> Dividir
+                  <Button size="sm" variant="secondary" className="h-9 min-h-9 md:h-8 md:min-h-8 text-[11px] gap-1 px-3 transition-all duration-200 hover:bg-accent/85" onClick={() => initSplit(l)}>
+                    <Split className="h-4 w-4 md:h-3.5 md:w-3.5" /> Dividir
                   </Button>
                 )}
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => initEdit(l)}>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 md:h-8 md:w-8 text-muted-foreground hover:text-primary transition-all duration-200" onClick={() => initEdit(l)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeletingLot(l)}>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 md:h-8 md:w-8 text-muted-foreground hover:text-destructive transition-all duration-200" onClick={() => setDeletingLot(l)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -460,7 +478,7 @@ function Page() {
           );
         })}
         {(lots ?? []).length === 0 && (
-          <Card className="p-10 text-center text-muted-foreground border-dashed">Sin lotes registrados.</Card>
+          <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">Sin lotes registrados.</Card>
         )}
       </div>
 

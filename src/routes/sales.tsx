@@ -347,34 +347,35 @@ function SalesPage() {
           }}
         >
           <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="mr-1 h-4 w-4" /> Nueva Venta
+            <Button size="sm" className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200">
+              <Plus className="mr-1 h-5 md:h-4 w-5 md:w-4" /> Nueva Venta
             </Button>
           </DialogTrigger>
 
           {/* ─── NEW SALE MODAL ─── */}
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
                 <ShoppingCart className="h-5 w-5" /> Nueva Venta
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4">
               {/* date + client */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Fecha</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium block text-foreground/90">Fecha</Label>
                   <Input
                     type="date"
+                    className="h-10 focus-visible:ring-2 focus-visible:ring-primary"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label>Cliente</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium block text-foreground/90">Cliente</Label>
                   <Select value={clientId} onValueChange={setClientId}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Seleccionar cliente" />
                     </SelectTrigger>
                     <SelectContent>
@@ -389,17 +390,17 @@ function SalesPage() {
               </div>
 
               {/* line items */}
-              <div className="space-y-2">
-                <Label>Productos</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold block text-foreground/90">Productos</Label>
                 {items.map((item, idx) => {
                   const filteredSpecies = speciesForKind(item.kind);
                   const sizes = sizesForSpecies(item.species_id);
                   return (
                     <Card
                       key={idx}
-                      className="border-border bg-card/60 p-3 space-y-2"
+                      className="border-border/50 bg-gradient-to-br from-card to-card/40 p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                      <div className="grid grid-cols-12 gap-2 items-end">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                         {/* kind */}
                         <div className="col-span-2 space-y-1">
                           <span className="text-[10px] uppercase text-muted-foreground">
@@ -630,25 +631,25 @@ function SalesPage() {
         {/* ── PREPARANDO ── */}
         <TabsContent value="preparando" className="space-y-3 mt-4">
           {preparando.length === 0 ? (
-            <Card className="border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
+            <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
               Sin pedidos en preparación.
             </Card>
           ) : (
             preparando.map((o: any) => (
               <Card
                 key={o.id}
-                className="border-border bg-card/60 p-4 flex items-center justify-between"
+                className="border-border/50 bg-gradient-to-br from-card to-card/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-200"
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-muted-foreground">
+                    <span className="font-mono text-xs text-muted-foreground font-semibold">
                       #{o.id.slice(0, 8)}
                     </span>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-[10px] border-border/40 bg-accent/10">
                       preparando
                     </Badge>
                   </div>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-semibold text-foreground">
                     {(o as any).clients?.name ?? "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -656,12 +657,12 @@ function SalesPage() {
                     productos
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-emerald-400">
+                <div className="flex items-center justify-between sm:justify-end gap-4">
+                  <span className="font-bold text-emerald-400 text-base">
                     {fmtMXN(o.total_mxn ?? 0)}
                   </span>
-                  <Button size="sm" onClick={() => handleDeliver(o.id)}>
-                    <Check className="mr-1 h-4 w-4" /> Marcar como Entregado
+                  <Button size="sm" className="h-10 sm:h-9 min-h-10 sm:min-h-9 transition-all duration-200" onClick={() => handleDeliver(o.id)}>
+                    <Check className="mr-1.5 h-4.5 w-4.5 sm:h-4 sm:w-4" /> Marcar como Entregado
                   </Button>
                 </div>
               </Card>
@@ -672,53 +673,58 @@ function SalesPage() {
         {/* ── HISTORIAL ── */}
         <TabsContent value="historial" className="mt-4">
           {historial.length === 0 ? (
-            <Card className="border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
+            <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
               Sin pedidos entregados.
             </Card>
           ) : (
-            <Card className="border-border bg-card/60 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-accent/30">
-                    <th className="text-[10px] uppercase text-muted-foreground px-4 py-2 text-left">
-                      Pedido #
-                    </th>
-                    <th className="text-[10px] uppercase text-muted-foreground px-4 py-2 text-left">
-                      Cliente
-                    </th>
-                    <th className="text-[10px] uppercase text-muted-foreground px-4 py-2 text-left">
-                      Fecha entrega
-                    </th>
-                    <th className="text-[10px] uppercase text-muted-foreground px-4 py-2 text-left">
-                      Items
-                    </th>
-                    <th className="text-[10px] uppercase text-muted-foreground px-4 py-2 text-right">
-                      Total MXN
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historial.map((o: any) => (
-                    <tr key={o.id} className="border-t border-border">
-                      <td className="px-4 py-2 font-mono text-xs">
-                        #{o.id.slice(0, 8)}
-                      </td>
-                      <td className="px-4 py-2">
-                        {(o as any).clients?.name ?? "—"}
-                      </td>
-                      <td className="px-4 py-2 text-muted-foreground">
-                        {fmtDate(o.delivered_at)}
-                      </td>
-                      <td className="px-4 py-2">
-                        {o.order_items?.length ?? 0} productos
-                      </td>
-                      <td className="px-4 py-2 text-right font-bold text-emerald-400">
-                        {fmtMXN(o.total_mxn ?? 0)}
-                      </td>
+            <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-accent/20 border-b border-border/30">
+                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                        Pedido #
+                      </th>
+                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                        Cliente
+                      </th>
+                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                        Fecha entrega
+                      </th>
+                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                        Items
+                      </th>
+                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-right">
+                        Total MXN
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {historial.map((o: any, i: number) => (
+                      <tr 
+                        key={o.id} 
+                        className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+                      >
+                        <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
+                          #{o.id.slice(0, 8)}
+                        </td>
+                        <td className="px-4 py-3 text-foreground font-medium">
+                          {(o as any).clients?.name ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {fmtDate(o.delivered_at)}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {o.order_items?.length ?? 0} productos
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-emerald-400">
+                          {fmtMXN(o.total_mxn ?? 0)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Card>
           )}
         </TabsContent>
