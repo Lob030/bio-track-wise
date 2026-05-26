@@ -47,13 +47,13 @@ function Page() {
     });
     if (error) return toast.error(error.message);
     toast.success(`Especie "${n}" creada`);
-    qc.invalidateQueries({ queryKey: ["species", "insect"] });
+    qc.invalidateQueries({ queryKey: ["species"] });
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("species").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["species", "insect"] });
+    qc.invalidateQueries({ queryKey: ["species"] });
   };
 
   const submit = async () => {
@@ -66,7 +66,7 @@ function Page() {
       }).eq("id", editingSpecies.id);
       if (error) return toast.error(error.message);
       toast.success("Especie actualizada");
-      qc.invalidateQueries({ queryKey: ["species", "insect"] });
+      qc.invalidateQueries({ queryKey: ["species"] });
     } else {
       await create(name.trim(), filteredRules);
     }
