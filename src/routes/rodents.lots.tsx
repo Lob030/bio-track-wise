@@ -447,7 +447,7 @@ function Page() {
                 <div className="text-xs text-muted-foreground flex gap-3 mt-1 flex-wrap">
                   <span>♀ Hembras: <strong className="text-foreground">{l.females ?? 0}</strong></span>
                   <span>♂ Machos: <strong className="text-foreground">{l.males ?? 0}</strong></span>
-                  {l.unsexed > 0 && <span>S/S: <strong className="text-foreground">{l.unsexed}</strong></span>}
+                  {(l.unsexed ?? 0) > 0 && <span>S/S: <strong className="text-foreground">{l.unsexed}</strong></span>}
                 </div>
               </div>
 
