@@ -356,108 +356,16 @@ function StockPage() {
   };
 
   // ── Rodent stock computation ─────────────────────────────────────────
-  const rodentStockData = useMemo(() => {
-    if (activeKind !== "rodent") return [];
-    return filteredSpecies.map((species: any) => {
-      const rules = (species.size_rules as any[] | null) ?? [];
-      const speciesLots = lotsForKind.filter(
-        (l: any) => l.species_id === species.id,
-      );
-
-      let totalIndividuals = 0;
-      let unmatchedIndividuals = 0;
-      const matchedLotIds = new Set<string>();
-
-      const rows = rules.map((rule: SizeRuleRodent) => {
-        const stock = speciesLots.reduce((sum: number, lot: any) => {
-          const age = getLotAge(lot);
-          if (age >= rule.min_days && age <= rule.max_days) {
-            matchedLotIds.add(lot.id);
-            return (
-              sum +
-              (Number(lot.males) || 0) +
-              (Number(lot.females) || 0) +
-              (Number(lot.unsexed) || 0)
-            );
-          }
-          return sum;
-        }, 0);
-        totalIndividuals += stock;
-        return { ...rule, stock };
-      });
-
-      speciesLots.forEach((lot: any) => {
-        if (!matchedLotIds.has(lot.id)) {
-          unmatchedIndividuals +=
-            (Number(lot.males) || 0) +
-            (Number(lot.females) || 0) +
-            (Number(lot.unsexed) || 0);
-        }
-      });
-
-      if (unmatchedIndividuals > 0) {
-        rows.push({
-          label: "Fuera de rango / Rezagados",
-          min_days: 0,
-          max_days: 0,
-          weight_g: "—",
-          stock: unmatchedIndividuals,
-          isUnmatched: true,
-        } as any);
-        totalIndividuals += unmatchedIndividuals;
-      }
-
-      return { species, rows, totalIndividuals };
-    });
-  }, [filteredSpecies, lotsForKind, activeKind]);
+  const rodentStockData = useMemo(
+    () => (activeKind === "rodent" ? filteredSpecies.map((s: any) => computeRodentStock(s, lotsForKind, getLotAge)) : []),
+    [filteredSpecies, lotsForKind, activeKind],
+  );
 
   // ── Insect stock computation ─────────────────────────────────────────
-  const insectStockData = useMemo(() => {
-    if (activeKind !== "insect") return [];
-    return filteredSpecies.map((species: any) => {
-      const rules = (species.size_rules as any[] | null) ?? [];
-      const speciesLots = lotsForKind.filter(
-        (l: any) => l.species_id === species.id,
-      );
-
-      let totalGrams = 0;
-      let unmatchedGrams = 0;
-      const matchedLotIds = new Set<string>();
-
-      const rows = rules.map((rule: SizeRuleInsect) => {
-        const stock = speciesLots.reduce((sum: number, lot: any) => {
-          const age = getLotAge(lot);
-          if (age >= rule.min_days && age <= rule.max_days) {
-            matchedLotIds.add(lot.id);
-            return sum + (Number(lot.mass_grams) || 0);
-          }
-          return sum;
-        }, 0);
-        totalGrams += stock;
-        return { ...rule, stock };
-      });
-
-      speciesLots.forEach((lot: any) => {
-        if (!matchedLotIds.has(lot.id)) {
-          unmatchedGrams += Number(lot.mass_grams) || 0;
-        }
-      });
-
-      if (unmatchedGrams > 0) {
-        rows.push({
-          label: "Fuera de rango / Rezagados",
-          min_days: 0,
-          max_days: 0,
-          individuals_per_gram: undefined,
-          stock: unmatchedGrams,
-          isUnmatched: true,
-        } as any);
-        totalGrams += unmatchedGrams;
-      }
-
-      return { species, rows, totalGrams };
-    });
-  }, [filteredSpecies, lotsForKind, activeKind]);
+  const insectStockData = useMemo(
+    () => (activeKind === "insect" ? filteredSpecies.map((s: any) => computeInsectStock(s, lotsForKind, getLotAge)) : []),
+    [filteredSpecies, lotsForKind, activeKind],
+  );
 
   // ── Reset species filter when switching kind ─────────────────────────
   const handleKindSwitch = (kind: KindType) => {
