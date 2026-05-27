@@ -459,7 +459,7 @@ function Page() {
               </div>
 
               {/* Right Column: Actions */}
-              <div className="flex items-center md:flex-col gap-2 shrink-0 md:items-end justify-between md:justify-center">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap md:justify-end">
                 {l.status === "active" && (
                   <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
                     <Split className="h-3.5 w-3.5" /> Dividir
