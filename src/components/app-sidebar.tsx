@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Rat, Bug, Boxes, Warehouse, Bell, ShoppingCart,
-  Users, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings
+  Users, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings, Download
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -111,6 +112,28 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { data: profile } = useProfile();
   const tier = (profile?.tier ?? "bronze") as Tier;
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setDeferredPrompt(null);
+    }
+  };
 
   const isActive = (url: string) => path === url || (url !== "/" && path.startsWith(url));
 
@@ -222,6 +245,19 @@ export function AppSidebar() {
               {!collapsed && <span className="text-sm">Configuración</span>}
             </Link>
           </SidebarMenuItem>
+          {deferredPrompt && (
+            <SidebarMenuItem>
+              <button
+                onClick={handleInstallClick}
+                style={getMenuBtnStyle(false)}
+                className="w-full text-emerald-400 hover:text-emerald-300 animate-pulse font-semibold"
+                title="Instalar App"
+              >
+                <Download className="h-4 w-4 shrink-0 text-emerald-400" />
+                {!collapsed && <span className="text-sm">Instalar App</span>}
+              </button>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <button
               onClick={() => supabase.auth.signOut()}

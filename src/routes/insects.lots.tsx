@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { type InsectRule } from "@/components/size-matrix";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ function Page() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "",
-    mass_grams: "", parent_lot_id: "", notes: "", age_days: 0,
+    mass_grams: "", parent_lot_id: "", notes: "", age_days: 0, tags: "",
   });
 
   // Action states
@@ -214,7 +215,7 @@ function Page() {
   });
   const { data: species } = useQuery({
     queryKey: ["species", "insect", "min"],
-    queryFn: async () => (await supabase.from("species").select("id,name").eq("kind", "insect")).data ?? [],
+    queryFn: async () => (await supabase.from("species").select("id,name,size_rules").eq("kind", "insect")).data ?? [],
   });
   const { data: lines } = useQuery({
     queryKey: ["lines", "insect", "min"],
@@ -264,6 +265,27 @@ function Page() {
     return map;
   }, [boxes]);
 
+  const speciesDataMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    (species ?? []).forEach((s) => { map[s.id] = s; });
+    return map;
+  }, [species]);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    (lots ?? []).forEach(l => (l.tags ?? []).forEach(t => set.add(t)));
+    return Array.from(set).sort();
+  }, [lots]);
+
+  const [filterTag, setFilterTag] = useState<string>("all");
+
+  const filteredLots = useMemo(() =>
+    filterTag === "all"
+      ? (lots ?? [])
+      : (lots ?? []).filter(l => (l.tags ?? []).includes(filterTag)),
+    [lots, filterTag]
+  );
+
   const summary = useMemo(() => {
     const active = (lots ?? []).filter((l) => l.status === "active");
     const biomass = active.reduce((s, l) => s + (Number(l.mass_grams) || 0), 0);
@@ -282,6 +304,8 @@ function Page() {
     today.setDate(today.getDate() - (Number(form.age_days) || 0));
     const started_at = today.toISOString().slice(0, 10);
 
+    const parsedTags = form.tags ? form.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+
     const { error } = await supabase.from("lots").insert({
       owner_id: u.user.id, kind: "insect",
       lot_code: form.lot_code || null, lot_type: form.lot_type as any,
@@ -289,11 +313,12 @@ function Page() {
       parent_lot_id: form.parent_lot_id || null,
       mass_grams: grams, notes: form.notes,
       started_at,
+      tags: parsedTags,
     });
     if (error) return toast.error(error.message.includes("TIER_LIMIT") ? "Límite del plan alcanzado." : error.message);
     toast.success("Lote de insectos creado");
     setOpen(false);
-    setForm({ lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "", mass_grams: "", parent_lot_id: "", notes: "", age_days: 0 });
+    setForm({ lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "", mass_grams: "", parent_lot_id: "", notes: "", age_days: 0, tags: "" });
     qc.invalidateQueries({ queryKey: ["lots", "insect"] });
     qc.invalidateQueries({ queryKey: ["lots-by-box", "insect"] });
   };
@@ -370,6 +395,10 @@ function Page() {
                 </Select>
               </div>
               <div>
+                <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Etiquetas (opcional)</Label>
+                <Input className="h-10 focus-visible:ring-2 focus-visible:ring-primary" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="reservado, prioridad, especial" />
+              </div>
+              <div>
                 <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Notas</Label>
                 <Textarea className="min-h-20 focus-visible:ring-2 focus-visible:ring-primary" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Detalles u observaciones..." />
               </div>
@@ -388,8 +417,25 @@ function Page() {
         <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Finalizados (mes)</div><div className="text-2xl font-bold mt-1 text-foreground">{summary.finalizedMonth}</div></div><CheckCircle2 className="h-6 w-6 text-info" /></div></Card>
       </div>
 
+      {allTags.length > 0 && (
+        <div className="flex items-center gap-2 mb-3">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Filtrar por etiqueta:</Label>
+          <Select value={filterTag} onValueChange={setFilterTag}>
+            <SelectTrigger className="w-48 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {allTags.map((t) => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="space-y-3">
-        {(lots ?? []).map((l) => {
+        {filteredLots.map((l) => {
           const childNames = childrenNamesMap[l.id];
           const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
           const speciesName = l.species_id ? speciesMap[l.species_id] ?? "" : "";
@@ -404,6 +450,15 @@ function Page() {
                   <span className="text-lg font-bold tracking-tight text-foreground font-heading">
                     {l.lot_code ?? l.id.slice(0, 8)}
                   </span>
+                  {(l.tags ?? []).length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {(l.tags ?? []).map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 py-0 px-1 rounded">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   {parentCode && (
                     <Badge variant="outline" className="text-[9px] text-muted-foreground border-border/40 bg-accent/10">
                       sub-lote de {parentCode}
@@ -468,6 +523,7 @@ function Page() {
                 <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
                 </Button>
+                <InsectProfitabilityDialog lot={l} species={l.species_id ? speciesDataMap[l.species_id] : null} />
                 <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => setDeletingLot(l)}>
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar
                 </Button>
@@ -607,5 +663,73 @@ function Page() {
         </AlertDialogContent>
       </AlertDialog>
     </PageShell>
+  );
+}
+
+function InsectProfitabilityDialog({ lot, species }: { lot: any; species: any }) {
+  const [open, setOpen] = useState(false);
+  const rules: InsectRule[] = (species?.size_rules as InsectRule[]) ?? [];
+  const massGrams = lot.mass_grams ?? 0;
+  const ageToday = Math.floor((Date.now() - new Date(lot.started_at).getTime()) / 86400000);
+
+  const projections = rules.map(rule => {
+    const saleRevenue = (rule.price_mxn ?? 0) * massGrams;
+    const daysUntil = Math.max(0, rule.min_days - ageToday);
+    return {
+      label: rule.label,
+      revenue: saleRevenue,
+      daysUntil,
+      readyDate: new Date(Date.now() + daysUntil * 86400000).toLocaleDateString('es-MX'),
+    };
+  });
+
+  return (
+    <>
+      <Button size="sm" variant="ghost" className="h-7 text-xs text-emerald-400 hover:text-emerald-300 gap-1" onClick={() => setOpen(true)}>
+        💰 Rentabilidad
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>💰 Rentabilidad — {lot.lot_code ?? lot.id.slice(0, 8)}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="p-3 text-center bg-card/50">
+                <p className="text-xs text-muted-foreground">Biomasa actual</p>
+                <p className="text-xl font-bold">{massGrams.toLocaleString("es-MX")} g</p>
+              </Card>
+              <Card className="p-3 text-center bg-card/50">
+                <p className="text-xs text-muted-foreground">Edad actual</p>
+                <p className="text-xl font-bold">{ageToday}d</p>
+              </Card>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Proyección de ingresos por etapa</h4>
+              <div className="space-y-2">
+                {projections.length > 0 ? (
+                  projections.map(p => (
+                    <div key={p.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                      <div>
+                        <p className="font-semibold text-sm">{p.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.daysUntil === 0 ? "✅ Listo ahora" : `📅 En ${p.daysUntil} días (${p.readyDate})`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-400 font-bold">${p.revenue.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">precio: ${((p.revenue / (massGrams || 1))).toFixed(2)}/g</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">No hay reglas de tamaño configuradas para esta especie.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
