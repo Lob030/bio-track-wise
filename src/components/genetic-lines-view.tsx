@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dna, Plus, Trash2, Download, Upload, Edit2 } from "lucide-react";
+import { Dna, Plus, Trash2, Download, Upload, Edit2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -51,6 +51,14 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
     },
     enabled: !!species,
   });
+
+  const [searchLine, setSearchLine] = useState<string>("");
+
+  const searchedLines = useMemo(() => {
+    if (!searchLine.trim()) return lines ?? [];
+    const q = searchLine.trim().toLowerCase();
+    return (lines ?? []).filter(line => line.name?.toLowerCase().startsWith(q));
+  }, [lines, searchLine]);
 
   const submit = async () => {
     if (!form.name.trim() || !form.species_id) return toast.error("Nombre y especie son requeridos");
@@ -152,11 +160,28 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
         </>
       }
     >
+      <div className="mb-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar línea genética por nombre..."
+            value={searchLine}
+            onChange={e => setSearchLine(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+        {searchLine && (
+          <p className="text-xs text-muted-foreground mt-1 ml-1">
+            {searchedLines.length} de {(lines ?? []).length} líneas
+          </p>
+        )}
+      </div>
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {(lines ?? []).length === 0 && (
+        {searchedLines.length === 0 && (
           <Card className="col-span-full p-10 text-center text-muted-foreground border-dashed">Aún no hay líneas genéticas registradas.</Card>
         )}
-        {(lines ?? []).map((l) => {
+        {searchedLines.map((l) => {
           const meta = unpackMeta(l.notes);
           const sp = species?.find((s) => s.id === l.species_id);
           return (

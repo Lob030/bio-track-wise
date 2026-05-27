@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split } from "lucide-react";
+import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { type InsectRule } from "@/components/size-matrix";
 import { PageShell } from "@/components/page-shell";
@@ -286,6 +286,14 @@ function Page() {
     [lots, filterTag]
   );
 
+  const [searchLot, setSearchLot] = useState<string>("");
+
+  const searchedLots = useMemo(() => {
+    if (!searchLot.trim()) return filteredLots ?? [];
+    const q = searchLot.trim().toLowerCase();
+    return (filteredLots ?? []).filter(lot => lot.lot_code?.toLowerCase().startsWith(q));
+  }, [filteredLots, searchLot]);
+
   const summary = useMemo(() => {
     const active = (lots ?? []).filter((l) => l.status === "active");
     const biomass = active.reduce((s, l) => s + (Number(l.mass_grams) || 0), 0);
@@ -417,25 +425,43 @@ function Page() {
         <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200"><div className="flex items-center justify-between"><div><div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Finalizados (mes)</div><div className="text-2xl font-bold mt-1 text-foreground">{summary.finalizedMonth}</div></div><CheckCircle2 className="h-6 w-6 text-info" /></div></Card>
       </div>
 
-      {allTags.length > 0 && (
-        <div className="flex items-center gap-2 mb-3">
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Filtrar por etiqueta:</Label>
-          <Select value={filterTag} onValueChange={setFilterTag}>
-            <SelectTrigger className="w-48 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              {allTags.map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar lote por código..."
+            value={searchLot}
+            onChange={(e) => setSearchLot(e.target.value)}
+            className="pl-9 h-8 text-xs focus-visible:ring-2 focus-visible:ring-primary"
+          />
         </div>
+
+        {allTags.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground whitespace-nowrap">Filtrar por etiqueta:</Label>
+            <Select value={filterTag} onValueChange={setFilterTag}>
+              <SelectTrigger className="w-48 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {allTags.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+      
+      {searchLot && (
+        <p className="text-xs text-muted-foreground mb-3 ml-1">
+          {searchedLots.length} de {(filteredLots ?? []).length} lotes
+        </p>
       )}
 
       <div className="space-y-3">
-        {filteredLots.map((l) => {
+        {searchedLots.map((l) => {
           const childNames = childrenNamesMap[l.id];
           const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
           const speciesName = l.species_id ? speciesMap[l.species_id] ?? "" : "";
@@ -531,8 +557,8 @@ function Page() {
             </Card>
           );
         })}
-        {(lots ?? []).length === 0 && (
-          <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">Sin lotes registrados.</Card>
+        {searchedLots.length === 0 && (
+          <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
         )}
       </div>
 

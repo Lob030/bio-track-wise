@@ -61,8 +61,25 @@ function fmtDate(iso: string | null | undefined) {
 
 /* ───────── component ───────── */
 
+type SalesTab = "nueva-venta" | "pedidos-futuros";
+
 function SalesPage() {
   const qc = useQueryClient();
+  const [activeTab, setActiveTab] = useState<SalesTab>("nueva-venta");
+
+  const { data: futureOrders, isLoading: loadingFutureOrders } = useQuery({
+    queryKey: ["future-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, clients(id, name), order_items(*, species(name, size_rules))")
+        .eq("status", "preparando")
+        .not("delivered_at", "is", null)
+        .order("delivered_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   /* ── queries ── */
   const { data: orders } = useQuery({
@@ -331,6 +348,35 @@ function SalesPage() {
 
   return (
     <div className="space-y-6">
+      {/* tab switcher */}
+      <div className="flex gap-1 p-1 rounded-xl bg-card w-fit mb-6 border border-border/50">
+        <button
+          onClick={() => setActiveTab("nueva-venta")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer
+            ${activeTab === "nueva-venta"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Nueva Venta
+        </button>
+        <button
+          onClick={() => setActiveTab("pedidos-futuros")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5
+            ${activeTab === "pedidos-futuros"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"}`}
+        >
+          📅 Pedidos Futuros
+          {(futureOrders ?? []).length > 0 && (
+            <span className="ml-1.5 bg-amber-500 text-amber-950 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+              {(futureOrders ?? []).length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === "nueva-venta" ? (
+        <div className="space-y-6">
       {/* header */}
       <div className="flex items-center justify-between">
         <div>
@@ -729,6 +775,13 @@ function SalesPage() {
           )}
         </TabsContent>
       </Tabs>
+        </div>
+      ) : (
+        <PedidosFuturosPanel
+          futureOrders={futureOrders ?? []}
+          isLoading={loadingFutureOrders}
+        />
+      )}
     </div>
   );
 }
@@ -740,3 +793,321 @@ export const Route = createFileRoute("/sales")({
     </TierGate>
   ),
 });
+
+function PedidosFuturosPanel({
+  futureOrders,
+  isLoading,
+}: {
+  futureOrders: any[];
+  isLoading: boolean;
+}) {
+  const [newOrderDialog, setNewOrderDialog] = useState(false);
+  const qc = useQueryClient();
+
+  if (isLoading) return (
+    <div className="p-8 text-center text-muted-foreground">Cargando pedidos...</div>
+  );
+
+  const markAsDelivered = async (orderId: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "historial", delivered_at: new Date().toISOString() })
+      .eq("id", orderId);
+    if (error) { toast.error("Error al marcar como entregado"); return; }
+    toast.success("Pedido marcado como entregado ✓");
+    qc.invalidateQueries({ queryKey: ["future-orders"] });
+    qc.invalidateQueries({ queryKey: ["orders"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Pedidos Programados</h3>
+        <Button onClick={() => setNewOrderDialog(true)}>
+          + Nuevo Pedido Futuro
+        </Button>
+      </div>
+
+      {futureOrders.length === 0 ? (
+        <Card className="p-8 text-center text-muted-foreground border-dashed">
+          No hay pedidos futuros. Crea uno para comenzar.
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {futureOrders.map(order => {
+            const daysUntil = order.delivered_at
+              ? Math.ceil((new Date(order.delivered_at).getTime() - Date.now()) / 86400000)
+              : null;
+            const isOverdue = daysUntil !== null && daysUntil < 0;
+            const isUrgent = daysUntil !== null && daysUntil <= 2 && daysUntil >= 0;
+
+            return (
+              <Card
+                key={order.id}
+                className={`p-4 border ${
+                  isOverdue ? "border-destructive/50 bg-destructive/5"
+                  : isUrgent ? "border-amber-500/50 bg-amber-500/5"
+                  : "border-border/50 bg-card/45"
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-semibold">{(order.clients as any)?.name ?? "Sin cliente"}</p>
+                    <p className="text-xs text-muted-foreground">{order.notes || "Sin notas"}</p>
+                  </div>
+                  <Badge variant={isOverdue ? "destructive" : isUrgent ? "warning" : "outline"}>
+                    {isOverdue
+                      ? `⚠️ Vencido hace ${Math.abs(daysUntil!)} días`
+                      : daysUntil === 0 ? "🔴 Hoy"
+                      : daysUntil === 1 ? "🟡 Mañana"
+                      : `📅 En ${daysUntil} días`}
+                  </Badge>
+                </div>
+
+                <div className="space-y-1 mb-3 pb-3 border-b border-border/40">
+                  {(order.order_items as any[])?.map((item: any) => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {item.species?.name ?? "Especie"} — {item.size_label}
+                      </span>
+                      <span className="font-medium">
+                        {item.requested_qty} unidades @ ${item.unit_price}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="font-bold text-emerald-400 text-lg">
+                      ${order.total_mxn.toFixed(2)} MXN
+                    </p>
+                  </div>
+                  <Button size="sm" onClick={() => markAsDelivered(order.id)}>
+                    ✓ Marcar entregado
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <CreateFutureOrderDialog open={newOrderDialog} onOpenChange={setNewOrderDialog} />
+    </div>
+  );
+}
+
+function CreateFutureOrderDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const qc = useQueryClient();
+  const [selectedClient, setSelectedClient] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState<
+    Array<{ speciesId: string; sizeLabel: string; quantity: number; unitPrice: number }>
+  >([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const { data: clients } = useQuery({
+    queryKey: ["clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id,name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: species } = useQuery({
+    queryKey: ["species"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("species")
+        .select("id,name,size_rules,kind,unit_price_mxn");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addItem = () =>
+    setItems([...items, { speciesId: "", sizeLabel: "", quantity: 1, unitPrice: 0 }]);
+
+  const removeItem = (idx: number) =>
+    setItems(items.filter((_, i) => i !== idx));
+
+  const updateItem = (idx: number, field: string, value: any) => {
+    const updated = [...items];
+    (updated[idx] as any)[field] = value;
+    setItems(updated);
+  };
+
+  const total = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+
+  const handleSubmit = async () => {
+    if (!selectedClient || !deliveryDate || items.length === 0) {
+      toast.error("Completa cliente, fecha y al menos un item");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+
+      const { data: order, error: orderErr } = await supabase
+        .from("orders")
+        .insert({
+          client_id: selectedClient,
+          delivered_at: deliveryDate,
+          status: "preparando",
+          subtotal_mxn: total,
+          total_mxn: total,
+          discount_pct: 0,
+          notes: notes || null,
+          owner_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (orderErr) throw orderErr;
+
+      const { error: itemsErr } = await supabase
+        .from("order_items")
+        .insert(
+          items.map(i => {
+            const sp = (species ?? []).find(s => s.id === i.speciesId);
+            const kind = sp?.kind ?? "rodent";
+            return {
+              owner_id: user.id,
+              order_id: order.id,
+              species_id: i.speciesId,
+              kind: kind,
+              size_label: i.sizeLabel,
+              requested_qty: i.quantity,
+              unit_price: i.unitPrice,
+              line_total: i.quantity * i.unitPrice,
+            };
+          })
+        );
+
+      if (itemsErr) throw itemsErr;
+
+      toast.success("Pedido futuro creado ✓");
+      onOpenChange(false);
+      setSelectedClient(""); setDeliveryDate(""); setNotes(""); setItems([]);
+      qc.invalidateQueries({ queryKey: ["future-orders"] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err) {
+      toast.error(String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>📅 Crear Pedido Futuro</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Client */}
+          <div>
+            <Label>Cliente</Label>
+            <Select value={selectedClient} onValueChange={setSelectedClient}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+              <SelectContent>
+                {(clients ?? []).map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Delivery date */}
+          <div>
+            <Label>Fecha de Entrega</Label>
+            <Input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <Label>Notas (opcional)</Label>
+            <Input placeholder="Instrucciones especiales..." value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+
+          {/* Items */}
+          <div>
+            <Label className="mb-2 block font-medium">Items del pedido</Label>
+            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+              {items.map((item, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <Select value={item.speciesId} onValueChange={v => {
+                    const sp = (species ?? []).find(s => s.id === v);
+                    updateItem(idx, "speciesId", v);
+                    if (sp) {
+                      updateItem(idx, "unitPrice", sp.unit_price_mxn ?? 0);
+                    }
+                  }}>
+                    <SelectTrigger className="flex-1 min-w-0">
+                      <SelectValue placeholder="Especie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(species ?? []).map((s: any) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input placeholder="Talla" value={item.sizeLabel}
+                    onChange={e => updateItem(idx, "sizeLabel", e.target.value)}
+                    className="w-24" />
+                  <Input placeholder="Qty" type="number" min="1" value={item.quantity}
+                    onChange={e => updateItem(idx, "quantity", parseInt(e.target.value) || 1)}
+                    className="w-20" />
+                  <Input placeholder="$Precio" type="number" step="0.01" value={item.unitPrice}
+                    onChange={e => updateItem(idx, "unitPrice", parseFloat(e.target.value) || 0)}
+                    className="w-24" />
+                  <Button size="sm" variant="ghost"
+                    className="text-destructive shrink-0"
+                    onClick={() => removeItem(idx)}>✕</Button>
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={addItem} className="mt-2">
+              + Agregar item
+            </Button>
+          </div>
+
+          {/* Total */}
+          {items.length > 0 && (
+            <div className="flex justify-between p-3 rounded-lg bg-muted/50">
+              <span className="font-medium">Total estimado</span>
+              <span className="font-bold text-emerald-400">${total.toFixed(2)} MXN</span>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? "Creando..." : "Crear Pedido"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

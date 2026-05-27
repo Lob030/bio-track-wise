@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin } from "lucide-react";
+import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -635,6 +635,14 @@ export function BoxesView({ kind }: { kind: Kind }) {
     });
   }, [boxes, byBox, filterCuarto, filterRack, filterUso, filterEstado]);
 
+  const [searchBox, setSearchBox] = useState<string>("");
+
+  const searchedBoxes = useMemo(() => {
+    if (!searchBox.trim()) return filteredBoxes ?? [];
+    const q = searchBox.trim().toLowerCase();
+    return (filteredBoxes ?? []).filter(box => box.code?.toLowerCase().startsWith(q));
+  }, [filteredBoxes, searchBox]);
+
   const feedFor = (boxId: string): number => {
     if (kind !== "rodent") return 0;
     const ls = byBox[boxId] ?? [];
@@ -834,15 +842,32 @@ export function BoxesView({ kind }: { kind: Kind }) {
         </div>
       )}
 
+      <div className="mb-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar caja por código..."
+            value={searchBox}
+            onChange={e => setSearchBox(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+        {searchBox && (
+          <p className="text-xs text-muted-foreground mt-1 ml-1">
+            {searchedBoxes.length} de {(boxes ?? []).length} cajas
+          </p>
+        )}
+      </div>
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filteredBoxes.length === 0 && (
+        {searchedBoxes.length === 0 && (
           <Card className="col-span-full p-10 text-center text-muted-foreground border-dashed">
             {(boxes ?? []).length === 0
               ? "Aún no hay cajas registradas."
               : "No hay cajas con los filtros seleccionados."}
           </Card>
         )}
-        {filteredBoxes.map((b) => {
+        {searchedBoxes.map((b) => {
           const { roomRack, usage } = unpackLocation(b.location);
           const occupants = byBox[b.id] ?? [];
           const occupied = occupants.length > 0;
