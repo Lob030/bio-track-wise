@@ -1,46 +1,102 @@
-## AI Assistant Module — Plan
+## Diagnóstico
 
-Build a functional chat-based assistant at `/ai` that parses natural-language commands into structured actions, shows a confirmation card, and executes safely against Supabase.
+Hoy hay **dos sistemas de color peleándose**:
 
-### Adjustments to the proposed spec
+1. `src/styles.css` + componentes shadcn → tokens `--background`, `--card`, `--border`, `--primary`, `--muted-foreground`, etc.
+2. `src/styles/themes.css` + `use-theme.ts` → variables `--color-background`, `--color-surface`, `--color-primary`, etc.
 
-- **Use Lovable AI Gateway, not a raw Google API call.** Lovable Cloud already provisions `LOVABLE_API_KEY`; no user-supplied Google key needed.
-- **Use a TanStack server function, not a Supabase Edge Function.** This stack's standard is `createServerFn` for app-internal AI calls (see `connecting-to-ai-models-tanstack`). Edge functions are reserved for webhooks/external callers.
-- **Default model:** `google/gemini-3-flash-preview` via the AI SDK + OpenAI-compatible adapter.
-- **Schema alignment:** the project's table is `genetic_lines` (not `lines`), and lots use `lot_code` + species `kind` filter — the executor will be adapted to the real schema in `types.ts`.
-- **Keep TierGate (`gold+`)** as in the existing stub.
+Cuando cambias de tema, **solo** se actualizan las `--color-*`, pero los componentes shadcn siguen leyendo los tokens originales. Resultado: tarjetas con `bg-card` que no se sincronizan, `text-emerald-400` hardcoded que pierde contraste sobre fondos claros u oscuros saturados, botones de acción `variant="ghost"` con `text-[9px]` que desaparecen, y selectores globales agresivos como `[class*="card"]` en `themes.css` que pisan estilos de shadcn de forma impredecible.
 
-### Files to add/change
+## Objetivo
 
-1. `src/lib/ai-gateway.server.ts` — provider helper (`createLovableAiGatewayProvider`) per the AI Gateway knowledge.
-2. `src/lib/ai-assistant.functions.ts` — `parseAiCommand` server function:
-   - Input: `{ userMessage: string, today: string }`
-   - Uses `generateText` + `Output.object` (Zod) to return a typed `ParsedAction`:
-     `{ type: "create_box" | "create_lot" | "update_lot" | "query" | "clarify", description, data?, requiresConfirmation }`
-   - System prompt in Spanish, with few-shot examples for box codes / room / furniture / birth lots / unsexed counts.
-3. `src/routes/ai.tsx` — full chat UI (replacing the stub), still wrapped in `<TierGate min="gold">`:
-   - Message list (user / assistant bubbles, no background on assistant per design contract; user bubble uses `primary` tokens).
-   - Composer (textarea + send button), auto-scroll, focus management.
-   - Calls `parseAiCommand` via `useServerFn`.
-   - Renders a **UI Proposal Card** (not just an AlertDialog) showing the parsed action's structured payload + `Confirmar y Ejecutar` / `Cancelar` buttons. Database call stays blocked until confirm.
-   - Executor functions (`createBox`, `createLot`, `updateLot`, `runQuery`) run client-side against Supabase using the user's session (RLS-scoped). Optimistic toasts + `queryClient.invalidateQueries` for affected modules.
-   - `query` type runs read-only Supabase counts (e.g. total active rodent population) and renders results inline without confirmation.
+Sistema de diseño **único y coherente** que se vea nivel Linear/Vercel/Stripe en los 7 temas, con contraste AA garantizado, jerarquía clara y botones de acción siempre legibles.
 
-### Technical notes
+## Cambios
 
-- `LOVABLE_API_KEY` is already provisioned (visible in secrets). No `add_secret` needed.
-- Server function returns plain DTO (`ParsedAction`) — no streaming required for this use case.
-- Executor maps `lotData.kind` + species lookup via `species.kind` filter; line lookup via `genetic_lines` joined through `species_id`.
-- Confirmation card shows: action type badge, human description, and a `<pre>` of the structured `data` for transparency.
-- All errors surfaced via `sonner` toast; 429/402 from gateway shown with actionable copy.
+### 1. Unificar el sistema de tokens (raíz del problema)
 
-### Out of scope (this iteration)
+- En `use-theme.ts → applyTheme()`, además de las `--color-*`, **mapear cada tema a los tokens shadcn** que ya usan los componentes:
+  - `--background`, `--foreground`
+  - `--card`, `--card-foreground`
+  - `--popover`, `--popover-foreground`
+  - `--primary`, `--primary-foreground`
+  - `--secondary`, `--secondary-foreground`
+  - `--muted`, `--muted-foreground`
+  - `--accent`, `--accent-foreground`
+  - `--destructive`, `--destructive-foreground`
+  - `--border`, `--input`, `--ring`
+  - `--sidebar-*` (la sidebar usa su propio set)
+- Así un solo cambio de tema mueve **toda** la UI.
 
-- Multi-turn memory / conversation persistence (single-shot per message).
-- Tool-calling loop (single structured-output call is sufficient for the documented commands).
-- Streaming tokens.
+### 2. Limpiar `src/styles/themes.css`
 
-### Verification
+- Eliminar los selectores globales agresivos (`[class*="card"]`, `button:not([variant=...])`, `input`, `textarea`, etc.) que pisan shadcn.
+- Mantener solo: reset tipográfico de `body`, scrollbars temáticos, selección de texto, y los efectos opcionales `theme-glow` / `theme-glitch` (cyberpunk).
 
-- Build passes (auto).
-- Manual test prompts: "Crea 5 cajas RA1 a RA5 en cuarto B mueble B", "Nacieron 14 pinkys en caja A4 hoy", "¿Cuántos roedores activos tengo?".
+### 3. Refinar las 7 paletas (`src/lib/themes.ts`)
+
+Cada tema se redefine con criterios SaaS premium: contraste AA, superficies elevadas distinguibles, primario con buena legibilidad sobre fondo, y mute-foreground siempre legible (no más texto gris perdido). Identidad conservada:
+
+- **Midnight Pro** — slate profundo + teal eléctrico (tipo Linear)
+- **Crystal Clear** — blanco roto + indigo (tipo Vercel/Stripe light)
+- **Neon City** — violeta/magenta sobre negro púrpura, glow controlado
+- **Deep Forest** — verde bosque + lima, cálido orgánico
+- **Deep Ocean** — azul abisal + cian, sereno corporativo
+- **Golden Hour** — marrón cálido + ámbar/coral
+- **Nord** — gris azulado nórdico, minimalista
+
+Para cada uno: revisar tamaños/letter-spacing/line-height tipográficos, sombras suaves (no las actuales planas), radios consistentes.
+
+### 4. Pulir las tarjetas de especie (Stock)
+
+- Reemplazar `text-emerald-400`, `border-border/50`, gradientes hardcoded por tokens semánticos (`text-primary`, `border-border`, `bg-card`).
+- Aumentar tamaño del nombre de la especie (de `text-sm` a `text-base font-bold`), separar precio en una segunda línea con su propio chip, y mostrar el total como `Badge` destacado.
+- Tabla: header con `bg-muted/40`, celdas con `text-foreground` por defecto y `text-muted-foreground` solo para metadatos, números a la derecha con tabular-nums.
+
+### 5. Arreglar botones de acción (cajas y lotes) — lo que mencionaste
+
+En `src/components/boxes-view.tsx` y `rodents.lots.tsx` / `insects.lots.tsx`:
+
+- Subir tamaños: de `h-6 text-[9px] px-1.5` → `h-8 text-xs px-3` con `gap-1.5`.
+- Usar variantes shadcn correctas: **QR** = `outline`, **Editar** = `secondary`, **Eliminar** / **Dividir** = `outline` con `text-destructive hover:bg-destructive/10` para eliminar.
+- Iconos `h-3.5 w-3.5` con label visible siempre (no solo en hover).
+- Agrupar las acciones en una fila al pie de la tarjeta con `border-t` y `bg-muted/20` para que se lean como una toolbar.
+
+### 6. Pulido general transversal
+
+- **Sidebar** (`app-sidebar.tsx`): usar tokens `--sidebar-*`, item activo con barra lateral de `--primary`, hover sutil.
+- **PageShell**: títulos con `font-display`, subtítulos `text-muted-foreground`, separación más generosa.
+- **Cards globales** (dashboard, billing, settings): superficie elevada con `shadow-sm`, hover con `shadow-md` + `-translate-y-0.5` sutil, radio consistente.
+- **Inputs / Selects**: focus ring con `--ring` del tema, no el ring genérico.
+- **Badges de estado**: paleta dedicada (success/warning/error/info) que respete contraste en cada tema.
+
+### 7. QA visual
+
+- Recorrer las pantallas clave (`/stock`, `/rodents/boxes`, `/rodents/lots`, `/insects/boxes`, `/insects/lots`, `/`, `/settings`, `/billing`, `/ai`) en los 7 temas vía screenshots y verificar:
+  - Contraste de texto principal y secundario.
+  - Botones de acción legibles.
+  - Tablas con jerarquía clara.
+  - Tarjetas con bordes y sombras consistentes.
+
+## Detalles técnicos (referencia)
+
+```text
+Archivos a editar
+├── src/hooks/use-theme.ts          → mapear a tokens shadcn
+├── src/lib/themes.ts               → refinar 7 paletas + tokens shadcn por tema
+├── src/styles/themes.css           → eliminar overrides globales agresivos
+├── src/styles.css                  → revisar tokens base shadcn
+├── src/routes/stock.tsx            → rediseñar RodentSpeciesCard / InsectSpeciesCard
+├── src/components/boxes-view.tsx   → toolbar de acciones (QR/Editar/Eliminar)
+├── src/routes/rodents.lots.tsx     → toolbar de acciones (Dividir/Editar/Eliminar)
+├── src/routes/insects.lots.tsx     → toolbar de acciones (Dividir/Editar/Eliminar)
+├── src/components/app-sidebar.tsx  → tokens --sidebar-*
+└── src/components/page-shell.tsx   → jerarquía tipográfica
+```
+
+Sin cambios en: lógica de negocio, queries, mutations, schema, auth.
+
+## Riesgos y mitigación
+
+- **Riesgo**: un tema podría no convencerte. → Mitigación: si pasa, ajustamos paleta puntual en una iteración rápida (5 min).
+- **Riesgo**: romper estilos en pantallas no listadas. → Mitigación: como migramos a tokens semánticos que ya usa shadcn, el comportamiento por defecto mejora en toda la app sin tocar archivo por archivo.

@@ -459,20 +459,18 @@ function Page() {
               </div>
 
               {/* Right Column: Actions */}
-              <div className="flex items-center md:flex-col gap-2 shrink-0 md:items-end justify-between md:justify-center">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap md:justify-end">
                 {l.status === "active" && (
-                  <Button size="sm" variant="secondary" className="h-9 min-h-9 md:h-8 md:min-h-8 text-[11px] gap-1 px-3 transition-all duration-200 hover:bg-accent/85" onClick={() => initSplit(l)}>
-                    <Split className="h-4 w-4 md:h-3.5 md:w-3.5" /> Dividir
+                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
+                    <Split className="h-3.5 w-3.5" /> Dividir
                   </Button>
                 )}
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-9 w-9 md:h-8 md:w-8 text-muted-foreground hover:text-primary transition-all duration-200" onClick={() => initEdit(l)}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 md:h-8 md:w-8 text-muted-foreground hover:text-destructive transition-all duration-200" onClick={() => setDeletingLot(l)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
+                  <Edit2 className="h-3.5 w-3.5" /> Editar
+                </Button>
+                <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => setDeletingLot(l)}>
+                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                </Button>
               </div>
             </Card>
           );

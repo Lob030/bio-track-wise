@@ -42,55 +42,64 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
     <Card
       ref={cardRef}
       key={species.id}
-      className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+      className="border-border bg-card overflow-hidden flex flex-col"
     >
-      <div className="px-4 py-3.5 border-b border-border/40">
-        <h3 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-1.5">
-          <span>🐭</span>
-          <span className="font-semibold">{species.name}</span>
-          {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
-            <span className="text-xs text-emerald-400 font-medium ml-1">
-              (${species.unit_price_mxn}/unidad)
-            </span>
-          )}{" "}
-          <span className="text-xs text-muted-foreground font-normal ml-auto">
-            ({totalIndividuals.toLocaleString("es-MX")} ind.)
-          </span>
-        </h3>
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-border bg-muted/30">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-xl shrink-0" aria-hidden>🐭</span>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-foreground tracking-tight truncate">
+                {species.name}
+              </h3>
+              {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Precio base: <span className="font-semibold text-primary">${species.unit_price_mxn}</span> / unidad
+                </p>
+              )}
+            </div>
+          </div>
+          <Badge variant="secondary" className="text-xs font-semibold tabular-nums shrink-0">
+            {totalIndividuals.toLocaleString("es-MX")} ind.
+          </Badge>
+        </div>
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Table */}
+      <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-accent/20 border-b border-border/30">
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Tamaño</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Días</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Peso (g)</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Precio (MXN)</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-right px-4 py-3">Stock</th>
+            <tr className="bg-muted/40 border-b border-border">
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Tamaño</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Días</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Peso (g)</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Precio</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right px-4 py-2.5">Stock</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
-              <tr 
-                key={i} 
-                className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+              <tr
+                key={i}
+                className="border-b border-border/40 last:border-b-0 hover:bg-muted/30 transition-colors"
               >
-                <td className="px-4 py-3 text-foreground font-medium">{row.label}</td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-2.5 text-foreground font-semibold">{row.label}</td>
+                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{row.weight_g ?? "—"}</td>
-                <td className="px-4 py-3 text-emerald-400 font-semibold">
-                  {row.price_mxn != null ? `$${row.price_mxn}/unidad` : "—"}
+                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{row.weight_g ?? "—"}</td>
+                <td className="px-4 py-2.5 text-primary font-semibold tabular-nums">
+                  {row.price_mxn != null ? `$${row.price_mxn}` : "—"}
                 </td>
-                <td className="px-4 py-3 text-right font-semibold text-foreground">
-                  {row.stock > 0 ? row.stock.toLocaleString("es-MX") : "--"}
+                <td className="px-4 py-2.5 text-right font-bold text-foreground tabular-nums">
+                  {row.stock > 0 ? row.stock.toLocaleString("es-MX") : <span className="text-muted-foreground/60 font-normal">—</span>}
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-5 text-center text-muted-foreground text-xs">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground text-xs">
                   Sin reglas de tamaño configuradas.
                 </td>
               </tr>
@@ -98,16 +107,18 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-3.5 border-t border-border/40 flex justify-end">
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-border bg-muted/20 flex justify-end">
         <Button
           size="sm"
           variant="outline"
           onClick={() => onDownload(species.id, species.name, cardRef.current)}
           disabled={downloadingSpeciesId === species.id}
-          className="text-xs h-9 min-h-9 px-3 transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
+          className="text-xs h-8 px-3 font-medium"
         >
-          <Download className="h-4 w-4 mr-2" />
-          {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
+          <Download className="h-3.5 w-3.5 mr-1.5" />
+          {downloadingSpeciesId === species.id ? "Descargando…" : "Descargar imagen"}
         </Button>
       </div>
     </Card>
@@ -128,57 +139,66 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
     <Card
       ref={cardRef}
       key={species.id}
-      className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+      className="border-border bg-card overflow-hidden flex flex-col"
     >
-      <div className="px-4 py-3.5 border-b border-border/40">
-        <h3 className="text-sm font-semibold text-foreground tracking-tight flex items-center gap-1.5">
-          <span>🐛</span>
-          <span className="font-semibold">{species.name}</span>
-          {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
-            <span className="text-xs text-emerald-400 font-medium ml-1">
-              (${species.unit_price_mxn}/gramo)
-            </span>
-          )}{" "}
-          <span className="text-xs text-muted-foreground font-normal ml-auto">
-            ({totalGrams.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}g total)
-          </span>
-        </h3>
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-border bg-muted/30">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-xl shrink-0" aria-hidden>🐛</span>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-foreground tracking-tight truncate">
+                {species.name}
+              </h3>
+              {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Precio base: <span className="font-semibold text-primary">${species.unit_price_mxn}</span> / gramo
+                </p>
+              )}
+            </div>
+          </div>
+          <Badge variant="secondary" className="text-xs font-semibold tabular-nums shrink-0">
+            {totalGrams.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} g
+          </Badge>
+        </div>
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Table */}
+      <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-accent/20 border-b border-border/30">
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Tamaño</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Días</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Cant. ind por 1g</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-left px-4 py-3">Precio (MXN)</th>
-              <th className="text-[11px] uppercase text-muted-foreground font-semibold text-right px-4 py-3">Stock (g)</th>
+            <tr className="bg-muted/40 border-b border-border">
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Tamaño</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Días</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Ind. / 1g</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Precio</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right px-4 py-2.5">Stock (g)</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
-              <tr 
-                key={i} 
-                className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+              <tr
+                key={i}
+                className="border-b border-border/40 last:border-b-0 hover:bg-muted/30 transition-colors"
               >
-                <td className="px-4 py-3 text-foreground font-medium">{row.label}</td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-2.5 text-foreground font-semibold">{row.label}</td>
+                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{row.individuals_per_gram ?? "—"}</td>
-                <td className="px-4 py-3 text-emerald-400 font-semibold">
-                  {row.price_mxn != null ? `$${row.price_mxn}/gramo` : "—"}
+                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{row.individuals_per_gram ?? "—"}</td>
+                <td className="px-4 py-2.5 text-primary font-semibold tabular-nums">
+                  {row.price_mxn != null ? `$${row.price_mxn}` : "—"}
                 </td>
-                <td className="px-4 py-3 text-right font-semibold text-foreground">
+                <td className="px-4 py-2.5 text-right font-bold text-foreground tabular-nums">
                   {row.stock > 0
                     ? row.stock.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                    : "--"}
+                    : <span className="text-muted-foreground/60 font-normal">—</span>}
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-5 text-center text-muted-foreground text-xs">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground text-xs">
                   Sin reglas de tamaño configuradas.
                 </td>
               </tr>
@@ -186,16 +206,18 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-3.5 border-t border-border/40 flex justify-end">
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-border bg-muted/20 flex justify-end">
         <Button
           size="sm"
           variant="outline"
           onClick={() => onDownload(species.id, species.name, cardRef.current)}
           disabled={downloadingSpeciesId === species.id}
-          className="text-xs h-9 min-h-9 px-3 transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
+          className="text-xs h-8 px-3 font-medium"
         >
-          <Download className="h-4 w-4 mr-2" />
-          {downloadingSpeciesId === species.id ? "Descargando..." : "Descargar imagen"}
+          <Download className="h-3.5 w-3.5 mr-1.5" />
+          {downloadingSpeciesId === species.id ? "Descargando…" : "Descargar imagen"}
         </Button>
       </div>
     </Card>
