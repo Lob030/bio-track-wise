@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { FileDown, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
 import { PageShell } from "@/components/page-shell";
@@ -49,6 +53,41 @@ const COLORS = ["#34d399", "#22d3ee", "#818cf8", "#fbbf24", "#94a3b8"];
 
 function ReportsPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>("month");
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const downloadPDF = async () => {
+    if (!reportRef.current) return;
+    setGeneratingPDF(true);
+
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "var(--color-background)",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [canvas.width / 2, canvas.height / 2],
+      });
+
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      
+      const dateStr = new Date().toISOString().split("T")[0];
+      pdf.save(`BioTrack-Reporte-${dateStr}.pdf`);
+
+      toast.success("✅ Reporte PDF descargado");
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      toast.error("❌ Error al generar PDF");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   /* ── Fetching Data via React Query ── */
   const { data: orders, isLoading: isLoadingOrders } = useQuery({
@@ -506,26 +545,59 @@ function ReportsPage() {
       subtitle="Inteligencia de negocio, control financiero y rendimiento biológico."
       icon={<BarChart3 className="h-6 w-6 text-emerald-glow" />}
       actions={
-        <div className="bg-card/80 p-0.5 rounded-lg border border-border/40 flex shadow-inner">
-          {(["day", "week", "month", "year"] as const).map((t) => (
-            <Button
-              key={t}
-              variant="ghost"
-              size="sm"
-              onClick={() => setTimeframe(t)}
-              className={`text-xs px-3 h-8 capitalize transition-all duration-200 ${
-                timeframe === t
-                  ? "bg-emerald-500/10 text-emerald-glow border border-emerald-500/20 shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t === "day" ? "Día" : t === "week" ? "Semana" : t === "month" ? "Mes" : "Año"}
-            </Button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadPDF}
+            disabled={generatingPDF}
+            className="gap-2"
+          >
+            {generatingPDF ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              <>
+                <FileDown className="h-4 w-4" />
+                Descargar PDF
+              </>
+            )}
+          </Button>
+
+          <div className="bg-card/80 p-0.5 rounded-lg border border-border/40 flex shadow-inner">
+            {(["day", "week", "month", "year"] as const).map((t) => (
+              <Button
+                key={t}
+                variant="ghost"
+                size="sm"
+                onClick={() => setTimeframe(t)}
+                className={`text-xs px-3 h-8 capitalize transition-all duration-200 ${
+                  timeframe === t
+                    ? "bg-emerald-500/10 text-emerald-glow border border-emerald-500/20 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t === "day" ? "Día" : t === "week" ? "Semana" : t === "month" ? "Mes" : "Año"}
+              </Button>
+            ))}
+          </div>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div ref={reportRef} className="space-y-6 p-4">
+        {generatingPDF && (
+          <div className="mb-6 p-4 border-b border-border/50">
+            <h1 className="text-2xl font-bold">BioTrack Central — Reporte de Bioterio</h1>
+            <p className="text-muted-foreground text-sm">
+              Generado: {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <p className="text-muted-foreground text-sm capitalize">
+              Período: {timeframe === "day" ? "Día" : timeframe === "week" ? "Semana" : timeframe === "month" ? "Mes" : "Año"}
+            </p>
+          </div>
+        )}
         {/* ── CORE KPI ROW ── */}
         <div className="grid md:grid-cols-3 gap-4">
           <Card className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center justify-between hover:border-primary/40 transition-all duration-300 shadow-md hover:shadow-lg">

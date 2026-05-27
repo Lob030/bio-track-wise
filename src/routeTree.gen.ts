@@ -16,6 +16,7 @@ import { Route as SalesRouteImport } from './routes/sales'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AiRouteImport } from './routes/ai'
@@ -62,6 +63,11 @@ const LoginRoute = LoginRouteImport.update({
 const ClientsRoute = ClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BillingRoute = BillingRouteImport.update({
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/ai': typeof AiRoute
   '/alerts': typeof AlertsRoute
   '/billing': typeof BillingRoute
+  '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/ai': typeof AiRoute
   '/alerts': typeof AlertsRoute
   '/billing': typeof BillingRoute
+  '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/ai': typeof AiRoute
   '/alerts': typeof AlertsRoute
   '/billing': typeof BillingRoute
+  '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/alerts'
     | '/billing'
+    | '/calendar'
     | '/clients'
     | '/login'
     | '/reports'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/alerts'
     | '/billing'
+    | '/calendar'
     | '/clients'
     | '/login'
     | '/reports'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/alerts'
     | '/billing'
+    | '/calendar'
     | '/clients'
     | '/login'
     | '/reports'
@@ -260,6 +272,7 @@ export interface RootRouteChildren {
   AiRoute: typeof AiRoute
   AlertsRoute: typeof AlertsRoute
   BillingRoute: typeof BillingRoute
+  CalendarRoute: typeof CalendarRoute
   ClientsRoute: typeof ClientsRoute
   LoginRoute: typeof LoginRoute
   ReportsRoute: typeof ReportsRoute
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/clients'
       preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/billing': {
@@ -420,6 +440,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiRoute: AiRoute,
   AlertsRoute: AlertsRoute,
   BillingRoute: BillingRoute,
+  CalendarRoute: CalendarRoute,
   ClientsRoute: ClientsRoute,
   LoginRoute: LoginRoute,
   ReportsRoute: ReportsRoute,
