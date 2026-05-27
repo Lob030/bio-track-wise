@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin, QrCode } from "lucide-react";
+import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -537,6 +537,11 @@ export function BoxesView({ kind }: { kind: Kind }) {
   const [editingBox, setEditingBox] = useState<any | null>(null);
   const [form, setForm] = useState({ code: "", roomRack: "", usage: "engorda", capacity: "" });
 
+  const [filterCuarto, setFilterCuarto] = useState<string>("all");
+  const [filterRack, setFilterRack] = useState<string>("all");
+  const [filterUso, setFilterUso] = useState<string>("all");
+  const [filterEstado, setFilterEstado] = useState<string>("all");
+
   const { data: boxes } = useQuery({
     queryKey: ["boxes", kind],
     queryFn: async () => {
@@ -570,6 +575,65 @@ export function BoxesView({ kind }: { kind: Kind }) {
     (lots ?? []).forEach((l) => { if (l.box_id) (map[l.box_id] ??= []).push(l); });
     return map;
   }, [lots]);
+
+  const uniqueCuartos = useMemo(() => {
+    const set = new Set<string>();
+    (boxes ?? []).forEach((b) => {
+      const { roomRack } = unpackLocation(b.location);
+      // Extract "Cuarto X" or first part before "/"
+      const cuartoMatch = roomRack.match(/cuarto\s+(\w+)/i);
+      if (cuartoMatch) set.add(cuartoMatch[1].toUpperCase());
+      else if (roomRack.includes("/")) set.add(roomRack.split("/")[0].trim());
+      else if (roomRack) set.add(roomRack.trim());
+    });
+    return Array.from(set).sort();
+  }, [boxes]);
+
+  const uniqueRacks = useMemo(() => {
+    const set = new Set<string>();
+    (boxes ?? []).forEach((b) => {
+      const { roomRack } = unpackLocation(b.location);
+      // Extract "Mueble Y" or second part after "/"
+      const muebleMatch = roomRack.match(/mueble\s+(\w+)/i);
+      if (muebleMatch) set.add(muebleMatch[1].toUpperCase());
+      else if (roomRack.includes("/")) set.add(roomRack.split("/")[1]?.trim() ?? "");
+    });
+    return Array.from(set).filter(Boolean).sort();
+  }, [boxes]);
+
+  const filteredBoxes = useMemo(() => {
+    return (boxes ?? []).filter((b) => {
+      const { roomRack, usage } = unpackLocation(b.location);
+      const isOccupied = (byBox[b.id] ?? []).length > 0;
+
+      // Cuarto filter
+      if (filterCuarto !== "all") {
+        const cuartoMatch = roomRack.match(/cuarto\s+(\w+)/i);
+        const cuartoVal = cuartoMatch?.[1]?.toUpperCase() 
+          ?? roomRack.split("/")[0]?.trim();
+        if (cuartoVal !== filterCuarto) return false;
+      }
+
+      // Rack filter
+      if (filterRack !== "all") {
+        const muebleMatch = roomRack.match(/mueble\s+(\w+)/i);
+        const rackVal = muebleMatch?.[1]?.toUpperCase() 
+          ?? roomRack.split("/")[1]?.trim();
+        if (rackVal !== filterRack) return false;
+      }
+
+      // Uso filter
+      if (filterUso !== "all") {
+        if (usage !== filterUso) return false;
+      }
+
+      // Estado filter
+      if (filterEstado === "libre" && isOccupied) return false;
+      if (filterEstado === "ocupada" && !isOccupied) return false;
+
+      return true;
+    });
+  }, [boxes, byBox, filterCuarto, filterRack, filterUso, filterEstado]);
 
   const feedFor = (boxId: string): number => {
     if (kind !== "rodent") return 0;
@@ -688,11 +752,97 @@ export function BoxesView({ kind }: { kind: Kind }) {
         </>
       }
     >
+      {/* FILTER BAR */}
+      {(boxes ?? []).length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-border/40">
+          
+          {/* Cuarto filter */}
+          {uniqueCuartos.length > 1 && (
+            <Select value={filterCuarto} onValueChange={setFilterCuarto}>
+              <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+                <SelectValue placeholder="Cuarto: Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Cuarto: Todos</SelectItem>
+                {uniqueCuartos.map((c) => (
+                  <SelectItem key={c} value={c}>Cuarto {c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Rack filter */}
+          {uniqueRacks.length > 1 && (
+            <Select value={filterRack} onValueChange={setFilterRack}>
+              <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+                <SelectValue placeholder="Mueble: Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Mueble: Todos</SelectItem>
+                {uniqueRacks.map((r) => (
+                  <SelectItem key={r} value={r}>Mueble {r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Uso filter */}
+          <Select value={filterUso} onValueChange={setFilterUso}>
+            <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+              <SelectValue placeholder="Uso: Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Uso: Todos</SelectItem>
+              <SelectItem value="engorda">Engorda</SelectItem>
+              <SelectItem value="reproductores">Reproductores</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Estado filter */}
+          <Select value={filterEstado} onValueChange={setFilterEstado}>
+            <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+              <SelectValue placeholder="Estado: Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Estado: Todos</SelectItem>
+              <SelectItem value="libre">Libre</SelectItem>
+              <SelectItem value="ocupada">Ocupada</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear filters button - only shown when filters are active */}
+          {(filterCuarto !== "all" || filterRack !== "all" || filterUso !== "all" || filterEstado !== "all") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setFilterCuarto("all");
+                setFilterRack("all");
+                setFilterUso("all");
+                setFilterEstado("all");
+              }}
+            >
+              ✕ Limpiar filtros
+            </Button>
+          )}
+
+          {/* Results counter */}
+          <span className="h-8 flex items-center text-xs text-muted-foreground ml-auto">
+            {filteredBoxes.length} de {(boxes ?? []).length} cajas
+          </span>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {(boxes ?? []).length === 0 && (
-          <Card className="col-span-full p-10 text-center text-muted-foreground border-dashed">Aún no hay cajas registradas.</Card>
+        {filteredBoxes.length === 0 && (
+          <Card className="col-span-full p-10 text-center text-muted-foreground border-dashed">
+            {(boxes ?? []).length === 0
+              ? "Aún no hay cajas registradas."
+              : "No hay cajas con los filtros seleccionados."}
+          </Card>
         )}
-        {(boxes ?? []).map((b) => {
+        {filteredBoxes.map((b) => {
           const { roomRack, usage } = unpackLocation(b.location);
           const occupants = byBox[b.id] ?? [];
           const occupied = occupants.length > 0;
@@ -741,10 +891,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
-                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium border-border/60 hover:bg-accent hover:border-primary/50">
-                  <QrCode className="h-3.5 w-3.5" /> QR
-                </Button>
+              <div className="grid grid-cols-2 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
                 <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
                   setEditingBox(b);
                   const unpacked = unpackLocation(b.location);
