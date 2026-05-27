@@ -154,28 +154,26 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 .text-amber-glow { color: oklch(0.82 0.17 75); }
 .text-red-glow { color: oklch(0.70 0.22 25); }
 
-/* Global Biotech Command Center High-Tech Layering and Accents */
-
-/* Glassmorphic Component Cards & Tabs Content Override */
-.bg-card, 
-.bg-slate-900\/60,
-.card,
-.tabs-content > div {
-  background-color: color-mix(in srgb, var(--card) 78%, transparent) !important; /* Raised opacity from 65% to 78% for superior text contrast */
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border-color: color-mix(in srgb, var(--border) 60%, transparent) !important;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2), inset 0 1px 1px color-mix(in srgb, var(--foreground) 6%, transparent) !important; /* premium satin inner highlight */
+/* Global card surface — uses theme tokens. Subtle, no aggressive hover transform */
+.bg-card,
+.card {
+  background-color: var(--card);
+  border-color: var(--border);
+  transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
 }
 
-/* Micro-interaction Hover Transform & Ambient Glow */
-.bg-card:hover, 
-.bg-slate-900\/60:hover,
-.card:hover {
-  transform: translateY(-3px) !important;
-  border-color: color-mix(in srgb, var(--primary) 65%, transparent) !important; /* Dynamic Primary glow on hover */
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), 0 0 20px 0 color-mix(in srgb, var(--primary) 15%, transparent), inset 0 1px 1px color-mix(in srgb, var(--foreground) 12%, transparent) !important;
+/* Opt-in premium glass treatment via [data-glass="true"] */
+[data-glass="true"] {
+  background-color: color-mix(in srgb, var(--card) 80%, transparent) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+[data-glass="true"]:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 0 16px color-mix(in srgb, var(--primary) 14%, transparent);
 }
 
 /* Sidebar clean bg-sidebar overrides */
