@@ -326,17 +326,17 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
                         </span>
                       </div>
                     </div>
-                    {/* Botones de acción compactos */}
-                    <div className="flex items-center gap-1.5 pt-1">
+                    {/* Botones de acción */}
+                    <div className="flex items-center gap-1.5 pt-1.5 border-t border-border/40">
                       {lot.status === "active" && (
-                        <Button size="sm" variant="outline" className="h-6 text-[9px] px-1.5" onClick={() => initSplit(lot)}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 font-medium" onClick={() => initSplit(lot)}>
                           Dividir
                         </Button>
                       )}
-                      <Button size="sm" variant="ghost" className="h-6 text-[9px] px-1.5 text-foreground" onClick={() => startEdit(lot)}>
+                      <Button size="sm" variant="secondary" className="h-7 text-xs px-2.5 font-medium" onClick={() => startEdit(lot)}>
                         Editar
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-6 text-[9px] px-1.5 text-destructive hover:text-destructive" onClick={() => { setPopoverOpen(false); setDeletingLot(lot); }}>
+                      <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => { setPopoverOpen(false); setDeletingLot(lot); }}>
                         Eliminar
                       </Button>
                     </div>
@@ -741,11 +741,11 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-2 mt-3 border-t border-border/40">
-                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 px-1.5 text-muted-foreground hover:text-primary">
+              <div className="grid grid-cols-3 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium border-border/60 hover:bg-accent hover:border-primary/50">
                   <QrCode className="h-3.5 w-3.5" /> QR
                 </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 px-1.5 text-muted-foreground hover:text-primary" onClick={() => {
+                <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
                   setEditingBox(b);
                   const unpacked = unpackLocation(b.location);
                   setForm({
@@ -758,7 +758,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 }}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
                 </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 px-1.5 text-muted-foreground hover:text-destructive" onClick={() => remove(b.id)}>
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => remove(b.id)}>
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar
                 </Button>
               </div>
