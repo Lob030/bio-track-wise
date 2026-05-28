@@ -266,24 +266,30 @@ export type Database = {
       clients: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           name: string
+          notes: string | null
           owner_id: string
           phone: string
           profile: Database["public"]["Enums"]["client_profile"]
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           name: string
+          notes?: string | null
           owner_id: string
           phone: string
           profile?: Database["public"]["Enums"]["client_profile"]
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
+          notes?: string | null
           owner_id?: string
           phone?: string
           profile?: Database["public"]["Enums"]["client_profile"]
