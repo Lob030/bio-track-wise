@@ -90,7 +90,7 @@ function Clients() {
         email: editForm.email || null,
         notes: editForm.notes || null,
         profile: editForm.profile,
-      })
+      } as any)
       .eq("id", editingClient.id);
     if (error) {
       toast.error(error.message);
