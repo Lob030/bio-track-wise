@@ -642,6 +642,12 @@ function Page() {
                     <Split className="h-3.5 w-3.5" /> Dividir
                   </Button>
                 )}
+                {l.status === "active" && (
+                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => { setDeathLot(l); setDeathCount(1); setDeathCause("desconocida"); }}>
+                    <Skull className="h-3.5 w-3.5" /> Baja
+                  </Button>
+                )}
+
                 <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
                 </Button>
