@@ -975,7 +975,22 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 )}
               </div>
 
+              {usage === "reproductores" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-9 text-xs gap-1.5 font-semibold border-pink-500/40 text-pink-500 hover:bg-pink-500/10 hover:text-pink-500 hover:border-pink-500/60 mt-1"
+                  onClick={() => {
+                    setBirthForm({ lot_code: "", species_id: "", line_id: "", unsexed: 0, notes: "" });
+                    setBirthBox(b);
+                  }}
+                >
+                  🐣 Registrar Nacimiento
+                </Button>
+              )}
+
               <div className="grid grid-cols-2 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
+
                 <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
                   setEditingBox(b);
                   const unpacked = unpackLocation(b.location);
