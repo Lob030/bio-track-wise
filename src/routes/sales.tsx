@@ -856,7 +856,7 @@ function PedidosFuturosPanel({
                     <p className="font-semibold">{(order.clients as any)?.name ?? "Sin cliente"}</p>
                     <p className="text-xs text-muted-foreground">{order.notes || "Sin notas"}</p>
                   </div>
-                  <Badge variant={isOverdue ? "destructive" : isUrgent ? "warning" : "outline"}>
+                  <Badge variant={isOverdue ? "destructive" : isUrgent ? "secondary" : "outline"}>
                     {isOverdue
                       ? `⚠️ Vencido hace ${Math.abs(daysUntil!)} días`
                       : daysUntil === 0 ? "🔴 Hoy"

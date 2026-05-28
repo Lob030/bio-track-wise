@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
 
 const ParsedActionSchema = z.union([
   z.object({
@@ -155,7 +157,9 @@ function regexFallback(userMessage: string, today: string): ParsedAction {
 }
 
 export const parseAiCommand = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: { userMessage: string; today: string }) => input)
+
   .handler(async ({ data }): Promise<ParsedAction> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");

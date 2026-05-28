@@ -29,11 +29,15 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   console.error(error);
+  const raw = error?.message ?? "";
+  let friendly = "Ocurrió un error inesperado. Por favor intenta de nuevo.";
+  if (raw.startsWith("TIER_LIMIT:")) friendly = "Has alcanzado el límite de tu plan actual. Actualiza tu suscripción para continuar.";
+  else if (raw.startsWith("Unauthorized")) friendly = "Tu sesión expiró o no tienes permisos para esta acción.";
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">Algo salió mal</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{friendly}</p>
         <button
           onClick={() => { router.invalidate(); reset(); }}
           className="mt-6 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium"
@@ -42,6 +46,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     </div>
   );
 }
+
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dna, Plus, Trash2, Download, Upload, Edit2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
