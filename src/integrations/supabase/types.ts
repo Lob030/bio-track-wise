@@ -347,6 +347,7 @@ export type Database = {
           started_at: string
           status: Database["public"]["Enums"]["lot_status"]
           tags: string[]
+          total_deaths: number | null
           unsexed: number | null
         }
         Insert: {
@@ -370,6 +371,7 @@ export type Database = {
           started_at?: string
           status?: Database["public"]["Enums"]["lot_status"]
           tags?: string[]
+          total_deaths?: number | null
           unsexed?: number | null
         }
         Update: {
@@ -393,6 +395,7 @@ export type Database = {
           started_at?: string
           status?: Database["public"]["Enums"]["lot_status"]
           tags?: string[]
+          total_deaths?: number | null
           unsexed?: number | null
         }
         Relationships: [
@@ -694,6 +697,7 @@ export type Database = {
           audited_at: string | null
           created_at: string
           id: string
+          min_stock_grams: number | null
           name: string
           notes: string | null
           owner_id: string
@@ -704,6 +708,7 @@ export type Database = {
           audited_at?: string | null
           created_at?: string
           id?: string
+          min_stock_grams?: number | null
           name: string
           notes?: string | null
           owner_id: string
@@ -714,6 +719,7 @@ export type Database = {
           audited_at?: string | null
           created_at?: string
           id?: string
+          min_stock_grams?: number | null
           name?: string
           notes?: string | null
           owner_id?: string
