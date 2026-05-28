@@ -420,8 +420,21 @@ function Page() {
       subtitle="Control individual de machos, hembras y sin sexar por lote."
       icon={<Rat className="h-6 w-6" />}
       actions={
+        <>
+        <Button variant="outline" className="h-10 md:h-9 min-h-10 md:min-h-9" onClick={() => exportToCSV(
+          `lotes-roedores-${new Date().toISOString().slice(0,10)}.csv`,
+          ["Código", "Tipo", "Especie", "Línea", "Caja", "Machos", "Hembras", "Sin sexar", "Total", "Bajas", "Inicio", "Estado"],
+          (lots ?? []).map((l: any) => [
+            l.lot_code, l.lot_type, speciesMap[l.species_id] ?? l.species_id, linesMap[l.line_id] ?? l.line_id, boxesMap[l.box_id] ?? l.box_id,
+            l.males, l.females, l.unsexed,
+            (l.males ?? 0) + (l.females ?? 0) + (l.unsexed ?? 0),
+            l.total_deaths ?? 0,
+            l.started_at, l.status
+          ])
+        )}><Download className="h-4 w-4 mr-2" /> Exportar CSV</Button>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
+
           <DialogContent className="max-w-3xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo lote de roedores</DialogTitle>
