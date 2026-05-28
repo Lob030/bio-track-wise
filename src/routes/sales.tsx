@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, ShoppingCart, Trash2, Check, Package } from "lucide-react";
+import { Plus, ShoppingCart, Trash2, Check, Package, Search } from "lucide-react";
 
 /* ───────── types ───────── */
 
@@ -126,6 +126,47 @@ function SalesPage() {
     [orders],
   );
 
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    historial.forEach((o: any) => {
+      const d = o.delivered_at ?? o.created_at;
+      if (d) {
+        // Format as "YYYY-MM" for value, display as "Enero 2025"
+        set.add(d.slice(0, 7));
+      }
+    });
+    // Sort descending (most recent first)
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [historial]);
+
+  const filteredHistorial = useMemo(() => {
+    let result = historial as any[];
+
+    // Filter by client name (partial match, case insensitive)
+    if (historialSearch.trim()) {
+      const q = historialSearch.trim().toLowerCase();
+      result = result.filter((o: any) =>
+        (o.clients?.name ?? "").toLowerCase().includes(q)
+      );
+    }
+
+    // Filter by month
+    if (historialMonth !== "all") {
+      result = result.filter((o: any) => {
+        const d = o.delivered_at ?? o.created_at;
+        return d?.startsWith(historialMonth);
+      });
+    }
+
+    return result;
+  }, [historial, historialSearch, historialMonth]);
+
+  // Total of filtered results
+  const filteredTotal = useMemo(
+    () => filteredHistorial.reduce((sum: number, o: any) => sum + Number(o.total_mxn ?? 0), 0),
+    [filteredHistorial]
+  );
+
   /* ── modal state ── */
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(todayISO);
@@ -134,6 +175,8 @@ function SalesPage() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [historialSearch, setHistorialSearch] = useState("");
+  const [historialMonth, setHistorialMonth] = useState("all");
 
   function resetForm() {
     setDate(todayISO());
@@ -723,55 +766,118 @@ function SalesPage() {
               Sin pedidos entregados.
             </Card>
           ) : (
-            <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-accent/20 border-b border-border/30">
-                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                        Pedido #
-                      </th>
-                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                        Cliente
-                      </th>
-                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                        Fecha entrega
-                      </th>
-                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                        Items
-                      </th>
-                      <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-right">
-                        Total MXN
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historial.map((o: any, i: number) => (
-                      <tr 
-                        key={o.id} 
-                        className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
-                      >
-                        <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
-                          #{o.id.slice(0, 8)}
-                        </td>
-                        <td className="px-4 py-3 text-foreground font-medium">
-                          {(o as any).clients?.name ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {fmtDate(o.delivered_at)}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {o.order_items?.length ?? 0} productos
-                        </td>
-                        <td className="px-4 py-3 text-right font-bold text-emerald-400">
-                          {fmtMXN(o.total_mxn ?? 0)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+            <>
+              {historial.length > 0 && (
+                <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                  {/* Client search */}
+                  <div className="relative flex-1 max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por cliente..."
+                      value={historialSearch}
+                      onChange={e => setHistorialSearch(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+
+                  {/* Month filter */}
+                  <Select value={historialMonth} onValueChange={setHistorialMonth}>
+                    <SelectTrigger className="h-9 w-44">
+                      <SelectValue placeholder="Todos los meses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los meses</SelectItem>
+                      {availableMonths.map(m => (
+                        <SelectItem key={m} value={m}>
+                          {new Date(m + "-15").toLocaleDateString("es-MX", {
+                            month: "long", year: "numeric"
+                          })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Clear filters button — only shows when filters are active */}
+                  {(historialSearch || historialMonth !== "all") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 text-muted-foreground"
+                      onClick={() => { setHistorialSearch(""); setHistorialMonth("all"); }}
+                    >
+                      ✕ Limpiar
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {historial.length > 0 && (
+                <div className="flex justify-between items-center text-xs text-muted-foreground mb-2 px-1">
+                  <span>
+                    {filteredHistorial.length} de {historial.length} órdenes
+                  </span>
+                  <span className="font-semibold text-emerald-400">
+                    Total: {fmtMXN(filteredTotal)}
+                  </span>
+                </div>
+              )}
+
+              {filteredHistorial.length === 0 ? (
+                <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
+                  Sin resultados para los filtros aplicados.
+                </Card>
+              ) : (
+                <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-accent/20 border-b border-border/30">
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Pedido #
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Cliente
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Fecha entrega
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Items
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-right">
+                            Total MXN
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredHistorial.map((o: any, i: number) => (
+                          <tr 
+                            key={o.id} 
+                            className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+                          >
+                            <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
+                              #{o.id.slice(0, 8)}
+                            </td>
+                            <td className="px-4 py-3 text-foreground font-medium">
+                              {(o as any).clients?.name ?? "—"}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {fmtDate(o.delivered_at)}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {o.order_items?.length ?? 0} productos
+                            </td>
+                            <td className="px-4 py-3 text-right font-bold text-emerald-400">
+                              {fmtMXN(o.total_mxn ?? 0)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>

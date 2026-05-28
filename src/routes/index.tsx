@@ -41,12 +41,15 @@ function Dashboard() {
   const { data } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [lots, clients, orders, alerts, boxes] = await Promise.all([
+      const [lots, clients, orders, alerts, boxes, purchases] = await Promise.all([
         supabase.from("lots").select("id, lot_type, status, kind, started_at, lot_code, box_id").eq("status", "active"),
         supabase.from("clients").select("id, created_at").gte("created_at", month.toISOString()),
         supabase.from("orders").select("id, total_mxn, created_at, status").gte("created_at", month.toISOString()),
         supabase.from("alerts").select("id").eq("acknowledged", false),
         supabase.from("boxes").select("id"),
+        supabase.from("warehouse_purchases")
+          .select("id, total_cost, created_at")
+          .gte("created_at", month.toISOString()),
       ]);
       return {
         lots: lots.data ?? [],
@@ -54,12 +57,16 @@ function Dashboard() {
         orders: orders.data ?? [],
         alerts: alerts.data ?? [],
         boxes: boxes.data ?? [],
+        purchases: purchases.data ?? [],
       };
     },
   });
 
   const lots = data?.lots ?? [];
   const sales = (data?.orders ?? []).reduce((a, o) => a + Number(o.total_mxn || 0), 0);
+  const gastos = (data?.purchases ?? []).reduce(
+    (sum, p) => sum + Number(p.total_cost || 0), 0
+  );
   const breeders = lots.filter((l) => l.lot_type === "breeder").length;
   const occupiedBoxes = new Set(lots.map((l) => l.box_id).filter(Boolean)).size;
   const totalBoxes = data?.boxes.length ?? 0;
@@ -87,7 +94,13 @@ function Dashboard() {
         <KPI icon={Activity} label="Lotes activos" value={lots.length} sub={`${byKind.rodent} roedores · ${byKind.insect} insectos`} tone="success" />
         <KPI icon={Users} label="Nuevos clientes (mes)" value={data?.clients.length ?? 0} />
         <KPI icon={ShoppingCart} label="Órdenes (mes)" value={data?.orders.length ?? 0} />
-        <KPI icon={Wallet} label="Gastos (mes)" value={"—"} sub="Sin registros" />
+        <KPI
+          icon={Wallet}
+          label="Gastos (mes)"
+          value={gastos > 0 ? `$${gastos.toLocaleString("es-MX", { maximumFractionDigits: 0 })}` : "$0"}
+          sub={`${(data?.purchases ?? []).length} compras registradas`}
+          tone={gastos > 0 ? "warning" : "default"}
+        />
         <KPI icon={Boxes} label="Ocupación de cajas" value={`${occupiedBoxes}/${totalBoxes}`} sub={`${free} libres`} />
         <KPI icon={Bell} label="Alertas pendientes" value={data?.alerts.length ?? 0} tone={(data?.alerts.length ?? 0) > 0 ? "warning" : "default"} />
         <KPI icon={TrendingUp} label="Ventas (mes)" value={`$${sales.toLocaleString("es-MX")}`} sub="MXN" tone="success" />
