@@ -126,6 +126,10 @@ function SalesPage() {
     [orders],
   );
 
+  const [historialSearch, setHistorialSearch] = useState("");
+  const [historialMonth, setHistorialMonth] = useState("all");
+
+
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
     historial.forEach((o: any) => {
@@ -177,8 +181,7 @@ function SalesPage() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [historialSearch, setHistorialSearch] = useState("");
-  const [historialMonth, setHistorialMonth] = useState("all");
+
 
   function resetForm() {
     setDate(todayISO());

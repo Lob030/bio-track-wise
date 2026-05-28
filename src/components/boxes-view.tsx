@@ -564,11 +564,70 @@ export function BoxesView({ kind }: { kind: Kind }) {
   const { data: species } = useQuery({
     queryKey: ["species", kind],
     queryFn: async () => {
-      const { data, error } = await supabase.from("species").select("id,size_rules").eq("kind", kind);
+      const { data, error } = await supabase.from("species").select("id,name,size_rules,kind").eq("kind", kind);
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: lines } = useQuery({
+    queryKey: ["genetic-lines", kind],
+    queryFn: async () => (await supabase.from("genetic_lines").select("id,name,species_id")).data ?? [],
+  });
+
+  // Birth dialog state
+  const [birthBox, setBirthBox] = useState<any | null>(null);
+  const [birthForm, setBirthForm] = useState({
+    lot_code: "",
+    species_id: "",
+    line_id: "",
+    unsexed: 0,
+    notes: "",
+  });
+  const [submittingBirth, setSubmittingBirth] = useState(false);
+
+  const registerBirth = async () => {
+    if (!birthBox) return;
+    if (!birthForm.lot_code || !birthForm.species_id || birthForm.unsexed <= 0) {
+      toast.error("Código, especie y número de crías son obligatorios");
+      return;
+    }
+    setSubmittingBirth(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+
+      const { error } = await supabase.from("lots").insert({
+        owner_id: user.id,
+        kind: birthBox.kind,
+        lot_code: birthForm.lot_code,
+        lot_type: "birth",
+        species_id: birthForm.species_id,
+        line_id: birthForm.line_id || null,
+        box_id: birthBox.id,
+        males: 0,
+        females: 0,
+        unsexed: birthForm.unsexed,
+        notes: birthForm.notes || null,
+        started_at: new Date().toISOString().slice(0, 10),
+        status: "active",
+      } as any);
+
+      if (error) throw error;
+
+      toast.success(`Nacimiento registrado — ${birthForm.unsexed} crías en lote ${birthForm.lot_code}`);
+      setBirthBox(null);
+      setBirthForm({ lot_code: "", species_id: "", line_id: "", unsexed: 0, notes: "" });
+      qc.invalidateQueries({ queryKey: ["lots", kind] });
+      qc.invalidateQueries({ queryKey: ["lots-by-box", kind] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(err.message ?? String(err));
+    } finally {
+      setSubmittingBirth(false);
+    }
+  };
+
 
   const byBox = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -916,7 +975,22 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 )}
               </div>
 
+              {usage === "reproductores" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-9 text-xs gap-1.5 font-semibold border-pink-500/40 text-pink-500 hover:bg-pink-500/10 hover:text-pink-500 hover:border-pink-500/60 mt-1"
+                  onClick={() => {
+                    setBirthForm({ lot_code: "", species_id: "", line_id: "", unsexed: 0, notes: "" });
+                    setBirthBox(b);
+                  }}
+                >
+                  🐣 Registrar Nacimiento
+                </Button>
+              )}
+
               <div className="grid grid-cols-2 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
+
                 <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
                   setEditingBox(b);
                   const unpacked = unpackLocation(b.location);
@@ -938,6 +1012,95 @@ export function BoxesView({ kind }: { kind: Kind }) {
           );
         })}
       </div>
+
+      <Dialog open={!!birthBox} onOpenChange={(v) => !v && setBirthBox(null)}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🐣 Registrar Nacimiento — Caja {birthBox?.code}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Se creará un lote de tipo <span className="font-semibold">birth</span> con fecha de hoy.
+          </p>
+          <div className="grid gap-4 py-2">
+            <div>
+              <Label className="mb-1.5 block">Código del lote *</Label>
+              <Input
+                value={birthForm.lot_code}
+                onChange={(e) => setBirthForm({ ...birthForm, lot_code: e.target.value })}
+                placeholder="Ej. N-01"
+                className="h-10"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block">Especie *</Label>
+              <Select value={birthForm.species_id} onValueChange={(v) => setBirthForm({ ...birthForm, species_id: v, line_id: "" })}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="Selecciona especie" /></SelectTrigger>
+                <SelectContent>
+                  {(species ?? [])
+                    .filter((s: any) => s.kind === birthBox?.kind)
+                    .map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block">Línea genética <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Select value={birthForm.line_id} onValueChange={(v) => setBirthForm({ ...birthForm, line_id: v })}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  {(lines ?? [])
+                    .filter((l: any) => !birthForm.species_id || l.species_id === birthForm.species_id)
+                    .map((l: any) => (
+                      <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block">Número de crías *</Label>
+              <Input
+                type="number"
+                min={1}
+                value={birthForm.unsexed || ""}
+                onChange={(e) => setBirthForm({ ...birthForm, unsexed: parseInt(e.target.value) || 0 })}
+                className="h-10"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Las crías se registran como "sin sexar" — se pueden actualizar después
+              </p>
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block">Notas <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Input
+                value={birthForm.notes}
+                onChange={(e) => setBirthForm({ ...birthForm, notes: e.target.value })}
+                className="h-10"
+              />
+            </div>
+
+            {birthForm.unsexed > 0 && birthForm.lot_code && (
+              <div className="p-3 rounded-md bg-pink-500/10 border border-pink-500/30 text-xs">
+                <p className="font-semibold text-pink-500 mb-1">Resumen del lote a crear:</p>
+                <p className="text-muted-foreground">
+                  Código: <span className="text-foreground font-medium">{birthForm.lot_code}</span> · Tipo: <span className="text-foreground font-medium">birth</span> · Crías: <span className="text-foreground font-medium">{birthForm.unsexed}</span> · Fecha: hoy
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBirthBox(null)}>Cancelar</Button>
+            <Button onClick={registerBirth} disabled={submittingBirth}>
+              {submittingBirth ? "Registrando..." : "🐣 Registrar Nacimiento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
+
   );
 }

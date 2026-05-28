@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, Area, ReferenceLine } from "recharts";
 import type { RodentRule } from "@/components/size-matrix";
-import { Rat, Plus, Edit2, Trash2, Split, Search } from "lucide-react";
+import { Rat, Plus, Edit2, Trash2, Split, Search, Skull, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -52,6 +53,63 @@ function Page() {
 
   const [deletingLot, setDeletingLot] = useState<any | null>(null);
   const [submittingDelete, setSubmittingDelete] = useState(false);
+
+  const [deathLot, setDeathLot] = useState<any | null>(null);
+  const [deathCount, setDeathCount] = useState(1);
+  const [deathCause, setDeathCause] = useState("desconocida");
+  const [submittingDeath, setSubmittingDeath] = useState(false);
+
+  const registerDeath = async () => {
+    if (!deathLot || deathCount <= 0) return;
+    const totalPop = (deathLot.males ?? 0) + (deathLot.females ?? 0) + (deathLot.unsexed ?? 0);
+    if (deathCount > totalPop) {
+      toast.error(`No puedes registrar más bajas (${deathCount}) que el total del lote (${totalPop})`);
+      return;
+    }
+    setSubmittingDeath(true);
+    try {
+      let remaining = deathCount;
+      let newUnsexed = deathLot.unsexed ?? 0;
+      let newFemales = deathLot.females ?? 0;
+      let newMales = deathLot.males ?? 0;
+
+      const fromUnsexed = Math.min(remaining, newUnsexed);
+      newUnsexed -= fromUnsexed; remaining -= fromUnsexed;
+      const fromFemales = Math.min(remaining, newFemales);
+      newFemales -= fromFemales; remaining -= fromFemales;
+      newMales -= Math.min(remaining, newMales);
+
+      const newTotal = newMales + newFemales + newUnsexed;
+      const { error } = await supabase
+        .from("lots")
+        .update({
+          males: newMales,
+          females: newFemales,
+          unsexed: newUnsexed,
+          total_deaths: (deathLot.total_deaths ?? 0) + deathCount,
+          status: newTotal === 0 ? "finalizado" : "active",
+          finalized_at: newTotal === 0 ? new Date().toISOString() : null,
+          notes: deathLot.notes
+            ? `${deathLot.notes} | Baja ${new Date().toLocaleDateString("es-MX")}: ${deathCount} (${deathCause})`
+            : `Baja ${new Date().toLocaleDateString("es-MX")}: ${deathCount} (${deathCause})`,
+        } as any)
+        .eq("id", deathLot.id);
+      if (error) throw error;
+
+      toast.success(`Baja registrada: ${deathCount} animal${deathCount > 1 ? "es" : ""} (${deathCause})`);
+      setDeathLot(null);
+      setDeathCount(1);
+      setDeathCause("desconocida");
+      qc.invalidateQueries({ queryKey: ["lots", "rodent"] });
+      qc.invalidateQueries({ queryKey: ["lots-by-box"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(err.message ?? String(err));
+    } finally {
+      setSubmittingDeath(false);
+    }
+  };
+
 
   const initEdit = (lot: any) => {
     setEditingLot(lot);
@@ -362,8 +420,21 @@ function Page() {
       subtitle="Control individual de machos, hembras y sin sexar por lote."
       icon={<Rat className="h-6 w-6" />}
       actions={
+        <>
+        <Button variant="outline" className="h-10 md:h-9 min-h-10 md:min-h-9" onClick={() => exportToCSV(
+          `lotes-roedores-${new Date().toISOString().slice(0,10)}.csv`,
+          ["Código", "Tipo", "Especie", "Línea", "Caja", "Machos", "Hembras", "Sin sexar", "Total", "Bajas", "Inicio", "Estado"],
+          (lots ?? []).map((l: any) => [
+            l.lot_code, l.lot_type, speciesMap[l.species_id] ?? l.species_id, linesMap[l.line_id] ?? l.line_id, boxesMap[l.box_id] ?? l.box_id,
+            l.males, l.females, l.unsexed,
+            (l.males ?? 0) + (l.females ?? 0) + (l.unsexed ?? 0),
+            l.total_deaths ?? 0,
+            l.started_at, l.status
+          ])
+        )}><Download className="h-4 w-4 mr-2" /> Exportar CSV</Button>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
+
           <DialogContent className="max-w-3xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo lote de roedores</DialogTitle>
@@ -553,6 +624,12 @@ function Page() {
                   <span>♂ Machos: <strong className="text-foreground">{l.males ?? 0}</strong></span>
                   {(l.unsexed ?? 0) > 0 && <span>S/S: <strong className="text-foreground">{l.unsexed}</strong></span>}
                 </div>
+                {((l as any).total_deaths ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-[9px] gap-1 border-destructive/40 text-destructive bg-destructive/5">
+                    💀 {(l as any).total_deaths} baja{((l as any).total_deaths ?? 0) > 1 ? "s" : ""}
+                  </Badge>
+                )}
+
               </div>
 
               {/* Center-Left Column: Genetic Line & Box */}
@@ -578,6 +655,12 @@ function Page() {
                     <Split className="h-3.5 w-3.5" /> Dividir
                   </Button>
                 )}
+                {l.status === "active" && (
+                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => { setDeathLot(l); setDeathCount(1); setDeathCause("desconocida"); }}>
+                    <Skull className="h-3.5 w-3.5" /> Baja
+                  </Button>
+                )}
+
                 <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
                 </Button>
@@ -592,6 +675,47 @@ function Page() {
           <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
         )}
       </div>
+
+      {/* Death Dialog */}
+      <Dialog open={!!deathLot} onOpenChange={(v) => !v && setDeathLot(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Skull className="h-5 w-5 text-destructive" /> Registrar Baja — {deathLot?.lot_code ?? deathLot?.id?.slice(0, 8)}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Total actual: <strong className="text-foreground">{(deathLot?.males ?? 0) + (deathLot?.females ?? 0) + (deathLot?.unsexed ?? 0)}</strong> animales · Bajas previas: <strong className="text-foreground">{deathLot?.total_deaths ?? 0}</strong>
+          </p>
+          <div className="grid gap-4 py-2">
+            <div>
+              <Label className="mb-1.5 block">Cantidad de bajas *</Label>
+              <Input type="number" min={1} value={deathCount} onChange={(e) => setDeathCount(parseInt(e.target.value) || 1)} className="h-10" />
+            </div>
+            <div>
+              <Label className="mb-1.5 block">Causa</Label>
+              <Select value={deathCause} onValueChange={setDeathCause}>
+                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desconocida">Desconocida</SelectItem>
+                  <SelectItem value="enfermedad">Enfermedad</SelectItem>
+                  <SelectItem value="pelea">Pelea</SelectItem>
+                  <SelectItem value="escapo">Escapó</SelectItem>
+                  <SelectItem value="estres">Estrés</SelectItem>
+                  <SelectItem value="malas_condiciones">Malas condiciones</SelectItem>
+                  <SelectItem value="neonato">Neonato (muerte temprana)</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeathLot(null)}>Cancelar</Button>
+            <Button onClick={registerDeath} disabled={submittingDeath} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              {submittingDeath ? "Registrando..." : "Confirmar baja"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Edit Dialog */}
       <Dialog open={!!editingLot} onOpenChange={(v) => !v && setEditingLot(null)}>
