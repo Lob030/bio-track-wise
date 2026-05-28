@@ -564,11 +564,70 @@ export function BoxesView({ kind }: { kind: Kind }) {
   const { data: species } = useQuery({
     queryKey: ["species", kind],
     queryFn: async () => {
-      const { data, error } = await supabase.from("species").select("id,size_rules").eq("kind", kind);
+      const { data, error } = await supabase.from("species").select("id,name,size_rules,kind").eq("kind", kind);
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: lines } = useQuery({
+    queryKey: ["genetic-lines", kind],
+    queryFn: async () => (await supabase.from("genetic_lines").select("id,name,species_id")).data ?? [],
+  });
+
+  // Birth dialog state
+  const [birthBox, setBirthBox] = useState<any | null>(null);
+  const [birthForm, setBirthForm] = useState({
+    lot_code: "",
+    species_id: "",
+    line_id: "",
+    unsexed: 0,
+    notes: "",
+  });
+  const [submittingBirth, setSubmittingBirth] = useState(false);
+
+  const registerBirth = async () => {
+    if (!birthBox) return;
+    if (!birthForm.lot_code || !birthForm.species_id || birthForm.unsexed <= 0) {
+      toast.error("Código, especie y número de crías son obligatorios");
+      return;
+    }
+    setSubmittingBirth(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+
+      const { error } = await supabase.from("lots").insert({
+        owner_id: user.id,
+        kind: birthBox.kind,
+        lot_code: birthForm.lot_code,
+        lot_type: "birth",
+        species_id: birthForm.species_id,
+        line_id: birthForm.line_id || null,
+        box_id: birthBox.id,
+        males: 0,
+        females: 0,
+        unsexed: birthForm.unsexed,
+        notes: birthForm.notes || null,
+        started_at: new Date().toISOString().slice(0, 10),
+        status: "active",
+      } as any);
+
+      if (error) throw error;
+
+      toast.success(`Nacimiento registrado — ${birthForm.unsexed} crías en lote ${birthForm.lot_code}`);
+      setBirthBox(null);
+      setBirthForm({ lot_code: "", species_id: "", line_id: "", unsexed: 0, notes: "" });
+      qc.invalidateQueries({ queryKey: ["lots", kind] });
+      qc.invalidateQueries({ queryKey: ["lots-by-box", kind] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(err.message ?? String(err));
+    } finally {
+      setSubmittingBirth(false);
+    }
+  };
+
 
   const byBox = useMemo(() => {
     const map: Record<string, any[]> = {};
