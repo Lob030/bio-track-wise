@@ -346,6 +346,7 @@ export type Database = {
           species_id: string | null
           started_at: string
           status: Database["public"]["Enums"]["lot_status"]
+          tags: string[]
           unsexed: number | null
         }
         Insert: {
@@ -368,6 +369,7 @@ export type Database = {
           species_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["lot_status"]
+          tags?: string[]
           unsexed?: number | null
         }
         Update: {
@@ -390,6 +392,7 @@ export type Database = {
           species_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["lot_status"]
+          tags?: string[]
           unsexed?: number | null
         }
         Relationships: [
