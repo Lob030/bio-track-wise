@@ -663,6 +663,47 @@ function Page() {
         )}
       </div>
 
+      {/* Death Dialog */}
+      <Dialog open={!!deathLot} onOpenChange={(v) => !v && setDeathLot(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Skull className="h-5 w-5 text-destructive" /> Registrar Baja — {deathLot?.lot_code ?? deathLot?.id?.slice(0, 8)}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Total actual: <strong className="text-foreground">{(deathLot?.males ?? 0) + (deathLot?.females ?? 0) + (deathLot?.unsexed ?? 0)}</strong> animales · Bajas previas: <strong className="text-foreground">{deathLot?.total_deaths ?? 0}</strong>
+          </p>
+          <div className="grid gap-4 py-2">
+            <div>
+              <Label className="mb-1.5 block">Cantidad de bajas *</Label>
+              <Input type="number" min={1} value={deathCount} onChange={(e) => setDeathCount(parseInt(e.target.value) || 1)} className="h-10" />
+            </div>
+            <div>
+              <Label className="mb-1.5 block">Causa</Label>
+              <Select value={deathCause} onValueChange={setDeathCause}>
+                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desconocida">Desconocida</SelectItem>
+                  <SelectItem value="enfermedad">Enfermedad</SelectItem>
+                  <SelectItem value="pelea">Pelea</SelectItem>
+                  <SelectItem value="escapo">Escapó</SelectItem>
+                  <SelectItem value="estres">Estrés</SelectItem>
+                  <SelectItem value="malas_condiciones">Malas condiciones</SelectItem>
+                  <SelectItem value="neonato">Neonato (muerte temprana)</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeathLot(null)}>Cancelar</Button>
+            <Button onClick={registerDeath} disabled={submittingDeath} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              {submittingDeath ? "Registrando..." : "Confirmar baja"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Edit Dialog */}
       <Dialog open={!!editingLot} onOpenChange={(v) => !v && setEditingLot(null)}>
         <DialogContent className="max-w-md">
