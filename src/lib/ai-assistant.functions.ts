@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
 
 const ParsedActionSchema = z.union([
   z.object({
