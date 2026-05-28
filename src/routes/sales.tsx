@@ -126,6 +126,10 @@ function SalesPage() {
     [orders],
   );
 
+  const [historialSearch, setHistorialSearch] = useState("");
+  const [historialMonth, setHistorialMonth] = useState("all");
+
+
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
     historial.forEach((o: any) => {
