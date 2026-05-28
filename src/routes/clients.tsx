@@ -121,9 +121,9 @@ function Clients() {
     const q = searchClient.trim().toLowerCase();
     return (clients ?? []).filter(
       (c) =>
-        c.name?.toLowerCase().includes(q) ||
-        c.phone?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q)
+        (c.name ?? "").toLowerCase().includes(q) ||
+        (c.phone ?? "").toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q)
     );
   }, [clients, searchClient]);
 

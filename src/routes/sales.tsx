@@ -130,9 +130,11 @@ function SalesPage() {
     const set = new Set<string>();
     historial.forEach((o: any) => {
       const d = o.delivered_at ?? o.created_at;
-      if (d) {
-        // Format as "YYYY-MM" for value, display as "Enero 2025"
-        set.add(d.slice(0, 7));
+      if (d && typeof d === "string" && d.length >= 7) {
+        const monthPart = d.slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(monthPart)) {
+          set.add(monthPart);
+        }
       }
     });
     // Sort descending (most recent first)
@@ -787,13 +789,33 @@ function SalesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos los meses</SelectItem>
-                      {availableMonths.map(m => (
-                        <SelectItem key={m} value={m}>
-                          {new Date(m + "-15").toLocaleDateString("es-MX", {
-                            month: "long", year: "numeric"
-                          })}
-                        </SelectItem>
-                      ))}
+                      {availableMonths.map(m => {
+                        let label = m;
+                        try {
+                          const parts = m.split("-");
+                          if (parts.length === 2) {
+                            const year = parseInt(parts[0], 10);
+                            const month = parseInt(parts[1], 10);
+                            if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
+                              const date = new Date(Date.UTC(year, month - 1, 15));
+                              if (!isNaN(date.getTime())) {
+                                label = date.toLocaleDateString("es-MX", {
+                                  month: "long",
+                                  year: "numeric",
+                                  timeZone: "UTC",
+                                });
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          console.error("Error formatting month:", e);
+                        }
+                        return (
+                          <SelectItem key={m} value={m}>
+                            {label}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
 
