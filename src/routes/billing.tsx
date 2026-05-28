@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown } from "lucide-react";
 import { useProfile, type Tier } from "@/hooks/use-profile";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/billing")({ component: Billing });
+
 
 const PLANS: { tier: Tier; price: string; name: string; features: string[]; accent: string }[] = [
   { tier: "bronze", price: "Gratis", name: "Bronze",
