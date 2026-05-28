@@ -54,6 +54,63 @@ function Page() {
   const [deletingLot, setDeletingLot] = useState<any | null>(null);
   const [submittingDelete, setSubmittingDelete] = useState(false);
 
+  const [deathLot, setDeathLot] = useState<any | null>(null);
+  const [deathCount, setDeathCount] = useState(1);
+  const [deathCause, setDeathCause] = useState("desconocida");
+  const [submittingDeath, setSubmittingDeath] = useState(false);
+
+  const registerDeath = async () => {
+    if (!deathLot || deathCount <= 0) return;
+    const totalPop = (deathLot.males ?? 0) + (deathLot.females ?? 0) + (deathLot.unsexed ?? 0);
+    if (deathCount > totalPop) {
+      toast.error(`No puedes registrar más bajas (${deathCount}) que el total del lote (${totalPop})`);
+      return;
+    }
+    setSubmittingDeath(true);
+    try {
+      let remaining = deathCount;
+      let newUnsexed = deathLot.unsexed ?? 0;
+      let newFemales = deathLot.females ?? 0;
+      let newMales = deathLot.males ?? 0;
+
+      const fromUnsexed = Math.min(remaining, newUnsexed);
+      newUnsexed -= fromUnsexed; remaining -= fromUnsexed;
+      const fromFemales = Math.min(remaining, newFemales);
+      newFemales -= fromFemales; remaining -= fromFemales;
+      newMales -= Math.min(remaining, newMales);
+
+      const newTotal = newMales + newFemales + newUnsexed;
+      const { error } = await supabase
+        .from("lots")
+        .update({
+          males: newMales,
+          females: newFemales,
+          unsexed: newUnsexed,
+          total_deaths: (deathLot.total_deaths ?? 0) + deathCount,
+          status: newTotal === 0 ? "finalizado" : "active",
+          finalized_at: newTotal === 0 ? new Date().toISOString() : null,
+          notes: deathLot.notes
+            ? `${deathLot.notes} | Baja ${new Date().toLocaleDateString("es-MX")}: ${deathCount} (${deathCause})`
+            : `Baja ${new Date().toLocaleDateString("es-MX")}: ${deathCount} (${deathCause})`,
+        } as any)
+        .eq("id", deathLot.id);
+      if (error) throw error;
+
+      toast.success(`Baja registrada: ${deathCount} animal${deathCount > 1 ? "es" : ""} (${deathCause})`);
+      setDeathLot(null);
+      setDeathCount(1);
+      setDeathCause("desconocida");
+      qc.invalidateQueries({ queryKey: ["lots", "rodent"] });
+      qc.invalidateQueries({ queryKey: ["lots-by-box"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+      toast.error(err.message ?? String(err));
+    } finally {
+      setSubmittingDeath(false);
+    }
+  };
+
+
   const initEdit = (lot: any) => {
     setEditingLot(lot);
     setEditingMales(lot.males ?? 0);
