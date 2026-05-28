@@ -611,6 +611,12 @@ function Page() {
                   <span>♂ Machos: <strong className="text-foreground">{l.males ?? 0}</strong></span>
                   {(l.unsexed ?? 0) > 0 && <span>S/S: <strong className="text-foreground">{l.unsexed}</strong></span>}
                 </div>
+                {((l as any).total_deaths ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-[9px] gap-1 border-destructive/40 text-destructive bg-destructive/5">
+                    💀 {(l as any).total_deaths} baja{((l as any).total_deaths ?? 0) > 1 ? "s" : ""}
+                  </Badge>
+                )}
+
               </div>
 
               {/* Center-Left Column: Genetic Line & Box */}
