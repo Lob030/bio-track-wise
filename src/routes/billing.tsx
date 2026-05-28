@@ -26,16 +26,13 @@ const PLANS: { tier: Tier; price: string; name: string; features: string[]; acce
 
 function Billing() {
   const { data: profile } = useProfile();
-  const qc = useQueryClient();
   const current = (profile?.tier ?? "bronze") as Tier;
 
-  const setTier = async (t: Tier) => {
-    if (!profile) return;
-    const { error } = await supabase.from("profiles").update({ tier: t, tier_renewed_at: new Date().toISOString() }).eq("id", profile.id);
-    if (error) return toast.error(error.message);
-    toast.success(`Plan actualizado a ${t}`);
-    qc.invalidateQueries({ queryKey: ["profile"] });
+  const setTier = async (_t: Tier) => {
+    toast.info("El cambio de plan se procesa mediante pago verificado. Contacta a soporte para actualizar tu suscripción.");
   };
+
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
