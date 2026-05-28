@@ -181,8 +181,7 @@ function SalesPage() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [historialSearch, setHistorialSearch] = useState("");
-  const [historialMonth, setHistorialMonth] = useState("all");
+
 
   function resetForm() {
     setDate(todayISO());
