@@ -241,6 +241,42 @@ function FoodTab() {
         </div>
       </Card>
 
+      {/* Feed consumption projection */}
+      <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm p-4 space-y-3">
+        <p className="text-sm font-semibold flex items-center gap-2">
+          🍽️ Proyección de consumo de alimento
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg bg-muted/40 p-3">
+            <p className="text-[10px] uppercase text-muted-foreground">Consumo diario</p>
+            <p className="text-lg font-bold tabular-nums">{feedProjection.dailyGrams.toFixed(0)}g</p>
+          </div>
+          <div className="rounded-lg bg-muted/40 p-3">
+            <p className="text-[10px] uppercase text-muted-foreground">Stock actual</p>
+            <p className="text-lg font-bold tabular-nums">{(feedProjection.totalFoodGrams / 1000).toFixed(1)}kg</p>
+          </div>
+          <div className="rounded-lg bg-muted/40 p-3">
+            <p className="text-[10px] uppercase text-muted-foreground">Alcanza para</p>
+            <p className="text-lg font-bold tabular-nums">
+              {feedProjection.daysRemaining === null
+                ? "—"
+                : feedProjection.daysRemaining === 0
+                  ? "¡Hoy!"
+                  : `${feedProjection.daysRemaining} días`}
+            </p>
+          </div>
+        </div>
+        {feedProjection.daysRemaining !== null && feedProjection.daysRemaining <= 7 && (
+          <p className="text-xs font-medium text-destructive">⚠️ Stock crítico — reponer alimento pronto</p>
+        )}
+        {feedProjection.daysRemaining !== null && feedProjection.daysRemaining > 7 && feedProjection.daysRemaining <= 14 && (
+          <p className="text-xs font-medium text-amber-500">Reponer en los próximos días</p>
+        )}
+        {feedProjection.dailyGrams === 0 && (
+          <p className="text-[11px] text-muted-foreground">Define el consumo diario (daily_feed_g) en las reglas de tamaño de cada especie para ver la proyección.</p>
+        )}
+      </Card>
+
       {/* Add button + Dialog */}
       <div className="flex justify-between items-center">
         <p className="text-xs italic text-muted-foreground">
