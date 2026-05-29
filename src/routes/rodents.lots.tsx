@@ -519,6 +519,7 @@ function Page() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </>
       }
     >
       <div className="flex flex-wrap items-center gap-4 mb-4">
