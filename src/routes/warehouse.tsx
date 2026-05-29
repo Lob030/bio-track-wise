@@ -200,6 +200,7 @@ function FoodTab() {
       name: form.name,
       quantity_grams: Number(form.quantity_grams),
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
+      min_stock_grams: form.min_stock_grams ? Number(form.min_stock_grams) : null,
       notes: form.notes || null,
       audited_at: form.audited_at || today(),
     });
@@ -210,7 +211,7 @@ function FoodTab() {
     toast.success("Alimento registrado.");
     qc.invalidateQueries({ queryKey: ["warehouse_food"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    setForm({ name: "", quantity_grams: "", unit_cost: "", notes: "", audited_at: today() });
+    setForm({ name: "", quantity_grams: "", unit_cost: "", min_stock_grams: "", notes: "", audited_at: today() });
     setOpen(false);
   };
 
