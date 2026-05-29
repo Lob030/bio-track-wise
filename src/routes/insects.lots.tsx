@@ -55,6 +55,7 @@ function Page() {
   const [deathGrams, setDeathGrams] = useState(0);
   const [deathCause, setDeathCause] = useState("desconocida");
   const [submittingDeath, setSubmittingDeath] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const initEdit = (lot: any) => {
     setEditingLot(lot);
@@ -348,10 +349,17 @@ function Page() {
   }, [lots]);
 
   const submit = async () => {
+    setSubmitting(true);
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
+    if (!u.user) {
+      setSubmitting(false);
+      return;
+    }
     const grams = +form.mass_grams;
-    if (!grams || grams <= 0) return toast.error("Peso en gramos del lote es obligatorio");
+    if (!grams || grams <= 0) {
+      setSubmitting(false);
+      return toast.error("Peso en gramos del lote es obligatorio");
+    }
 
     const today = new Date();
     today.setDate(today.getDate() - (Number(form.age_days) || 0));
@@ -368,12 +376,16 @@ function Page() {
       started_at,
       tags: parsedTags,
     });
-    if (error) return toast.error(error.message.includes("TIER_LIMIT") ? "Límite del plan alcanzado." : error.message);
+    if (error) {
+      setSubmitting(false);
+      return toast.error(error.message.includes("TIER_LIMIT") ? "Límite del plan alcanzado." : error.message);
+    }
     toast.success("Lote de insectos creado");
     setOpen(false);
     setForm({ lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "", mass_grams: "", parent_lot_id: "", notes: "", age_days: 0, tags: "" });
     qc.invalidateQueries({ queryKey: ["lots", "insect"] });
     qc.invalidateQueries({ queryKey: ["lots-by-box", "insect"] });
+    setSubmitting(false);
   };
 
   return (
@@ -472,7 +484,9 @@ function Page() {
             </div>
             <DialogFooter className="mt-2 border-t border-border/20 pt-4 flex gap-2">
               <Button variant="outline" className="h-10 transition-all duration-200" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button className="h-10 transition-all duration-200" onClick={submit}>Registrar lote</Button>
+              <Button className="h-10 transition-all duration-200" onClick={submit} disabled={submitting}>
+                {submitting ? "Registrando..." : "Registrar lote"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -238,7 +238,10 @@ function SalesPage() {
     setSubmitting(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
+      if (!u.user) {
+        setSubmitting(false);
+        return;
+      }
 
       /* 1 ─ insert order */
       const { data: order, error: oErr } = await supabase

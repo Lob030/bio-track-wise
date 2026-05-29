@@ -65,7 +65,6 @@ function Billing() {
           );
         })}
       </div>
-      <p className="mt-4 text-xs text-muted-foreground">Demo: el cambio de plan se aplica al instante. En producción se conecta al checkout.</p>
     </div>
   );
 }
