@@ -105,7 +105,8 @@ function Dashboard() {
           sub={`${(data?.purchases ?? []).length} compras registradas`}
           tone={gastos > 0 ? "warning" : "default"}
         />
-        <KPI icon={Boxes} label="Ocupación de cajas" value={`${occupiedBoxes}/${totalBoxes}`} sub={`${free} libres`} />
+        <KPI icon={Boxes} label="Ocupación de cajas" value={`${occupancyPct}%`} sub={`${occupiedBoxes}/${totalBoxes} ocupadas · ${free} libres`} tone={occupancyPct >= 90 ? "warning" : "default"} />
+        <KPI icon={Wallet} label="Ticket promedio (mes)" value={`$${avgTicket.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`} sub={`${paidOrders.length} órdenes con venta`} tone="success" />
         <KPI icon={Bell} label="Alertas pendientes" value={data?.alerts.length ?? 0} tone={(data?.alerts.length ?? 0) > 0 ? "warning" : "default"} />
         <KPI icon={TrendingUp} label="Ventas (mes)" value={`$${sales.toLocaleString("es-MX")}`} sub="MXN" tone="success" />
         <KPI icon={FlaskConical} label="Lotes reproductores" value={breeders} />
