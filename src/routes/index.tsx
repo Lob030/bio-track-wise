@@ -63,7 +63,10 @@ function Dashboard() {
   });
 
   const lots = data?.lots ?? [];
-  const sales = (data?.orders ?? []).reduce((a, o) => a + Number(o.total_mxn || 0), 0);
+  const orders = data?.orders ?? [];
+  const sales = orders.reduce((a, o) => a + Number(o.total_mxn || 0), 0);
+  const paidOrders = orders.filter((o) => Number(o.total_mxn || 0) > 0);
+  const avgTicket = paidOrders.length > 0 ? sales / paidOrders.length : 0;
   const gastos = (data?.purchases ?? []).reduce(
     (sum, p) => sum + Number(p.total_cost || 0), 0
   );
@@ -71,6 +74,7 @@ function Dashboard() {
   const occupiedBoxes = new Set(lots.map((l) => l.box_id).filter(Boolean)).size;
   const totalBoxes = data?.boxes.length ?? 0;
   const free = Math.max(0, totalBoxes - occupiedBoxes);
+  const occupancyPct = totalBoxes > 0 ? Math.round((occupiedBoxes / totalBoxes) * 100) : 0;
 
   const byKind = {
     rodent: lots.filter((l) => l.kind === "rodent").length,
