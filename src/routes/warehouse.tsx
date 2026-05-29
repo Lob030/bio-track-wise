@@ -121,6 +121,7 @@ function FoodTab() {
     name: "",
     quantity_grams: "",
     unit_cost: "",
+    min_stock_grams: "",
     notes: "",
     audited_at: today(),
   });
@@ -137,6 +138,23 @@ function FoodTab() {
     },
   });
 
+  // Active rodent lots + species rules for feed projection
+  const { data: activeLots } = useQuery({
+    queryKey: ["lots-for-feed"],
+    queryFn: async () =>
+      (await supabase
+        .from("lots")
+        .select("id, species_id, males, females, unsexed, started_at, kind")
+        .eq("status", "active")
+        .eq("kind", "rodent")).data ?? [],
+  });
+
+  const { data: allSpecies } = useQuery({
+    queryKey: ["species-for-feed"],
+    queryFn: async () =>
+      (await supabase.from("species").select("id, size_rules")).data ?? [],
+  });
+
   const totalValue = useMemo(() => {
     if (!data) return 0;
     return data.reduce((sum, r) => {
@@ -145,6 +163,30 @@ function FoodTab() {
       return sum + (qty * cost) / 1000;
     }, 0);
   }, [data]);
+
+  const feedProjection = useMemo(() => {
+    let dailyGrams = 0;
+    (activeLots ?? []).forEach((lot: any) => {
+      const sp = (allSpecies ?? []).find((s: any) => s.id === lot.species_id);
+      const rules = (sp?.size_rules as any[]) ?? [];
+      const ageToday = Math.floor(
+        (Date.now() - new Date(lot.started_at).getTime()) / 86400000,
+      );
+      const rule = rules.find(
+        (r: any) => ageToday >= r.min_days && ageToday <= r.max_days,
+      );
+      const count = (lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0);
+      dailyGrams += (rule?.daily_feed_g ?? 0) * count;
+    });
+    const totalFoodGrams = (data ?? []).reduce(
+      (sum, f) => sum + (Number(f.quantity_grams) ?? 0),
+      0,
+    );
+    const daysRemaining =
+      dailyGrams > 0 ? Math.floor(totalFoodGrams / dailyGrams) : null;
+    return { dailyGrams, totalFoodGrams, daysRemaining };
+  }, [activeLots, allSpecies, data]);
+
 
   const handleSave = async () => {
     if (!form.name || !form.quantity_grams) {
@@ -158,6 +200,7 @@ function FoodTab() {
       name: form.name,
       quantity_grams: Number(form.quantity_grams),
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
+      min_stock_grams: form.min_stock_grams ? Number(form.min_stock_grams) : null,
       notes: form.notes || null,
       audited_at: form.audited_at || today(),
     });
@@ -168,7 +211,7 @@ function FoodTab() {
     toast.success("Alimento registrado.");
     qc.invalidateQueries({ queryKey: ["warehouse_food"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    setForm({ name: "", quantity_grams: "", unit_cost: "", notes: "", audited_at: today() });
+    setForm({ name: "", quantity_grams: "", unit_cost: "", min_stock_grams: "", notes: "", audited_at: today() });
     setOpen(false);
   };
 
@@ -196,6 +239,42 @@ function FoodTab() {
           </p>
           <p className="text-xl font-bold">{fmtMXN(totalValue)}</p>
         </div>
+      </Card>
+
+      {/* Feed consumption projection */}
+      <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm p-4 space-y-3">
+        <p className="text-sm font-semibold flex items-center gap-2">
+          🍽️ Proyección de consumo de alimento
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg bg-muted/40 p-3">
+            <p className="text-[10px] uppercase text-muted-foreground">Consumo diario</p>
+            <p className="text-lg font-bold tabular-nums">{feedProjection.dailyGrams.toFixed(0)}g</p>
+          </div>
+          <div className="rounded-lg bg-muted/40 p-3">
+            <p className="text-[10px] uppercase text-muted-foreground">Stock actual</p>
+            <p className="text-lg font-bold tabular-nums">{(feedProjection.totalFoodGrams / 1000).toFixed(1)}kg</p>
+          </div>
+          <div className="rounded-lg bg-muted/40 p-3">
+            <p className="text-[10px] uppercase text-muted-foreground">Alcanza para</p>
+            <p className="text-lg font-bold tabular-nums">
+              {feedProjection.daysRemaining === null
+                ? "—"
+                : feedProjection.daysRemaining === 0
+                  ? "¡Hoy!"
+                  : `${feedProjection.daysRemaining} días`}
+            </p>
+          </div>
+        </div>
+        {feedProjection.daysRemaining !== null && feedProjection.daysRemaining <= 7 && (
+          <p className="text-xs font-medium text-destructive">⚠️ Stock crítico — reponer alimento pronto</p>
+        )}
+        {feedProjection.daysRemaining !== null && feedProjection.daysRemaining > 7 && feedProjection.daysRemaining <= 14 && (
+          <p className="text-xs font-medium text-amber-500">Reponer en los próximos días</p>
+        )}
+        {feedProjection.dailyGrams === 0 && (
+          <p className="text-[11px] text-muted-foreground">Define el consumo diario (daily_feed_g) en las reglas de tamaño de cada especie para ver la proyección.</p>
+        )}
       </Card>
 
       {/* Add button + Dialog */}
@@ -228,6 +307,11 @@ function FoodTab() {
                 <Input type="number" step="0.01" value={form.unit_cost} onChange={(e) => setForm({ ...form, unit_cost: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
+                <Label>Stock mínimo (g)</Label>
+                <Input type="number" value={form.min_stock_grams} onChange={(e) => setForm({ ...form, min_stock_grams: e.target.value })} placeholder="Ej. 5000" />
+                <p className="text-[11px] text-muted-foreground">Recibirás una alerta cuando el stock baje de este nivel.</p>
+              </div>
+              <div className="grid gap-1.5">
                 <Label>Notas</Label>
                 <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
@@ -253,7 +337,12 @@ function FoodTab() {
           {data.map((r) => (
             <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
-                <p className="font-medium text-sm">{r.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm">{r.name}</p>
+                  {r.min_stock_grams != null && (Number(r.quantity_grams) || 0) < Number(r.min_stock_grams) && (
+                    <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px]">⚠ Stock bajo</Badge>
+                  )}
+                </div>
                 <div className="flex gap-3 text-xs text-muted-foreground">
                   <span>{((Number(r.quantity_grams) || 0) / 1000).toFixed(1)} kg</span>
                   {r.unit_cost && <span>{fmtMXN(Number(r.unit_cost))}/kg</span>}

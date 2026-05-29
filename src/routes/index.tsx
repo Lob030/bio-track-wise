@@ -63,7 +63,10 @@ function Dashboard() {
   });
 
   const lots = data?.lots ?? [];
-  const sales = (data?.orders ?? []).reduce((a, o) => a + Number(o.total_mxn || 0), 0);
+  const orders = data?.orders ?? [];
+  const sales = orders.reduce((a, o) => a + Number(o.total_mxn || 0), 0);
+  const paidOrders = orders.filter((o) => Number(o.total_mxn || 0) > 0);
+  const avgTicket = paidOrders.length > 0 ? sales / paidOrders.length : 0;
   const gastos = (data?.purchases ?? []).reduce(
     (sum, p) => sum + Number(p.total_cost || 0), 0
   );
@@ -71,6 +74,7 @@ function Dashboard() {
   const occupiedBoxes = new Set(lots.map((l) => l.box_id).filter(Boolean)).size;
   const totalBoxes = data?.boxes.length ?? 0;
   const free = Math.max(0, totalBoxes - occupiedBoxes);
+  const occupancyPct = totalBoxes > 0 ? Math.round((occupiedBoxes / totalBoxes) * 100) : 0;
 
   const byKind = {
     rodent: lots.filter((l) => l.kind === "rodent").length,
@@ -101,7 +105,8 @@ function Dashboard() {
           sub={`${(data?.purchases ?? []).length} compras registradas`}
           tone={gastos > 0 ? "warning" : "default"}
         />
-        <KPI icon={Boxes} label="Ocupación de cajas" value={`${occupiedBoxes}/${totalBoxes}`} sub={`${free} libres`} />
+        <KPI icon={Boxes} label="Ocupación de cajas" value={`${occupancyPct}%`} sub={`${occupiedBoxes}/${totalBoxes} ocupadas · ${free} libres`} tone={occupancyPct >= 90 ? "warning" : "default"} />
+        <KPI icon={Wallet} label="Ticket promedio (mes)" value={`$${avgTicket.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`} sub={`${paidOrders.length} órdenes con venta`} tone="success" />
         <KPI icon={Bell} label="Alertas pendientes" value={data?.alerts.length ?? 0} tone={(data?.alerts.length ?? 0) > 0 ? "warning" : "default"} />
         <KPI icon={TrendingUp} label="Ventas (mes)" value={`$${sales.toLocaleString("es-MX")}`} sub="MXN" tone="success" />
         <KPI icon={FlaskConical} label="Lotes reproductores" value={breeders} />
