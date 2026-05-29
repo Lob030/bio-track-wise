@@ -271,6 +271,11 @@ function FoodTab() {
                 <Input type="number" step="0.01" value={form.unit_cost} onChange={(e) => setForm({ ...form, unit_cost: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
+                <Label>Stock mínimo (g)</Label>
+                <Input type="number" value={form.min_stock_grams} onChange={(e) => setForm({ ...form, min_stock_grams: e.target.value })} placeholder="Ej. 5000" />
+                <p className="text-[11px] text-muted-foreground">Recibirás una alerta cuando el stock baje de este nivel.</p>
+              </div>
+              <div className="grid gap-1.5">
                 <Label>Notas</Label>
                 <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
