@@ -437,6 +437,21 @@ function SalesPage() {
             Pipeline de pedidos y entrega con vaciado FIFO de lotes.
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="gap-1.5 h-9"
+          onClick={() => exportToCSV(
+            `ventas-${new Date().toISOString().slice(0,10)}.csv`,
+            ["Pedido", "Cliente", "Total MXN", "Estado", "Fecha"],
+            (orders ?? []).map((o: any) => [
+              o.id.slice(0, 8),
+              o.clients?.name ?? "—",
+              o.total_mxn,
+              o.status,
+              new Date(o.created_at).toLocaleDateString("es-MX"),
+            ])
+          )}>
+          <Download className="h-4 w-4" /> Exportar CSV
+        </Button>
         <Dialog
           open={open}
           onOpenChange={(v) => {
@@ -708,6 +723,7 @@ function SalesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* ─── TABS ─── */}

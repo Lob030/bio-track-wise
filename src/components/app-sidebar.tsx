@@ -108,12 +108,46 @@ function getSubBtnStyle(active: boolean): React.CSSProperties {
   };
 }
 
+function useAlertCount() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // Initial count
+    supabase
+      .from("alerts")
+      .select("id", { count: "exact", head: true })
+      .eq("acknowledged", false)
+      .then(({ count: c }) => setCount(c ?? 0));
+
+    // Real-time subscription
+    const channel = supabase
+      .channel("alerts-badge")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "alerts" },
+        () => {
+          supabase
+            .from("alerts")
+            .select("id", { count: "exact", head: true })
+            .eq("acknowledged", false)
+            .then(({ count: c }) => setCount(c ?? 0));
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  return count;
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { data: profile } = useProfile();
   const tier = (profile?.tier ?? "bronze") as Tier;
+  const alertCount = useAlertCount();
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -229,7 +263,12 @@ export function AppSidebar() {
                         style={{ color: isActive(item.url) ? "var(--color-primary)" : "var(--color-text-muted)" }}
                       />
                       {!collapsed && <span className="flex-1 text-sm">{item.title}</span>}
-                      {!allowed && !collapsed && <Lock className="ml-auto h-3 w-3" style={{ color: "var(--color-text-muted)" }} />}
+                      {item.url === "/alerts" && alertCount > 0 && !collapsed && (
+                        <Badge className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold bg-destructive text-destructive-foreground border-0 rounded-full flex items-center justify-center">
+                          {alertCount}
+                        </Badge>
+                      )}
+                      {!allowed && !collapsed && item.url !== "/alerts" && <Lock className="ml-auto h-3 w-3" style={{ color: "var(--color-text-muted)" }} />}
                     </Link>
                   </SidebarMenuItem>
                 );

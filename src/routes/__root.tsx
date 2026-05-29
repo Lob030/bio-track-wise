@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/reac
 import {
   Outlet, Link, createRootRouteWithContext, useRouter, HeadContent, Scripts,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import appCss from "../styles.css?url";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -10,6 +10,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
+import { CommandPalette } from "@/components/command-palette";
+import { FAB } from "@/components/fab";
+import { WifiOff } from "lucide-react";
 import "../styles/themes.css";
 
 function NotFoundComponent() {
@@ -105,6 +108,35 @@ function AuthBridge() {
   return null;
 }
 
+/* ── Offline banner ── */
+function useOnlineStatus() {
+  const [online, setOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+  useEffect(() => {
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+  return online;
+}
+
+function OfflineBanner() {
+  const online = useOnlineStatus();
+  if (online) return null;
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-destructive/10 text-destructive border-b border-destructive/20">
+      <WifiOff className="h-4 w-4 shrink-0" />
+      Sin conexión a internet — los cambios no se guardarán hasta reconectarte.
+    </div>
+  );
+}
+
 function AppShell() {
   return (
     <SidebarProvider>
@@ -123,6 +155,7 @@ function AppShell() {
             <SidebarTrigger />
             <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>BioTrack · Gestión de Bioterio</div>
           </header>
+          <OfflineBanner />
           <main className="flex-1 overflow-auto">
             <Outlet />
           </main>
@@ -139,11 +172,26 @@ function ThemeInitializer() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [cmdOpen, setCmdOpen] = useState(false);
+
+  // Cmd+K / Ctrl+K keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeInitializer />
       <AuthBridge />
       <AuthOrApp />
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
       <Toaster />
     </QueryClientProvider>
   );
@@ -162,5 +210,10 @@ function AuthOrApp() {
     if (typeof window !== "undefined") window.location.href = "/login";
     return null;
   }
-  return <AppShell />;
+  return (
+    <>
+      <AppShell />
+      <FAB />
+    </>
+  );
 }
