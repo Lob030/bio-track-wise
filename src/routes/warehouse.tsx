@@ -337,7 +337,12 @@ function FoodTab() {
           {data.map((r) => (
             <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
-                <p className="font-medium text-sm">{r.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm">{r.name}</p>
+                  {r.min_stock_grams != null && (Number(r.quantity_grams) || 0) < Number(r.min_stock_grams) && (
+                    <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px]">⚠ Stock bajo</Badge>
+                  )}
+                </div>
                 <div className="flex gap-3 text-xs text-muted-foreground">
                   <span>{((Number(r.quantity_grams) || 0) / 1000).toFixed(1)} kg</span>
                   {r.unit_cost && <span>{fmtMXN(Number(r.unit_cost))}/kg</span>}
