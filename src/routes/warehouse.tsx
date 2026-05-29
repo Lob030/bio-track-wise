@@ -121,6 +121,7 @@ function FoodTab() {
     name: "",
     quantity_grams: "",
     unit_cost: "",
+    min_stock_grams: "",
     notes: "",
     audited_at: today(),
   });
@@ -137,6 +138,23 @@ function FoodTab() {
     },
   });
 
+  // Active rodent lots + species rules for feed projection
+  const { data: activeLots } = useQuery({
+    queryKey: ["lots-for-feed"],
+    queryFn: async () =>
+      (await supabase
+        .from("lots")
+        .select("id, species_id, males, females, unsexed, started_at, kind")
+        .eq("status", "active")
+        .eq("kind", "rodent")).data ?? [],
+  });
+
+  const { data: allSpecies } = useQuery({
+    queryKey: ["species-for-feed"],
+    queryFn: async () =>
+      (await supabase.from("species").select("id, size_rules")).data ?? [],
+  });
+
   const totalValue = useMemo(() => {
     if (!data) return 0;
     return data.reduce((sum, r) => {
@@ -145,6 +163,30 @@ function FoodTab() {
       return sum + (qty * cost) / 1000;
     }, 0);
   }, [data]);
+
+  const feedProjection = useMemo(() => {
+    let dailyGrams = 0;
+    (activeLots ?? []).forEach((lot: any) => {
+      const sp = (allSpecies ?? []).find((s: any) => s.id === lot.species_id);
+      const rules = (sp?.size_rules as any[]) ?? [];
+      const ageToday = Math.floor(
+        (Date.now() - new Date(lot.started_at).getTime()) / 86400000,
+      );
+      const rule = rules.find(
+        (r: any) => ageToday >= r.min_days && ageToday <= r.max_days,
+      );
+      const count = (lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0);
+      dailyGrams += (rule?.daily_feed_g ?? 0) * count;
+    });
+    const totalFoodGrams = (data ?? []).reduce(
+      (sum, f) => sum + (Number(f.quantity_grams) ?? 0),
+      0,
+    );
+    const daysRemaining =
+      dailyGrams > 0 ? Math.floor(totalFoodGrams / dailyGrams) : null;
+    return { dailyGrams, totalFoodGrams, daysRemaining };
+  }, [activeLots, allSpecies, data]);
+
 
   const handleSave = async () => {
     if (!form.name || !form.quantity_grams) {
