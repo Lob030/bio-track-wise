@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, ShoppingCart, Trash2, Check, Package, Search } from "lucide-react";
+import { Plus, ShoppingCart, Trash2, Check, Package, Search, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/utils";
 
 /* ───────── types ───────── */
 
@@ -833,6 +834,21 @@ function SalesPage() {
                       ✕ Limpiar
                     </Button>
                   )}
+
+                  <Button variant="outline" size="sm" className="gap-1.5 h-9 sm:ml-auto"
+                    onClick={() => exportToCSV(
+                      `ventas-historial-${new Date().toISOString().slice(0,10)}.csv`,
+                      ["Pedido", "Cliente", "Fecha entrega", "Items", "Total MXN"],
+                      filteredHistorial.map((o: any) => [
+                        o.id.slice(0, 8),
+                        o.clients?.name ?? "—",
+                        o.delivered_at ? new Date(o.delivered_at).toLocaleDateString("es-MX") : "—",
+                        o.order_items?.length ?? 0,
+                        o.total_mxn
+                      ])
+                    )}>
+                    <Download className="h-4 w-4" /> Exportar CSV
+                  </Button>
                 </div>
               )}
 

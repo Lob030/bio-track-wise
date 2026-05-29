@@ -15,6 +15,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesRouteImport } from './routes/sales'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as KanbanRouteImport } from './routes/kanban'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BillingRouteImport } from './routes/billing'
@@ -58,6 +59,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KanbanRoute = KanbanRouteImport.update({
+  id: '/kanban',
+  path: '/kanban',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/billing': typeof BillingRoute
   '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
+  '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/billing': typeof BillingRoute
   '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
+  '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/billing': typeof BillingRoute
   '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
+  '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/calendar'
     | '/clients'
+    | '/kanban'
     | '/login'
     | '/reports'
     | '/sales'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/calendar'
     | '/clients'
+    | '/kanban'
     | '/login'
     | '/reports'
     | '/sales'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/calendar'
     | '/clients'
+    | '/kanban'
     | '/login'
     | '/reports'
     | '/sales'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   BillingRoute: typeof BillingRoute
   CalendarRoute: typeof CalendarRoute
   ClientsRoute: typeof ClientsRoute
+  KanbanRoute: typeof KanbanRoute
   LoginRoute: typeof LoginRoute
   ReportsRoute: typeof ReportsRoute
   SalesRoute: typeof SalesRoute
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kanban': {
+      id: '/kanban'
+      path: '/kanban'
+      fullPath: '/kanban'
+      preLoaderRoute: typeof KanbanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clients': {
@@ -442,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillingRoute: BillingRoute,
   CalendarRoute: CalendarRoute,
   ClientsRoute: ClientsRoute,
+  KanbanRoute: KanbanRoute,
   LoginRoute: LoginRoute,
   ReportsRoute: ReportsRoute,
   SalesRoute: SalesRoute,
@@ -460,3 +481,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

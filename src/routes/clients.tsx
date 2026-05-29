@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Edit2, Trash2, Search, Mail, MessageSquare } from "lucide-react";
+import { Plus, Users, Edit2, Trash2, Search, Mail, MessageSquare, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -158,6 +159,15 @@ function Clients() {
           </p>
         </div>
         <div className="flex gap-2 items-center">
+          <Button variant="outline" size="sm" className="gap-1.5 h-9"
+            onClick={() => exportToCSV(
+              `clientes-${new Date().toISOString().slice(0,10)}.csv`,
+              ["Nombre", "Teléfono", "Email", "Perfil", "Notas"],
+              (clients ?? []).map(c => [c.name, c.phone, c.email, c.profile, c.notes])
+            )}>
+            <Download className="h-4 w-4" /> Exportar CSV
+          </Button>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

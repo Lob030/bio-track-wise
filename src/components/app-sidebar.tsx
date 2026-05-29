@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Rat, Bug, Boxes, Warehouse, Bell, ShoppingCart,
-  Users, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings, Download, CalendarDays
+  Users, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings, Download, CalendarDays, LayoutGrid
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -43,6 +43,7 @@ const MENU: Item[] = [
   { title: "Clientes", url: "/clients", icon: Users, minTier: "gold" },
   { title: "Reportes", url: "/reports", icon: BarChart3, minTier: "gold" },
   { title: "Calendario", url: "/calendar", icon: CalendarDays, minTier: "gold" },
+  { title: "Kanban", url: "/kanban", icon: LayoutGrid, minTier: "silver" },
   { title: "Asistente IA", url: "/ai", icon: Sparkles, minTier: "gold" },
 ];
 

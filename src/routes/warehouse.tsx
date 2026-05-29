@@ -187,6 +187,12 @@ function FoodTab() {
     return { dailyGrams, totalFoodGrams, daysRemaining };
   }, [activeLots, allSpecies, data]);
 
+  const lowStockItems = useMemo(
+    () => (data ?? []).filter(f =>
+      f.min_stock_grams != null && f.min_stock_grams > 0 && f.quantity_grams < f.min_stock_grams
+    ),
+    [data]
+  );
 
   const handleSave = async () => {
     if (!form.name || !form.quantity_grams) {
@@ -228,6 +234,17 @@ function FoodTab() {
 
   return (
     <div className="space-y-4">
+      {lowStockItems.length > 0 && (
+        <Card className="p-3 border-rose-500/40 bg-rose-500/5 flex items-center gap-2">
+          <span className="text-rose-400 font-semibold text-sm">
+            ⚠️ {lowStockItems.length} producto{lowStockItems.length > 1 ? "s" : ""} con stock bajo:
+          </span>
+          <span className="text-xs text-rose-300">
+            {lowStockItems.map(f => f.name).join(", ")}
+          </span>
+        </Card>
+      )}
+
       {/* KPI */}
       <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-4 flex items-center gap-3">
         <div className="rounded-md bg-emerald-500/20 p-2">
@@ -303,6 +320,20 @@ function FoodTab() {
                 <Input type="number" value={form.quantity_grams} onChange={(e) => setForm({ ...form, quantity_grams: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
+                <Label>
+                  Stock mínimo (g) <span className="text-muted-foreground font-normal">(opcional)</span>
+                </Label>
+                <Input
+                  type="number" min={0}
+                  placeholder="Ej. 5000"
+                  value={form.min_stock_grams}
+                  onChange={e => setForm({ ...form, min_stock_grams: e.target.value })}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Recibirás una alerta cuando el stock baje de este valor
+                </p>
+              </div>
+              <div className="grid gap-1.5">
                 <Label>Costo por kg MXN</Label>
                 <Input type="number" step="0.01" value={form.unit_cost} onChange={(e) => setForm({ ...form, unit_cost: e.target.value })} />
               </div>
@@ -339,8 +370,10 @@ function FoodTab() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm">{r.name}</p>
-                  {r.min_stock_grams != null && (Number(r.quantity_grams) || 0) < Number(r.min_stock_grams) && (
-                    <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px]">⚠ Stock bajo</Badge>
+                  {r.min_stock_grams != null && r.min_stock_grams > 0 && (Number(r.quantity_grams) || 0) < r.min_stock_grams && (
+                    <Badge className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/30">
+                      ⚠️ Stock bajo
+                    </Badge>
                   )}
                 </div>
                 <div className="flex gap-3 text-xs text-muted-foreground">

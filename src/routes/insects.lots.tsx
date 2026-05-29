@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split, Search } from "lucide-react";
+import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split, Search, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { type InsectRule } from "@/components/size-matrix";
 import { PageShell } from "@/components/page-shell";
@@ -49,6 +50,11 @@ function Page() {
 
   const [deletingLot, setDeletingLot] = useState<any | null>(null);
   const [submittingDelete, setSubmittingDelete] = useState(false);
+
+  const [deathLot, setDeathLot] = useState<any | null>(null);
+  const [deathGrams, setDeathGrams] = useState(0);
+  const [deathCause, setDeathCause] = useState("desconocida");
+  const [submittingDeath, setSubmittingDeath] = useState(false);
 
   const initEdit = (lot: any) => {
     setEditingLot(lot);
@@ -209,6 +215,45 @@ function Page() {
     }
   };
 
+  const registerDeath = async () => {
+    if (!deathLot || deathGrams <= 0) return;
+
+    const currentMass = deathLot.mass_grams ?? 0;
+    if (deathGrams > currentMass) {
+      toast.error(`No puedes registrar ${deathGrams}g de bajas si el lote solo tiene ${currentMass}g`);
+      return;
+    }
+
+    setSubmittingDeath(true);
+    try {
+      const newMass = currentMass - deathGrams;
+      const { error } = await supabase
+        .from("lots")
+        .update({
+          mass_grams: newMass,
+          total_deaths: (deathLot.total_deaths ?? 0) + 1,
+          status: newMass === 0 ? "finalizado" : "active",
+          finalized_at: newMass === 0 ? new Date().toISOString() : null,
+          notes: deathLot.notes
+            ? `${deathLot.notes} | Baja ${new Date().toLocaleDateString("es-MX")}: ${deathGrams}g (${deathCause})`
+            : `Baja ${new Date().toLocaleDateString("es-MX")}: ${deathGrams}g (${deathCause})`,
+        })
+        .eq("id", deathLot.id);
+
+      if (error) throw error;
+
+      toast.success(`Baja registrada: ${deathGrams}g (${deathCause})`);
+      setDeathLot(null);
+      setDeathGrams(0);
+      setDeathCause("desconocida");
+      qc.invalidateQueries({ queryKey: ["lots"] });
+    } catch (err) {
+      toast.error(String(err));
+    } finally {
+      setSubmittingDeath(false);
+    }
+  };
+
   const { data: lots } = useQuery({
     queryKey: ["lots", "insect"],
     queryFn: async () => (await supabase.from("lots").select("*").eq("kind", "insect").order("created_at", { ascending: false })).data ?? [],
@@ -337,8 +382,22 @@ function Page() {
       subtitle="Biomasa en gramos por lote, sin tracking individual de sexo."
       icon={<Bug className="h-6 w-6" />}
       actions={
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
+        <div className="flex gap-2 items-center">
+          <Button variant="outline" size="sm" className="gap-1.5 h-9"
+            onClick={() => exportToCSV(
+              `lotes-insectos-${new Date().toISOString().slice(0,10)}.csv`,
+              ["Código", "Tipo", "Especie", "Línea", "Caja", "Biomasa (g)", "Bajas", "Inicio", "Estado"],
+              (lots ?? []).map(l => [
+                l.lot_code, l.lot_type, l.species_id, l.line_id, l.box_id,
+                l.mass_grams,
+                l.total_deaths ?? 0,
+                l.started_at, l.status
+              ])
+            )}>
+            <Download className="h-4 w-4" /> Exportar CSV
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
           <DialogContent className="max-w-3xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo lote de insectos</DialogTitle>
@@ -417,6 +476,7 @@ function Page() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -537,14 +597,28 @@ function Page() {
                 <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">Biomasa / Info</div>
                 <div className="text-sm font-bold text-foreground">{(+(l.mass_grams ?? 0)).toFixed(1)} g</div>
                 <div className="text-xs text-muted-foreground">Iniciado: <span className="font-medium text-foreground/85">{new Date(l.started_at).toLocaleDateString("es-MX")}</span></div>
+                {(l.total_deaths ?? 0) > 0 && (
+                  <span className="text-xs text-rose-400/70 flex items-center gap-1">
+                    💀 {l.total_deaths} evento{(l.total_deaths ?? 0) > 1 ? "s" : ""}
+                  </span>
+                )}
               </div>
 
               {/* Right Column: Actions */}
               <div className="flex items-center gap-2 shrink-0 flex-wrap md:justify-end">
                 {l.status === "active" && (
-                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
-                    <Split className="h-3.5 w-3.5" /> Dividir
-                  </Button>
+                  <>
+                    <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
+                      <Split className="h-3.5 w-3.5" /> Dividir
+                    </Button>
+                    <Button
+                      size="sm" variant="ghost"
+                      className="h-9 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 gap-1.5 px-3"
+                      onClick={() => { setDeathLot(l); setDeathGrams(0); setDeathCause("desconocida"); }}
+                    >
+                      💀 Baja
+                    </Button>
+                  </>
                 )}
                 <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
@@ -688,6 +762,56 @@ function Page() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Death Dialog */}
+      <Dialog open={!!deathLot} onOpenChange={(v) => !v && setDeathLot(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>💀 Registrar Baja — {deathLot?.lot_code ?? deathLot?.id.slice(0, 8)}</DialogTitle>
+            <div className="text-xs text-muted-foreground mt-1">
+              Biomasa actual: {deathLot?.mass_grams ?? 0}g
+              · Bajas previas: {deathLot?.total_deaths ?? 0}
+            </div>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">Gramos perdidos *</Label>
+              <Input
+                type="number" min={1}
+                value={deathGrams || ""}
+                onChange={e => setDeathGrams(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+                className="h-10"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">Causa</Label>
+              <Select value={deathCause} onValueChange={setDeathCause}>
+                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desconocida">Desconocida</SelectItem>
+                  <SelectItem value="enfermedad">Enfermedad</SelectItem>
+                  <SelectItem value="pelea">Pelea</SelectItem>
+                  <SelectItem value="escapó">Escapó</SelectItem>
+                  <SelectItem value="estrés">Estrés</SelectItem>
+                  <SelectItem value="malas-condiciones">Malas condiciones</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeathLot(null)}>Cancelar</Button>
+            <Button
+              onClick={registerDeath}
+              disabled={submittingDeath}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {submittingDeath ? "Registrando..." : "Confirmar baja"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
-  Activity, Users, ShoppingCart, Wallet, Boxes, Bell, TrendingUp, FlaskConical
+  Activity, Users, ShoppingCart, Wallet, Boxes, Bell, TrendingUp, FlaskConical, Package
 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 
@@ -82,6 +82,29 @@ function Dashboard() {
   };
   const total = byKind.rodent + byKind.insect || 1;
 
+  // Occupancy rate de cajas
+  const boxOccupancyPct = useMemo(() => {
+    const totalBoxes = (data?.boxes ?? []).length;
+    if (totalBoxes === 0) return 0;
+    const lotsWithBoxes = new Set((data?.lots ?? []).filter(l => l.box_id).map(l => l.box_id));
+    return Math.round((lotsWithBoxes.size / totalBoxes) * 100);
+  }, [data]);
+
+  // Average order value
+  const avgOrderValue = useMemo(() => {
+    const ordersThisMonth = (data?.orders ?? []).filter(o => o.status === "historial");
+    if (ordersThisMonth.length === 0) return 0;
+    const total = ordersThisMonth.reduce((sum, o) => sum + Number(o.total_mxn ?? 0), 0);
+    return total / ordersThisMonth.length;
+  }, [data]);
+
+  // Clientes activos este mes
+  const activeClientsThisMonth = useMemo(() => {
+    const thisMonthStart = new Date();
+    thisMonthStart.setDate(1);
+    return (data?.clients ?? []).filter(c => new Date(c.created_at) >= thisMonthStart).length;
+  }, [data]);
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -110,6 +133,30 @@ function Dashboard() {
         <KPI icon={Bell} label="Alertas pendientes" value={data?.alerts.length ?? 0} tone={(data?.alerts.length ?? 0) > 0 ? "warning" : "default"} />
         <KPI icon={TrendingUp} label="Ventas (mes)" value={`$${sales.toLocaleString("es-MX")}`} sub="MXN" tone="success" />
         <KPI icon={FlaskConical} label="Lotes reproductores" value={breeders} />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+        <KPI
+          icon={Package}
+          label="Ocupación de cajas"
+          value={`${boxOccupancyPct}%`}
+          sub={`${(data?.boxes ?? []).length} cajas totales`}
+          tone={boxOccupancyPct > 90 ? "warning" : "default"}
+        />
+        <KPI
+          icon={TrendingUp}
+          label="Ticket promedio"
+          value={avgOrderValue > 0
+            ? `$${avgOrderValue.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`
+            : "$0"}
+          sub="Este mes"
+        />
+        <KPI
+          icon={Users}
+          label="Clientes nuevos"
+          value={activeClientsThisMonth}
+          sub="Este mes"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
