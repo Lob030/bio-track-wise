@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split, Search, Download } from "lucide-react";
 import { exportToCSV } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,11 +27,24 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/insects/lots")({ component: Page });
+export const Route = createFileRoute("/insects/lots")({
+  validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
+    new: search.new === "1" ? true : undefined,
+  }),
+  component: Page,
+});
 
 function Page() {
+  const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (autoNew) {
+      setOpen(true);
+    }
+  }, [autoNew]);
+
   const [form, setForm] = useState({
     lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "",
     mass_grams: "", parent_lot_id: "", notes: "", age_days: 0, tags: "",

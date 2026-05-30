@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, Area, ReferenceLine } from "recharts";
 import type { RodentRule } from "@/components/size-matrix";
 import { Rat, Plus, Edit2, Trash2, Split, Search, Skull, Download } from "lucide-react";
@@ -27,11 +27,24 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/rodents/lots")({ component: Page });
+export const Route = createFileRoute("/rodents/lots")({
+  validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
+    new: search.new === "1" ? true : undefined,
+  }),
+  component: Page,
+});
 
 function Page() {
+  const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  
+  useEffect(() => {
+    if (autoNew) {
+      setOpen(true);
+    }
+  }, [autoNew]);
+
   const [form, setForm] = useState({
     lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "",
     males: 0, females: 0, unsexed: 0, notes: "", age_days: 0, tags: "",

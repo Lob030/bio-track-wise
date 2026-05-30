@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
 import { Card } from "@/components/ui/card";
@@ -65,6 +65,7 @@ function fmtDate(iso: string | null | undefined) {
 type SalesTab = "nueva-venta" | "pedidos-futuros";
 
 function SalesPage() {
+  const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<SalesTab>("nueva-venta");
 
@@ -182,6 +183,12 @@ function SalesPage() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (autoNew) {
+      setOpen(true);
+    }
+  }, [autoNew]);
 
 
   function resetForm() {
@@ -953,6 +960,9 @@ function SalesPage() {
 }
 
 export const Route = createFileRoute("/sales")({
+  validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
+    new: search.new === "1" ? true : undefined,
+  }),
   component: () => (
     <TierGate min="gold" module="Ventas">
       <SalesPage />
