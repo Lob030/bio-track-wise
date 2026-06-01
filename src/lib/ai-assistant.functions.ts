@@ -156,9 +156,15 @@ function regexFallback(userMessage: string, today: string): ParsedAction {
   };
 }
 
+const AiCommandInputSchema = z.object({
+  userMessage: z.string().trim().min(1, "Mensaje vacío").max(500, "Mensaje demasiado largo"),
+  today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida"),
+});
+
 export const parseAiCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { userMessage: string; today: string }) => input)
+  .inputValidator((input: { userMessage: string; today: string }) => AiCommandInputSchema.parse(input))
+
 
   .handler(async ({ data }): Promise<ParsedAction> => {
     const key = process.env.LOVABLE_API_KEY;
