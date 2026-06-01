@@ -171,7 +171,9 @@ export const parseAiCommand = createServerFn({ method: "POST" })
     // Server-side tier + monthly-quota enforcement (atomic check-and-increment).
     // Prevents non-Gold/Diamond users from bypassing the client-side TierGate
     // and ensures the Gold 20-prompts/month cap is enforced server-side.
-    const { error: gateErr } = await context.supabase.rpc("consume_ai_prompt");
+    // Runs via the service-role admin client with the JWT-verified userId from
+    // requireSupabaseAuth — the function itself is not exposed to API callers.
+    const { error: gateErr } = await supabaseAdmin.rpc("consume_ai_prompt", { _uid: context.userId });
     if (gateErr) {
       const msg = gateErr.message ?? "";
       // Throw stable markers so the client error mapper (toUserFriendlyError)
