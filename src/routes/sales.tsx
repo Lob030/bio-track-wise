@@ -1184,7 +1184,7 @@ function CreateFutureOrderDialog({
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err) {
-      toast.error(String(err));
+      toast.error(toUserFriendlyError(err));
     } finally {
       setSubmitting(false);
     }

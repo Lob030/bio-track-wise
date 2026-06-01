@@ -263,7 +263,7 @@ function Page() {
       setDeathCause("desconocida");
       qc.invalidateQueries({ queryKey: ["lots"] });
     } catch (err) {
-      toast.error(String(err));
+      toast.error(toUserFriendlyError(err));
     } finally {
       setSubmittingDeath(false);
     }
