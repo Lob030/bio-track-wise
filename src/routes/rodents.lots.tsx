@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/rodents/lots")({
   validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
@@ -117,7 +118,7 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["lots-by-box"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
-      toast.error(err.message ?? String(err));
+      toast.error(toUserFriendlyError(err));
     } finally {
       setSubmittingDeath(false);
     }
@@ -160,7 +161,7 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
       console.error("Edit error:", err);
-      toast.error(err.message ?? "Error al actualizar lote");
+      toast.error(toUserFriendlyError(err, "Error al actualizar lote"));
     } finally {
       setSubmittingEdit(false);
     }
@@ -284,7 +285,7 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
       console.error("Split operation failed:", err);
-      toast.error(err.message ?? "Error al dividir el lote");
+      toast.error(toUserFriendlyError(err, "Error al dividir el lote"));
     } finally {
       setSubmittingSplit(false);
     }
@@ -304,7 +305,7 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
       console.error("Delete error:", err);
-      toast.error(err.message ?? "Error al eliminar lote");
+      toast.error(toUserFriendlyError(err, "Error al eliminar lote"));
     } finally {
       setSubmittingDelete(false);
     }
@@ -418,7 +419,7 @@ function Page() {
       started_at,
       tags: parsedTags,
     });
-    if (error) return toast.error(error.message.includes("TIER_LIMIT") ? "Límite del plan alcanzado." : error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Lote creado");
     setOpen(false);
     setForm({ lot_code: "", lot_type: "engorda", species_id: "", line_id: "", box_id: "", males: 0, females: 0, unsexed: 0, notes: "", age_days: 0, tags: "" });

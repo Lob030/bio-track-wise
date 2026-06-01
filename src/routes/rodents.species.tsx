@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/rodents/species")({ component: Page });
 
@@ -44,14 +45,14 @@ function Page() {
     const { error } = await supabase.from("species").insert({
       owner_id: u.user.id, kind: "rodent", name: n, size_rules: r as any,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     toast.success(`Especie "${n}" creada`);
     qc.invalidateQueries({ queryKey: ["species"] });
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("species").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Eliminada");
     qc.invalidateQueries({ queryKey: ["species"] });
   };
@@ -64,7 +65,7 @@ function Page() {
       const { error } = await supabase.from("species").update({
         name: name.trim(), size_rules: filteredRules as any,
       }).eq("id", editingSpecies.id);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(toUserFriendlyError(error));
       toast.success("Especie actualizada");
       qc.invalidateQueries({ queryKey: ["species"] });
     } else {

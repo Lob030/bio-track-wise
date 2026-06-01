@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { Plus, ShoppingCart, Trash2, Check, Package, Search, Download } from "lucide-react";
 import { exportToCSV } from "@/lib/utils";
+import { toUserFriendlyError } from "@/lib/errors";
 
 /* ───────── types ───────── */
 
@@ -370,7 +371,7 @@ function SalesPage() {
       setOpen(false);
       resetForm();
     } catch (err: any) {
-      toast.error(err.message ?? "Error al registrar venta");
+      toast.error(toUserFriendlyError(err, "Error al registrar venta"));
     } finally {
       setSubmitting(false);
     }
@@ -383,7 +384,7 @@ function SalesPage() {
       .update({ status: "historial", delivered_at: new Date().toISOString() })
       .eq("id", orderId);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Pedido entregado");
