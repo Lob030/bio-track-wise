@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { downloadCSV, pickCSVFile } from "@/lib/csv";
 import type { RodentRule } from "@/components/size-matrix";
+import { toUserFriendlyError } from "@/lib/errors";
 
 type Kind = "rodent" | "insect";
 
@@ -95,7 +96,7 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
       qc.invalidateQueries({ queryKey: ["lots", kind] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
-      toast.error(err.message ?? "Error al actualizar lote");
+      toast.error(toUserFriendlyError(err, "Error al actualizar lote"));
     } finally {
       setSaving(false);
     }
@@ -269,7 +270,7 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
       console.error("Split operation failed:", err);
-      toast.error(err.message ?? "Error al dividir lote");
+      toast.error(toUserFriendlyError(err, "Error al dividir lote"));
     } finally {
       setSubmittingSplit(false);
     }
@@ -288,7 +289,7 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
       qc.invalidateQueries({ queryKey: ["lots", kind] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
-      toast.error(err.message ?? "Error al eliminar lote");
+      toast.error(toUserFriendlyError(err, "Error al eliminar lote"));
     } finally {
       setSubmittingDelete(false);
     }
@@ -622,7 +623,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
       qc.invalidateQueries({ queryKey: ["lots-by-box", kind] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
-      toast.error(err.message ?? String(err));
+      toast.error(toUserFriendlyError(err));
     } finally {
       setSubmittingBirth(false);
     }
@@ -729,7 +730,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
         location: packLocation(form.roomRack.trim(), form.usage),
         capacity: form.capacity ? +form.capacity : null,
       }).eq("id", editingBox.id);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(toUserFriendlyError(error));
       toast.success("Caja actualizada");
     } else {
       const { error } = await supabase.from("boxes").insert({
@@ -737,7 +738,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
         location: packLocation(form.roomRack.trim(), form.usage),
         capacity: form.capacity ? +form.capacity : null,
       });
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(toUserFriendlyError(error));
       toast.success("Caja registrada");
     }
 
@@ -749,7 +750,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("boxes").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     qc.invalidateQueries({ queryKey: ["boxes", kind] });
   };
 

@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/alerts")({ component: Page });
 
@@ -151,7 +152,7 @@ function Page() {
       animal_kind: form.animal_kind,
       species_id: form.animal_kind !== "both" && form.species_id ? form.species_id : null,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Regla creada");
     setOpen(false); setForm(DEFAULT_FORM); setAlertName("");
     qc.invalidateQueries({ queryKey: ["alert_rules"] });

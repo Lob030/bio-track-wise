@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { downloadCSV, pickCSVFile } from "@/lib/csv";
+import { toUserFriendlyError } from "@/lib/errors";
 
 type Kind = "rodent" | "insect";
 
@@ -70,14 +71,14 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
         name: form.name.trim(), species_id: form.species_id,
         notes: packMeta(form.date, form.origin, form.notes),
       }).eq("id", editingLine.id);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(toUserFriendlyError(error));
       toast.success("Línea genética actualizada");
     } else {
       const { error } = await supabase.from("genetic_lines").insert({
         owner_id: u.user.id, name: form.name.trim(), species_id: form.species_id,
         notes: packMeta(form.date, form.origin, form.notes),
       });
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(toUserFriendlyError(error));
       toast.success("Línea genética creada");
     }
 
@@ -89,7 +90,7 @@ export function GeneticLinesView({ kind }: { kind: Kind }) {
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("genetic_lines").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     qc.invalidateQueries({ queryKey: ["lines", kind] });
   };
 

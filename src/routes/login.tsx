@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
+import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -29,7 +30,7 @@ function LoginPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     navigate({ to: "/" });
   };
   const signUp = async () => {
@@ -39,7 +40,7 @@ function LoginPage() {
       options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Cuenta creada. Verifica tu email.");
   };
   const google = async () => {

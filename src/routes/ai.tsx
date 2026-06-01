@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Send, Loader2, Sparkles, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { parseAiCommand, type ParsedAction } from "@/lib/ai-assistant.functions";
+import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/ai")({
   component: () => (
@@ -88,7 +89,7 @@ function AIAssistantPage() {
         setPending({ msgId, action });
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "Error al procesar");
+      toast.error(toUserFriendlyError(e, "Error al procesar"));
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +134,7 @@ function AIAssistantPage() {
       }
       addMessage({ role: "assistant", content: result });
     } catch (e: any) {
-      toast.error(e?.message ?? "Error en consulta");
+      toast.error(toUserFriendlyError(e, "Error en consulta"));
     }
   };
 
@@ -223,8 +224,8 @@ function AIAssistantPage() {
       setConfirmed((s) => new Set(s).add(msgId));
       addMessage({ role: "assistant", content: "✅ Acción ejecutada correctamente." });
     } catch (e: any) {
-      toast.error(e?.message ?? "Error al ejecutar");
-      addMessage({ role: "assistant", content: `❌ Error: ${e?.message ?? "desconocido"}` });
+      toast.error(toUserFriendlyError(e, "Error al ejecutar"));
+      addMessage({ role: "assistant", content: `❌ Error: ${toUserFriendlyError(e)}` });
     } finally {
       setPending(null);
       setIsLoading(false);

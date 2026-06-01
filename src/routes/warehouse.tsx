@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Trash2, Warehouse, DollarSign } from "lucide-react";
+import { toUserFriendlyError } from "@/lib/errors";
 
 /* ------------------------------------------------------------------ */
 /*  Route export                                                       */
@@ -211,7 +212,7 @@ function FoodTab() {
       audited_at: form.audited_at || today(),
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Alimento registrado.");
@@ -224,7 +225,7 @@ function FoodTab() {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("warehouse_food").delete().eq("id", id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Registro eliminado.");
@@ -450,7 +451,7 @@ function CleaningTab() {
       cost: form.cost ? Number(form.cost) : null,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Producto registrado.");
@@ -463,7 +464,7 @@ function CleaningTab() {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("warehouse_cleaning").delete().eq("id", id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Registro eliminado.");
@@ -651,7 +652,7 @@ function ToolsTab() {
       notes: form.notes || null,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Herramienta registrada.");
@@ -664,7 +665,7 @@ function ToolsTab() {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("warehouse_tools").delete().eq("id", id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Registro eliminado.");
@@ -803,7 +804,7 @@ function PackagingTab() {
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Insumo registrado.");
@@ -816,7 +817,7 @@ function PackagingTab() {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("warehouse_packaging").delete().eq("id", id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Registro eliminado.");
@@ -1026,7 +1027,7 @@ function PurchasesTab() {
 
     const { error } = await supabase.from("warehouse_purchases").insert(payload as any);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Adquisición registrada.");
@@ -1044,7 +1045,7 @@ function PurchasesTab() {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("warehouse_purchases").delete().eq("id", id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Registro eliminado.");

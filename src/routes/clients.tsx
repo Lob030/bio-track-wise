@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Users, Edit2, Trash2, Search, Mail, MessageSquare, Download } from "lucide-react";
 import { exportToCSV } from "@/lib/utils";
 import { toast } from "sonner";
+import { toUserFriendlyError } from "@/lib/errors";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,7 +95,7 @@ function Clients() {
       } as any)
       .eq("id", editingClient.id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Cliente actualizado");
@@ -109,7 +110,7 @@ function Clients() {
       .delete()
       .eq("id", deletingClient.id);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Cliente eliminado");
@@ -140,7 +141,7 @@ function Clients() {
       notes: form.notes || null,
       profile: form.profile,
     } as any);
-    if (error) return toast.error(error.message.includes("TIER_LIMIT") ? "Límite del plan alcanzado." : error.message);
+    if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Cliente registrado");
     setOpen(false);
     setForm({ name: "", phone: "", email: "", notes: "", profile: "particular" });
