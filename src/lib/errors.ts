@@ -29,6 +29,12 @@ export function toUserFriendlyError(error: unknown, fallback: string = GENERIC):
   // Known business-rule errors surfaced from triggers/policies.
   const message = typeof err.message === "string" ? err.message : "";
   if (message.includes("TIER_LIMIT")) return "Límite del plan alcanzado.";
+  if (message.includes("AI_LIMIT_REACHED")) {
+    return "Has alcanzado el límite de 20 prompts de IA este mes. Actualiza a Diamond para uso ilimitado.";
+  }
+  if (message.includes("TIER_FORBIDDEN")) {
+    return "Tu plan no incluye el Asistente IA. Requiere plan Gold o superior.";
+  }
 
   // Map known Postgres error codes.
   if (err.code && PG_CODE_MESSAGES[err.code]) return PG_CODE_MESSAGES[err.code];
