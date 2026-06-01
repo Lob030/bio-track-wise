@@ -228,7 +228,7 @@ function Dashboard() {
       .update({ status: "historial" as const, delivered_at: new Date().toISOString() })
       .eq("id", orderId);
     if (error) {
-      toast.error(error.message);
+      toast.error(toUserFriendlyError(error));
       return;
     }
     toast.success("Pedido entregado");
