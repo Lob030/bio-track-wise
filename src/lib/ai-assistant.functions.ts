@@ -173,10 +173,9 @@ export const parseAiCommand = createServerFn({ method: "POST" })
     const { error: gateErr } = await context.supabase.rpc("consume_ai_prompt");
     if (gateErr) {
       const msg = gateErr.message ?? "";
-      if (msg.includes("AI_LIMIT_REACHED")) {
-        throw new Error("Has alcanzado el límite de 20 prompts de IA este mes. Actualiza a Diamond para uso ilimitado.");
-      }
-      throw new Error("Tu plan no incluye el Asistente IA. Requiere plan Gold o superior.");
+      // Throw stable markers so the client error mapper (toUserFriendlyError)
+      // surfaces a clear Spanish message instead of the generic fallback.
+      throw new Error(msg.includes("AI_LIMIT_REACHED") ? "AI_LIMIT_REACHED" : "TIER_FORBIDDEN");
     }
 
     const key = process.env.LOVABLE_API_KEY;
