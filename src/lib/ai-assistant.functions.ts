@@ -166,7 +166,19 @@ export const parseAiCommand = createServerFn({ method: "POST" })
   .inputValidator((input: { userMessage: string; today: string }) => AiCommandInputSchema.parse(input))
 
 
-  .handler(async ({ data }): Promise<ParsedAction> => {
+  .handler(async ({ data, context }): Promise<ParsedAction> => {
+    // Server-side tier + monthly-quota enforcement (atomic check-and-increment).
+    // Prevents non-Gold/Diamond users from bypassing the client-side TierGate
+    // and ensures the Gold 20-prompts/month cap is enforced server-side.
+    const { error: gateErr } = await context.supabase.rpc("consume_ai_prompt");
+    if (gateErr) {
+      const msg = gateErr.message ?? "";
+      if (msg.includes("AI_LIMIT_REACHED")) {
+        throw new Error("Has alcanzado el límite de 20 prompts de IA este mes. Actualiza a Diamond para uso ilimitado.");
+      }
+      throw new Error("Tu plan no incluye el Asistente IA. Requiere plan Gold o superior.");
+    }
+
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
