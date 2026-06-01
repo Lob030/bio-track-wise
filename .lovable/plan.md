@@ -1,102 +1,55 @@
-## Diagnóstico
+# Fix: server-side tier + quota enforcement for the AI assistant
 
-Hoy hay **dos sistemas de color peleándose**:
+The security scan reports a single remaining issue: `parseAiCommand` authenticates the user but does not enforce the subscription tier or the monthly AI-prompt cap on the server. The gate currently exists only in the UI (`TierGate min="gold"`), so any logged-in user can call the RPC directly.
 
-1. `src/styles.css` + componentes shadcn → tokens `--background`, `--card`, `--border`, `--primary`, `--muted-foreground`, etc.
-2. `src/styles/themes.css` + `use-theme.ts` → variables `--color-background`, `--color-surface`, `--color-primary`, etc.
+Business rules (from `billing.tsx`):
+- `bronze` / `silver`: no AI access.
+- `gold`: AI access, **20 prompts/month**.
+- `diamond`: AI access, **unlimited**.
 
-Cuando cambias de tema, **solo** se actualizan las `--color-*`, pero los componentes shadcn siguen leyendo los tokens originales. Resultado: tarjetas con `bg-card` que no se sincronizan, `text-emerald-400` hardcoded que pierde contraste sobre fondos claros u oscuros saturados, botones de acción `variant="ghost"` con `text-[9px]` que desaparecen, y selectores globales agresivos como `[class*="card"]` en `themes.css` que pisan estilos de shadcn de forma impredecible.
+## Approach
 
-## Objetivo
+Enforce both checks atomically inside a database function (avoids a read-then-write race), and call it from the server function before invoking the AI gateway.
 
-Sistema de diseño **único y coherente** que se vea nivel Linear/Vercel/Stripe en los 7 temas, con contraste AA garantizado, jerarquía clara y botones de acción siempre legibles.
+### 1. Database migration — atomic quota guard
 
-## Cambios
+Create a `SECURITY DEFINER` function `public.consume_ai_prompt()` that runs as the authenticated user (`auth.uid()`):
 
-### 1. Unificar el sistema de tokens (raíz del problema)
+- Read the caller's `tier` and `ai_prompts_used_this_month` from `profiles`.
+- If `tier` not in (`gold`, `diamond`) → raise an exception with code/message `TIER_FORBIDDEN`.
+- If `tier = 'gold'` and `ai_prompts_used_this_month >= 20` → raise `AI_LIMIT_REACHED`.
+- Otherwise increment `ai_prompts_used_this_month` by 1 (skip increment for `diamond` since it is unlimited, or increment harmlessly — increment for tracking either way) and return success.
+- Grant `EXECUTE` on the function to `authenticated`.
 
-- En `use-theme.ts → applyTheme()`, además de las `--color-*`, **mapear cada tema a los tokens shadcn** que ya usan los componentes:
-  - `--background`, `--foreground`
-  - `--card`, `--card-foreground`
-  - `--popover`, `--popover-foreground`
-  - `--primary`, `--primary-foreground`
-  - `--secondary`, `--secondary-foreground`
-  - `--muted`, `--muted-foreground`
-  - `--accent`, `--accent-foreground`
-  - `--destructive`, `--destructive-foreground`
-  - `--border`, `--input`, `--ring`
-  - `--sidebar-*` (la sidebar usa su propio set)
-- Así un solo cambio de tema mueve **toda** la UI.
+This keeps the check-and-increment in one transaction so the cap cannot be bypassed by concurrent calls.
 
-### 2. Limpiar `src/styles/themes.css`
+### 2. `src/lib/ai-assistant.functions.ts`
 
-- Eliminar los selectores globales agresivos (`[class*="card"]`, `button:not([variant=...])`, `input`, `textarea`, etc.) que pisan shadcn.
-- Mantener solo: reset tipográfico de `body`, scrollbars temáticos, selección de texto, y los efectos opcionales `theme-glow` / `theme-glitch` (cyberpunk).
+At the start of the `.handler()` (which already has `context.supabase` and `context.userId` from `requireSupabaseAuth`), call the RPC:
 
-### 3. Refinar las 7 paletas (`src/lib/themes.ts`)
-
-Cada tema se redefine con criterios SaaS premium: contraste AA, superficies elevadas distinguibles, primario con buena legibilidad sobre fondo, y mute-foreground siempre legible (no más texto gris perdido). Identidad conservada:
-
-- **Midnight Pro** — slate profundo + teal eléctrico (tipo Linear)
-- **Crystal Clear** — blanco roto + indigo (tipo Vercel/Stripe light)
-- **Neon City** — violeta/magenta sobre negro púrpura, glow controlado
-- **Deep Forest** — verde bosque + lima, cálido orgánico
-- **Deep Ocean** — azul abisal + cian, sereno corporativo
-- **Golden Hour** — marrón cálido + ámbar/coral
-- **Nord** — gris azulado nórdico, minimalista
-
-Para cada uno: revisar tamaños/letter-spacing/line-height tipográficos, sombras suaves (no las actuales planas), radios consistentes.
-
-### 4. Pulir las tarjetas de especie (Stock)
-
-- Reemplazar `text-emerald-400`, `border-border/50`, gradientes hardcoded por tokens semánticos (`text-primary`, `border-border`, `bg-card`).
-- Aumentar tamaño del nombre de la especie (de `text-sm` a `text-base font-bold`), separar precio en una segunda línea con su propio chip, y mostrar el total como `Badge` destacado.
-- Tabla: header con `bg-muted/40`, celdas con `text-foreground` por defecto y `text-muted-foreground` solo para metadatos, números a la derecha con tabular-nums.
-
-### 5. Arreglar botones de acción (cajas y lotes) — lo que mencionaste
-
-En `src/components/boxes-view.tsx` y `rodents.lots.tsx` / `insects.lots.tsx`:
-
-- Subir tamaños: de `h-6 text-[9px] px-1.5` → `h-8 text-xs px-3` con `gap-1.5`.
-- Usar variantes shadcn correctas: **QR** = `outline`, **Editar** = `secondary`, **Eliminar** / **Dividir** = `outline` con `text-destructive hover:bg-destructive/10` para eliminar.
-- Iconos `h-3.5 w-3.5` con label visible siempre (no solo en hover).
-- Agrupar las acciones en una fila al pie de la tarjeta con `border-t` y `bg-muted/20` para que se lean como una toolbar.
-
-### 6. Pulido general transversal
-
-- **Sidebar** (`app-sidebar.tsx`): usar tokens `--sidebar-*`, item activo con barra lateral de `--primary`, hover sutil.
-- **PageShell**: títulos con `font-display`, subtítulos `text-muted-foreground`, separación más generosa.
-- **Cards globales** (dashboard, billing, settings): superficie elevada con `shadow-sm`, hover con `shadow-md` + `-translate-y-0.5` sutil, radio consistente.
-- **Inputs / Selects**: focus ring con `--ring` del tema, no el ring genérico.
-- **Badges de estado**: paleta dedicada (success/warning/error/info) que respete contraste en cada tema.
-
-### 7. QA visual
-
-- Recorrer las pantallas clave (`/stock`, `/rodents/boxes`, `/rodents/lots`, `/insects/boxes`, `/insects/lots`, `/`, `/settings`, `/billing`, `/ai`) en los 7 temas vía screenshots y verificar:
-  - Contraste de texto principal y secundario.
-  - Botones de acción legibles.
-  - Tablas con jerarquía clara.
-  - Tarjetas con bordes y sombras consistentes.
-
-## Detalles técnicos (referencia)
-
-```text
-Archivos a editar
-├── src/hooks/use-theme.ts          → mapear a tokens shadcn
-├── src/lib/themes.ts               → refinar 7 paletas + tokens shadcn por tema
-├── src/styles/themes.css           → eliminar overrides globales agresivos
-├── src/styles.css                  → revisar tokens base shadcn
-├── src/routes/stock.tsx            → rediseñar RodentSpeciesCard / InsectSpeciesCard
-├── src/components/boxes-view.tsx   → toolbar de acciones (QR/Editar/Eliminar)
-├── src/routes/rodents.lots.tsx     → toolbar de acciones (Dividir/Editar/Eliminar)
-├── src/routes/insects.lots.tsx     → toolbar de acciones (Dividir/Editar/Eliminar)
-├── src/components/app-sidebar.tsx  → tokens --sidebar-*
-└── src/components/page-shell.tsx   → jerarquía tipográfica
+```ts
+const { error: gateErr } = await context.supabase.rpc("consume_ai_prompt");
+if (gateErr) {
+  // map to a safe message; rethrow so the client shows a toast
+  throw new Error(gateErr.message.includes("AI_LIMIT_REACHED")
+    ? "Has alcanzado el límite de 20 prompts de IA este mes."
+    : "Tu plan no incluye el Asistente IA.");
+}
 ```
 
-Sin cambios en: lógica de negocio, queries, mutations, schema, auth.
+Run this **before** building the gateway provider / calling `generateObject`, so no AI cost is incurred when the caller is not entitled. The middleware chain stays `.middleware([requireSupabaseAuth]).inputValidator(...).handler(...)`.
 
-## Riesgos y mitigación
+### 3. Client UX (optional, light touch)
 
-- **Riesgo**: un tema podría no convencerte. → Mitigación: si pasa, ajustamos paleta puntual en una iteración rápida (5 min).
-- **Riesgo**: romper estilos en pantallas no listadas. → Mitigación: como migramos a tokens semánticos que ya usa shadcn, el comportamiento por defecto mejora en toda la app sin tocar archivo por archivo.
+`src/routes/ai.tsx` already wraps the page in `TierGate min="gold"`. No functional change needed, but the AI call site should surface the thrown error message via the existing `toast.error(toUserFriendlyError(...))` path so a Gold user who hits the 20/month cap sees a clear message. Verify the catch already routes through `toUserFriendlyError`; if `AI_LIMIT_REACHED`/`TIER_FORBIDDEN` aren't mapped, add them to `src/lib/errors.ts`.
+
+## Verification
+
+- Confirm build passes.
+- Re-run the security scan; expect `SERVER_FN_MISSING_AUTH` to clear.
+- Mark the finding fixed in the security panel.
+
+## Technical notes
+
+- The monthly counter reset (`tier_renewed_at`) is out of scope here — this plan only enforces the existing counter; if no reset job exists, I'll flag it but not build it unless you want it.
+- No changes to `client.ts`, `types.ts`, or other auto-generated files.

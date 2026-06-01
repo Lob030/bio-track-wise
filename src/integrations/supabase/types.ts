@@ -866,6 +866,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_ai_prompt: { Args: { _uid: string }; Returns: undefined }
       fifo_consume_insects: {
         Args: {
           _grams: number

@@ -3,6 +3,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 
 const ParsedActionSchema = z.union([
@@ -166,7 +167,20 @@ export const parseAiCommand = createServerFn({ method: "POST" })
   .inputValidator((input: { userMessage: string; today: string }) => AiCommandInputSchema.parse(input))
 
 
-  .handler(async ({ data }): Promise<ParsedAction> => {
+  .handler(async ({ data, context }): Promise<ParsedAction> => {
+    // Server-side tier + monthly-quota enforcement (atomic check-and-increment).
+    // Prevents non-Gold/Diamond users from bypassing the client-side TierGate
+    // and ensures the Gold 20-prompts/month cap is enforced server-side.
+    // Runs via the service-role admin client with the JWT-verified userId from
+    // requireSupabaseAuth — the function itself is not exposed to API callers.
+    const { error: gateErr } = await supabaseAdmin.rpc("consume_ai_prompt", { _uid: context.userId });
+    if (gateErr) {
+      const msg = gateErr.message ?? "";
+      // Throw stable markers so the client error mapper (toUserFriendlyError)
+      // surfaces a clear Spanish message instead of the generic fallback.
+      throw new Error(msg.includes("AI_LIMIT_REACHED") ? "AI_LIMIT_REACHED" : "TIER_FORBIDDEN");
+    }
+
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
