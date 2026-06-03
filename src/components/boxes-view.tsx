@@ -533,11 +533,22 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
   );
 }
 
-export function BoxesView({ kind }: { kind: Kind }) {
+export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId?: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingBox, setEditingBox] = useState<any | null>(null);
+  const [qrBox, setQrBox] = useState<any | null>(null);
   const [form, setForm] = useState({ code: "", roomRack: "", usage: "engorda", capacity: "" });
+
+  useEffect(() => {
+    if (!highlightBoxId) return;
+    const el = document.getElementById(`box-card-${highlightBoxId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-primary", "ring-offset-2");
+    const t = setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 3000);
+    return () => clearTimeout(t);
+  }, [highlightBoxId]);
 
   const [filterCuarto, setFilterCuarto] = useState<string>("all");
   const [filterRack, setFilterRack] = useState<string>("all");
