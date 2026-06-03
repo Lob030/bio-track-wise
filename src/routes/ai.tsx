@@ -44,7 +44,7 @@ function AIAssistantPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "¡Hola! Soy tu asistente de bioterio. Puedo ayudarte a:\n• Crear cajas nuevas\n• Registrar lotes de nacimiento o engorda\n• Consultar inventario\n\nDescríbeme qué necesitas en lenguaje natural.",
+        "¡Hola! Soy tu asistente de bioterio. Puedo ayudarte a:\n• Crear cajas nuevas\n• Registrar lotes de nacimiento o engorda\n• Registrar ventas y bajas (muertes)\n• Consultar inventario, stock crítico, pedidos pendientes e ingresos del mes\n\nDescríbeme qué necesitas en lenguaje natural.",
       timestamp: new Date(),
     },
   ]);
