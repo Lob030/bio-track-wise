@@ -30,7 +30,10 @@ interface Message {
 }
 
 const requiresConfirmation = (a: ParsedAction) =>
-  a.type === "create_box" || a.type === "create_lot";
+  a.type === "create_box" ||
+  a.type === "create_lot" ||
+  a.type === "register_sale" ||
+  a.type === "register_death";
 
 function AIAssistantPage() {
   const qc = useQueryClient();
