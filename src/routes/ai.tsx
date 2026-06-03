@@ -134,6 +134,38 @@ function AIAssistantPage() {
           .eq("owner_id", u.user.id)
           .eq("status", "active");
         result = `🧬 Tienes **${count ?? 0}** lotes activos.`;
+      } else if (q === "critical_stock") {
+        const { data } = await supabase
+          .from("warehouse_food")
+          .select("name,quantity_grams,min_stock_grams")
+          .eq("owner_id", u.user.id);
+        const critical = (data ?? []).filter(
+          (f) => Number(f.quantity_grams ?? 0) <= Number(f.min_stock_grams ?? 0),
+        );
+        result =
+          critical.length === 0
+            ? "✅ No tienes insumos en stock crítico."
+            : `⚠️ Tienes **${critical.length}** insumo(s) en stock crítico:\n${critical
+                .map((f) => `• ${f.name}: ${Number(f.quantity_grams ?? 0)} g (mínimo ${Number(f.min_stock_grams ?? 0)} g)`)
+                .join("\n")}`;
+      } else if (q === "pending_orders") {
+        const { count } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("owner_id", u.user.id)
+          .eq("status", "preparando");
+        result = `📋 Tienes **${count ?? 0}** pedido(s) pendiente(s).`;
+      } else if (q === "revenue_this_month") {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const { data } = await supabase
+          .from("orders")
+          .select("total_mxn,delivered_at")
+          .eq("owner_id", u.user.id)
+          .eq("status", "historial")
+          .gte("delivered_at", start);
+        const revenue = (data ?? []).reduce((s, o) => s + Number(o.total_mxn ?? 0), 0);
+        result = `💰 Has vendido **$${revenue.toLocaleString("es-MX", { minimumFractionDigits: 2 })}** MXN este mes (${data?.length ?? 0} ventas).`;
       }
       addMessage({ role: "assistant", content: result });
     } catch (e: any) {
