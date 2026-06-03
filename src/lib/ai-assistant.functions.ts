@@ -152,8 +152,51 @@ REGLAS:
 function regexFallback(userMessage: string, today: string): ParsedAction {
   const msg = userMessage.toLowerCase();
 
+  // Register death: "murieron/murió/baja(s) ... lote X"
+  if (/(muri|muert|baja|fallec)/.test(msg)) {
+    const lotMatch = userMessage.match(/lote\s+([A-Za-z0-9-]+)/i);
+    const numMatch = userMessage.match(/\d+/);
+    if (lotMatch && numMatch) {
+      const causes = ["enfermedad", "pelea", "escapo", "estres", "malas_condiciones", "neonato"] as const;
+      const cause = causes.find((c) => msg.includes(c.replace("_", " ")) || msg.includes(c)) ?? "desconocida";
+      return {
+        type: "register_death",
+        description: `Voy a registrar ${numMatch[0]} baja(s) en el lote ${lotMatch[1].toUpperCase()} (${cause})`,
+        lotCode: lotMatch[1].toUpperCase(),
+        count: parseInt(numMatch[0]),
+        cause,
+      };
+    }
+    return { type: "clarify", description: "¿En qué lote y cuántas bajas? Ej: \"Murieron 3 del lote L12\"." };
+  }
+
+  // Register sale: "vendí/venta ... $X"
+  if (/(vend|venta)/.test(msg) && !/(mes|ingres)/.test(msg)) {
+    const amountMatch = userMessage.match(/(\d+(?:\.\d+)?)/);
+    if (amountMatch) {
+      const clientMatch = userMessage.match(/\ba\s+([A-Za-zÁÉÍÓÚáéíóúñÑ]+)/);
+      const total = parseFloat(amountMatch[1]);
+      return {
+        type: "register_sale",
+        description: `Voy a registrar una venta de $${total} MXN${clientMatch ? ` a ${clientMatch[1]}` : ""}`,
+        totalMxn: total,
+        ...(clientMatch ? { clientName: clientMatch[1] } : {}),
+      };
+    }
+    return { type: "clarify", description: "¿Por qué monto fue la venta? Ej: \"Vendí 500 pesos a Juan\"." };
+  }
+
   // Query
-  if (/(cu[aá]nt[oa]s?|cu[aá]nto)/.test(msg)) {
+  if (/(cu[aá]nt[oa]s?|cu[aá]nto|qu[eé]|cu[aá]l)/.test(msg)) {
+    if (/(stock|cr[ií]tic|insumo|aliment)/.test(msg)) {
+      return { type: "query", description: "Voy a consultar qué insumos están en stock crítico", queryType: "critical_stock" };
+    }
+    if (/(mes|ingres)/.test(msg) && /(vend|ingres|venta)/.test(msg)) {
+      return { type: "query", description: "Voy a consultar tus ingresos de este mes", queryType: "revenue_this_month" };
+    }
+    if (/(pedido|orden|pendiente)/.test(msg)) {
+      return { type: "query", description: "Voy a consultar cuántos pedidos pendientes tienes", queryType: "pending_orders" };
+    }
     if (msg.includes("caja")) {
       return { type: "query", description: "Voy a consultar cuántas cajas tienes", queryType: "total_boxes" };
     }
