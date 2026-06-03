@@ -1029,6 +1029,44 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
         })}
       </div>
 
+      <Dialog open={!!qrBox} onOpenChange={(v) => !v && setQrBox(null)}>
+        <DialogContent id="qr-dialog" className="max-w-xs text-center">
+          <DialogHeader>
+            <DialogTitle>QR — Caja {qrBox?.code}</DialogTitle>
+            <DialogDescription>
+              Escanea con la cámara para abrir esta caja directamente en la app.
+            </DialogDescription>
+          </DialogHeader>
+          {qrBox && (
+            <div className="flex flex-col items-center gap-4 py-2">
+              <QRCodeSVG
+                value={`${window.location.origin}/${kind === "rodent" ? "rodents" : "insects"}/boxes?box=${qrBox.id}`}
+                size={200}
+                includeMargin
+              />
+              <p className="text-xs text-muted-foreground break-all">
+                {`${window.location.origin}/${kind === "rodent" ? "rodents" : "insects"}/boxes?box=${qrBox.id}`}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => {
+                const svg = document.querySelector("#qr-dialog svg") as SVGElement | null;
+                if (!svg) return;
+                const serializer = new XMLSerializer();
+                const svgStr = serializer.serializeToString(svg);
+                const blob = new Blob([svgStr], { type: "image/svg+xml" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `QR-${qrBox.code}.svg`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}>
+                <Download className="h-4 w-4 mr-1" /> Descargar QR
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!birthBox} onOpenChange={(v) => !v && setBirthBox(null)}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
