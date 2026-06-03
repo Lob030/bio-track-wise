@@ -254,6 +254,73 @@ function AIAssistantPage() {
         if (error) throw error;
         qc.invalidateQueries({ queryKey: ["lots"] });
         toast.success("Lote creado");
+      } else if (action.type === "register_sale") {
+        let clientId: string | null = null;
+        if (action.clientName) {
+          const { data: cl } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("owner_id", ownerId)
+            .ilike("name", `%${action.clientName}%`)
+            .limit(1)
+            .maybeSingle();
+          if (cl) clientId = cl.id;
+        }
+        const { error } = await supabase.from("orders").insert({
+          owner_id: ownerId,
+          client_id: clientId,
+          subtotal_mxn: action.totalMxn,
+          total_mxn: action.totalMxn,
+          discount_pct: 0,
+          status: "historial" as any,
+          delivered_at: new Date().toISOString(),
+          notes: action.notes ?? null,
+        });
+        if (error) throw error;
+        qc.invalidateQueries({ queryKey: ["orders"] });
+        toast.success(`Venta registrada: $${action.totalMxn} MXN`);
+      } else if (action.type === "register_death") {
+        const { data: lot } = await supabase
+          .from("lots")
+          .select("id,males,females,unsexed,total_deaths,notes")
+          .eq("owner_id", ownerId)
+          .eq("lot_code", action.lotCode)
+          .maybeSingle();
+        if (!lot) throw new Error(`Lote "${action.lotCode}" no encontrado`);
+        const totalPop = (lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0);
+        if (action.count > totalPop) {
+          throw new Error(`No puedes registrar más bajas (${action.count}) que el total del lote (${totalPop})`);
+        }
+        let remaining = action.count;
+        let newUnsexed = lot.unsexed ?? 0;
+        let newFemales = lot.females ?? 0;
+        let newMales = lot.males ?? 0;
+        const takeU = Math.min(newUnsexed, remaining);
+        newUnsexed -= takeU;
+        remaining -= takeU;
+        const takeF = Math.min(newFemales, remaining);
+        newFemales -= takeF;
+        remaining -= takeF;
+        const takeM = Math.min(newMales, remaining);
+        newMales -= takeM;
+        remaining -= takeM;
+        const newTotal = newUnsexed + newFemales + newMales;
+        const dateStr = new Date().toLocaleDateString("es-MX");
+        const note = `Baja ${dateStr}: ${action.count} (${action.cause})`;
+        const { error } = await supabase
+          .from("lots")
+          .update({
+            unsexed: newUnsexed,
+            females: newFemales,
+            males: newMales,
+            total_deaths: (lot.total_deaths ?? 0) + action.count,
+            status: newTotal === 0 ? ("finalizado" as any) : ("active" as any),
+            notes: lot.notes ? `${lot.notes} | ${note}` : note,
+          })
+          .eq("id", lot.id);
+        if (error) throw error;
+        qc.invalidateQueries({ queryKey: ["lots"] });
+        toast.success(`Baja registrada: ${action.count} (${action.cause})`);
       }
 
       setConfirmed((s) => new Set(s).add(msgId));
