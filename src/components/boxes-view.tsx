@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin, Search } from "lucide-react";
+import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapPin, Search, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -532,11 +533,22 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
   );
 }
 
-export function BoxesView({ kind }: { kind: Kind }) {
+export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId?: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingBox, setEditingBox] = useState<any | null>(null);
+  const [qrBox, setQrBox] = useState<any | null>(null);
   const [form, setForm] = useState({ code: "", roomRack: "", usage: "engorda", capacity: "" });
+
+  useEffect(() => {
+    if (!highlightBoxId) return;
+    const el = document.getElementById(`box-card-${highlightBoxId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-primary", "ring-offset-2");
+    const t = setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 3000);
+    return () => clearTimeout(t);
+  }, [highlightBoxId]);
 
   const [filterCuarto, setFilterCuarto] = useState<string>("all");
   const [filterRack, setFilterRack] = useState<string>("all");
@@ -933,7 +945,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
           const occupied = occupants.length > 0;
           const feed = feedFor(b.id);
           return (
-            <Card key={b.id} className="p-4 border-border bg-card/60 space-y-3 relative overflow-hidden flex flex-col justify-between">
+            <Card key={b.id} id={`box-card-${b.id}`} className="p-4 border-border bg-card/60 space-y-3 relative overflow-hidden flex flex-col justify-between transition-all">
               <div>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
@@ -990,7 +1002,7 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 </Button>
               )}
 
-              <div className="grid grid-cols-2 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
+              <div className="grid grid-cols-3 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
 
                 <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
                   setEditingBox(b);
@@ -1005,6 +1017,9 @@ export function BoxesView({ kind }: { kind: Kind }) {
                 }}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
                 </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => setQrBox(b)}>
+                  <QrCode className="h-3.5 w-3.5" /> QR
+                </Button>
                 <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => remove(b.id)}>
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar
                 </Button>
@@ -1013,6 +1028,44 @@ export function BoxesView({ kind }: { kind: Kind }) {
           );
         })}
       </div>
+
+      <Dialog open={!!qrBox} onOpenChange={(v) => !v && setQrBox(null)}>
+        <DialogContent id="qr-dialog" className="max-w-xs text-center">
+          <DialogHeader>
+            <DialogTitle>QR — Caja {qrBox?.code}</DialogTitle>
+            <DialogDescription>
+              Escanea con la cámara para abrir esta caja directamente en la app.
+            </DialogDescription>
+          </DialogHeader>
+          {qrBox && (
+            <div className="flex flex-col items-center gap-4 py-2">
+              <QRCodeSVG
+                value={`${window.location.origin}/${kind === "rodent" ? "rodents" : "insects"}/boxes?box=${qrBox.id}`}
+                size={200}
+                includeMargin
+              />
+              <p className="text-xs text-muted-foreground break-all">
+                {`${window.location.origin}/${kind === "rodent" ? "rodents" : "insects"}/boxes?box=${qrBox.id}`}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => {
+                const svg = document.querySelector("#qr-dialog svg") as SVGElement | null;
+                if (!svg) return;
+                const serializer = new XMLSerializer();
+                const svgStr = serializer.serializeToString(svg);
+                const blob = new Blob([svgStr], { type: "image/svg+xml" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `QR-${qrBox.code}.svg`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}>
+                <Download className="h-4 w-4 mr-1" /> Descargar QR
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!birthBox} onOpenChange={(v) => !v && setBirthBox(null)}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
