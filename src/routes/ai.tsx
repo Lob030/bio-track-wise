@@ -280,13 +280,38 @@ function AIAssistantPage() {
         qc.invalidateQueries({ queryKey: ["orders"] });
         toast.success(`Venta registrada: $${action.totalMxn} MXN`);
       } else if (action.type === "register_death") {
-        const { data: lot } = await supabase
+        // First try: exact lot_code match
+        let { data: lot } = await supabase
           .from("lots")
-          .select("id,males,females,unsexed,total_deaths,notes")
+          .select("id,males,females,unsexed,total_deaths,notes,lot_code")
           .eq("owner_id", ownerId)
-          .eq("lot_code", action.lotCode)
+          .eq("status", "active")
+          .ilike("lot_code", action.lotCode)
           .maybeSingle();
-        if (!lot) throw new Error(`Lote "${action.lotCode}" no encontrado`);
+
+        // Second try: search by associated box code
+        if (!lot) {
+          const { data: box } = await supabase
+            .from("boxes")
+            .select("id")
+            .eq("owner_id", ownerId)
+            .ilike("code", action.lotCode)
+            .maybeSingle();
+          if (box) {
+            const { data: lotByBox } = await supabase
+              .from("lots")
+              .select("id,males,females,unsexed,total_deaths,notes,lot_code")
+              .eq("owner_id", ownerId)
+              .eq("status", "active")
+              .eq("box_id", box.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            lot = lotByBox;
+          }
+        }
+
+        if (!lot) throw new Error(`No encontré un lote activo con código o caja "${action.lotCode}"`);
         const totalPop = (lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0);
         if (action.count > totalPop) {
           throw new Error(`No puedes registrar más bajas (${action.count}) que el total del lote (${totalPop})`);

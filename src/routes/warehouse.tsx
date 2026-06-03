@@ -139,6 +139,7 @@ function FoodTab() {
     queryKey: ["warehouse_food", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user?.id) throw new Error("No autenticado");
       const { data, error } = await supabase
         .from("warehouse_food")
         .select("*")
@@ -445,6 +446,7 @@ function CleaningTab() {
     queryKey: ["warehouse_cleaning", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user?.id) throw new Error("No autenticado");
       const { data, error } = await supabase
         .from("warehouse_cleaning")
         .select("*")
@@ -657,6 +659,7 @@ function ToolsTab() {
     queryKey: ["warehouse_tools", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user?.id) throw new Error("No autenticado");
       const { data, error } = await supabase
         .from("warehouse_tools")
         .select("*")
@@ -820,6 +823,7 @@ function PackagingTab() {
     queryKey: ["warehouse_packaging", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user?.id) throw new Error("No autenticado");
       const { data, error } = await supabase
         .from("warehouse_packaging")
         .select("*")
@@ -981,6 +985,7 @@ function PurchasesTab() {
     queryKey: ["warehouse_purchases", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      if (!user?.id) throw new Error("No autenticado");
       const { data, error } = await supabase
         .from("warehouse_purchases")
         .select("*, species(name)")

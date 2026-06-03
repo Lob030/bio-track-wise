@@ -543,29 +543,36 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
   const [qrBox, setQrBox] = useState<any | null>(null);
   const [form, setForm] = useState({ code: "", roomRack: "", usage: "engorda", capacity: "" });
 
+  const { data: boxes } = useQuery({
+    queryKey: ["boxes", kind],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("boxes")
+        .select("*")
+        .eq("kind", kind)
+        .order("code", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   useEffect(() => {
-    if (!highlightBoxId) return;
+    if (!highlightBoxId || !boxes?.length) return;
     const el = document.getElementById(`box-card-${highlightBoxId}`);
     if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.classList.add("ring-2", "ring-primary", "ring-offset-2");
-    const t = setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 3000);
-    return () => clearTimeout(t);
-  }, [highlightBoxId]);
+    // Small delay to let React finish rendering the list
+    const timer = setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary", "ring-offset-2");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 3000);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [highlightBoxId, boxes]);
 
   const [filterCuarto, setFilterCuarto] = useState<string>("all");
   const [filterRack, setFilterRack] = useState<string>("all");
   const [filterUso, setFilterUso] = useState<string>("all");
   const [filterEstado, setFilterEstado] = useState<string>("all");
-
-  const { data: boxes } = useQuery({
-    queryKey: ["boxes", kind],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("boxes").select("*").eq("kind", kind).order("code");
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const { data: lots } = useQuery({
     queryKey: ["lots-by-box", kind],
