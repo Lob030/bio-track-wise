@@ -90,7 +90,7 @@ function Dashboard() {
           .select("id, lot_type, status, kind, started_at, lot_code, box_id, species_id, species(name)")
           .eq("status", "active"),
         supabase.from("clients").select("id, created_at").gte("created_at", month.toISOString()),
-        supabase.from("orders").select("id, total_mxn, created_at, status").gte("created_at", month.toISOString()),
+        supabase.from("orders").select("id, total_mxn, created_at, status").gte("created_at", month.toISOString()).eq("status", "historial"),
         supabase.from("alerts").select("id").eq("acknowledged", false),
         supabase.from("boxes").select("id"),
         supabase.from("warehouse_purchases")
@@ -109,7 +109,8 @@ function Dashboard() {
         supabase.from("orders")
           .select("id, total_mxn, created_at, status")
           .gte("created_at", prevMonth.toISOString())
-          .lt("created_at", month.toISOString()),
+          .lt("created_at", month.toISOString())
+          .eq("status", "historial"),
         /* previous-month purchases */
         supabase.from("warehouse_purchases")
           .select("id, total_cost, created_at")
@@ -305,7 +306,7 @@ function Dashboard() {
         ) : (
           <div className="divide-y divide-border">
             {pendingOrders.map((o: any) => (
-              <div key={o.id} className="py-3 flex items-center justify-between gap-4">
+              <div key={o.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
                 <div className="flex items-center gap-3 flex-wrap min-w-0">
                   <span className="font-medium text-sm truncate">
                     {(o as any).clients?.name ?? "Sin cliente"}
@@ -317,7 +318,7 @@ function Dashboard() {
                     {new Date(o.created_at).toLocaleDateString("es-MX")}
                   </span>
                 </div>
-                <Button size="sm" className="h-8 shrink-0" onClick={() => handleDeliver(o.id)}>
+                <Button size="sm" className="h-9 w-full sm:w-auto sm:h-8 shrink-0" onClick={() => handleDeliver(o.id)}>
                   <Check className="mr-1 h-3.5 w-3.5" /> Entregar
                 </Button>
               </div>

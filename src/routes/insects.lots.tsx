@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Bug, Plus, Scale, Layers, CheckCircle2, Edit2, Trash2, Split, Search, Download } from "lucide-react";
 import { exportToCSV } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { type InsectRule } from "@/components/size-matrix";
 import { PageShell } from "@/components/page-shell";
+import { AdminOnly } from "@/components/role-gate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +38,7 @@ export const Route = createFileRoute("/insects/lots")({
 });
 
 function Page() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -422,8 +425,9 @@ function Page() {
             )}>
             <Download className="h-4 w-4" /> Exportar CSV
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
+          <AdminOnly>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
           <DialogContent className="max-w-3xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo lote de insectos</DialogTitle>
@@ -504,7 +508,8 @@ function Page() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
+          </AdminOnly>
+          </div>
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -549,6 +554,74 @@ function Page() {
       )}
 
       <div className="space-y-3">
+        {/* ── Mobile card list ── */}
+        {isMobile ? (
+          <>
+            {searchedLots.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
+            )}
+            {searchedLots.map((l) => {
+              const speciesName = l.species_id ? speciesMap[l.species_id] ?? "" : "";
+              const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
+              return (
+                <div key={l.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      <span className="font-semibold text-sm truncate">{l.lot_code ?? l.id.slice(0, 8)}</span>
+                      {parentCode && <span className="text-[10px] text-muted-foreground">↳ {parentCode}</span>}
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">
+                      {l.lot_type === "breeder" ? "Reproductor" : l.lot_type === "engorda" ? "Engorda" : "Nacimiento"}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {speciesName || "—"} · {new Date(l.started_at).toLocaleDateString("es-MX")}
+                  </div>
+                  <div className="text-xs font-medium">
+                    <span className="font-bold text-foreground">{(+(l.mass_grams ?? 0)).toFixed(1)}g</span> biomasa
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                      l.status === "active"
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                        : "bg-muted text-muted-foreground border-transparent"
+                    }`}>{l.status === "active" ? "Activo" : "Finalizado"}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {l.status === "active" && (
+                      <AdminOnly>
+                        <Button size="sm" variant="outline" className="flex-1 h-9 text-xs gap-1 font-medium border-border/60"
+                          onClick={() => initSplit(l)}>
+                          <Split className="h-3.5 w-3.5" /> Dividir
+                        </Button>
+                      </AdminOnly>
+                    )}
+                    {l.status === "active" && (
+                      <Button size="sm" variant="ghost" className="flex-1 h-9 text-xs gap-1 font-medium text-rose-400"
+                        onClick={() => { setDeathLot(l); setDeathGrams(0); setDeathCause("desconocida"); }}>
+                        💀 Baja
+                      </Button>
+                    )}
+                    <AdminOnly>
+                      <Button size="sm" variant="secondary" className="flex-1 h-9 text-xs gap-1 font-medium"
+                        onClick={() => initEdit(l)}>
+                        <Edit2 className="h-3.5 w-3.5" /> Editar
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 h-9 text-xs gap-1 font-medium text-destructive border-destructive/40"
+                        onClick={() => setDeletingLot(l)}>
+                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                      </Button>
+                    </AdminOnly>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        ) : (
+          <>
+            {searchedLots.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
+            )}
         {searchedLots.map((l) => {
           const childNames = childrenNamesMap[l.id];
           const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
@@ -636,9 +709,11 @@ function Page() {
               <div className="flex items-center gap-2 shrink-0 flex-wrap md:justify-end">
                 {l.status === "active" && (
                   <>
-                    <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
-                      <Split className="h-3.5 w-3.5" /> Dividir
-                    </Button>
+                    <AdminOnly>
+                      <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
+                        <Split className="h-3.5 w-3.5" /> Dividir
+                      </Button>
+                    </AdminOnly>
                     <Button
                       size="sm" variant="ghost"
                       className="h-9 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 gap-1.5 px-3"
@@ -648,19 +723,23 @@ function Page() {
                     </Button>
                   </>
                 )}
-                <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
-                  <Edit2 className="h-3.5 w-3.5" /> Editar
-                </Button>
-                <InsectProfitabilityDialog lot={l} species={l.species_id ? speciesDataMap[l.species_id] : null} />
-                <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => setDeletingLot(l)}>
-                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                </Button>
+                <AdminOnly>
+                  <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
+                    <Edit2 className="h-3.5 w-3.5" /> Editar
+                  </Button>
+                  <InsectProfitabilityDialog lot={l} species={l.species_id ? speciesDataMap[l.species_id] : null} />
+                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => setDeletingLot(l)}>
+                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                  </Button>
+                </AdminOnly>
               </div>
             </Card>
           );
         })}
         {searchedLots.length === 0 && (
           <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
+        )}
+          </>
         )}
       </div>
 

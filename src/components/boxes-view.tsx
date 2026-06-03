@@ -4,6 +4,8 @@ import { Boxes as BoxIcon, Plus, Trash2, Download, Upload, Utensils, Edit2, MapP
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
+import { AdminOnly } from "@/components/role-gate";
+import { useIsAdmin } from "@/hooks/use-role";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -535,6 +537,7 @@ function PopoverOpenableBadge({ occupants, kind, qc, boxes }: { occupants: any[]
 
 export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId?: string }) {
   const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [editingBox, setEditingBox] = useState<any | null>(null);
   const [qrBox, setQrBox] = useState<any | null>(null);
@@ -800,35 +803,39 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
       icon={<BoxIcon className="h-6 w-6" />}
       actions={
         <>
-          <Button variant="outline" size="sm" onClick={importCSV}><Upload className="h-4 w-4 mr-2" /> Importar</Button>
+          <AdminOnly>
+            <Button variant="outline" size="sm" onClick={importCSV}><Upload className="h-4 w-4 mr-2" /> Importar</Button>
+          </AdminOnly>
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-2" /> Exportar</Button>
-          <Dialog open={open} onOpenChange={(v) => {
-            setOpen(v);
-            if (!v) {
-              setEditingBox(null);
-              setForm({ code: "", roomRack: "", usage: "engorda", capacity: "" });
-            }
-          }}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva caja</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>{editingBox ? "Editar caja" : "Nueva caja"}</DialogTitle></DialogHeader>
-              <div className="grid gap-3">
-                <div><Label>Código *</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="C-01" /></div>
-                <div><Label>Ubicación (Sala / Rack) *</Label><Input value={form.roomRack} onChange={(e) => setForm({ ...form, roomRack: e.target.value })} placeholder="Sala A / Rack 2" /></div>
-                <div><Label>Uso *</Label>
-                  <Select value={form.usage} onValueChange={(v) => setForm({ ...form, usage: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="engorda">Engorda</SelectItem>
-                      <SelectItem value="reproductores">Reproductores</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <AdminOnly>
+            <Dialog open={open} onOpenChange={(v) => {
+              setOpen(v);
+              if (!v) {
+                setEditingBox(null);
+                setForm({ code: "", roomRack: "", usage: "engorda", capacity: "" });
+              }
+            }}>
+              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nueva caja</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>{editingBox ? "Editar caja" : "Nueva caja"}</DialogTitle></DialogHeader>
+                <div className="grid gap-3">
+                  <div><Label>Código *</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="C-01" /></div>
+                  <div><Label>Ubicación (Sala / Rack) *</Label><Input value={form.roomRack} onChange={(e) => setForm({ ...form, roomRack: e.target.value })} placeholder="Sala A / Rack 2" /></div>
+                  <div><Label>Uso *</Label>
+                    <Select value={form.usage} onValueChange={(v) => setForm({ ...form, usage: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="engorda">Engorda</SelectItem>
+                        <SelectItem value="reproductores">Reproductores</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Capacidad</Label><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></div>
                 </div>
-                <div><Label>Capacidad</Label><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} /></div>
-              </div>
-              <DialogFooter><Button onClick={submit}>{editingBox ? "Guardar cambios" : "Registrar"}</Button></DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter><Button onClick={submit}>{editingBox ? "Guardar cambios" : "Registrar"}</Button></DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </AdminOnly>
         </>
       }
     >
@@ -839,7 +846,7 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
           {/* Cuarto filter */}
           {uniqueCuartos.length > 1 && (
             <Select value={filterCuarto} onValueChange={setFilterCuarto}>
-              <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+              <SelectTrigger className="h-8 w-auto min-w-0 max-w-[150px] text-xs">
                 <SelectValue placeholder="Cuarto: Todos" />
               </SelectTrigger>
               <SelectContent>
@@ -854,7 +861,7 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
           {/* Rack filter */}
           {uniqueRacks.length > 1 && (
             <Select value={filterRack} onValueChange={setFilterRack}>
-              <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+              <SelectTrigger className="h-8 w-auto min-w-0 max-w-[150px] text-xs">
                 <SelectValue placeholder="Mueble: Todos" />
               </SelectTrigger>
               <SelectContent>
@@ -868,7 +875,7 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
 
           {/* Uso filter */}
           <Select value={filterUso} onValueChange={setFilterUso}>
-            <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+            <SelectTrigger className="h-8 w-auto min-w-0 max-w-[150px] text-xs">
               <SelectValue placeholder="Uso: Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -880,7 +887,7 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
 
           {/* Estado filter */}
           <Select value={filterEstado} onValueChange={setFilterEstado}>
-            <SelectTrigger className="h-8 w-auto min-w-[130px] text-xs">
+            <SelectTrigger className="h-8 w-auto min-w-0 max-w-[150px] text-xs">
               <SelectValue placeholder="Estado: Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -1002,27 +1009,32 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
                 </Button>
               )}
 
-              <div className="grid grid-cols-3 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
+              <div className={`grid ${isAdmin ? "grid-cols-3" : "grid-cols-1"} gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30`}>
+                <AdminOnly>
+                  <Button size="sm" variant="secondary" className="h-8 text-xs gap-1 px-1.5 font-medium min-w-0 truncate" onClick={() => {
+                    setEditingBox(b);
+                    const unpacked = unpackLocation(b.location);
+                    setForm({
+                      code: b.code,
+                      roomRack: unpacked.roomRack,
+                      usage: unpacked.usage || "engorda",
+                      capacity: b.capacity ? String(b.capacity) : "",
+                    });
+                    setOpen(true);
+                  }}>
+                    <Edit2 className="h-3.5 w-3.5 shrink-0" /> Editar
+                  </Button>
+                </AdminOnly>
 
-                <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
-                  setEditingBox(b);
-                  const unpacked = unpackLocation(b.location);
-                  setForm({
-                    code: b.code,
-                    roomRack: unpacked.roomRack,
-                    usage: unpacked.usage || "engorda",
-                    capacity: b.capacity ? String(b.capacity) : "",
-                  });
-                  setOpen(true);
-                }}>
-                  <Edit2 className="h-3.5 w-3.5" /> Editar
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1 px-1.5 font-medium min-w-0 truncate" onClick={() => setQrBox(b)}>
+                  <QrCode className="h-3.5 w-3.5 shrink-0" /> QR
                 </Button>
-                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => setQrBox(b)}>
-                  <QrCode className="h-3.5 w-3.5" /> QR
-                </Button>
-                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => remove(b.id)}>
-                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                </Button>
+
+                <AdminOnly>
+                  <Button size="sm" variant="outline" className="h-8 text-xs gap-1 px-1.5 font-medium min-w-0 truncate text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => remove(b.id)}>
+                    <Trash2 className="h-3.5 w-3.5 shrink-0" /> Eliminar
+                  </Button>
+                </AdminOnly>
               </div>
             </Card>
           );

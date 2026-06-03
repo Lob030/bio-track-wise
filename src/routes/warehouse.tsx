@@ -127,12 +127,22 @@ function FoodTab() {
     audited_at: today(),
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["user-session"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
   const { data } = useQuery({
-    queryKey: ["warehouse_food"],
+    queryKey: ["warehouse_food", user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_food")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -423,12 +433,22 @@ function CleaningTab() {
     cost: "",
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["user-session"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
   const { data } = useQuery({
-    queryKey: ["warehouse_cleaning"],
+    queryKey: ["warehouse_cleaning", user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_cleaning")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -625,12 +645,22 @@ function ToolsTab() {
     notes: "",
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["user-session"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
   const { data } = useQuery({
-    queryKey: ["warehouse_tools"],
+    queryKey: ["warehouse_tools", user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_tools")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -778,12 +808,22 @@ function PackagingTab() {
     unit_cost: "",
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["user-session"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
   const { data } = useQuery({
-    queryKey: ["warehouse_packaging"],
+    queryKey: ["warehouse_packaging", user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_packaging")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -928,13 +968,23 @@ function PurchasesTab() {
     notes: "",
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["user-session"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
   /* Main data */
   const { data } = useQuery({
-    queryKey: ["warehouse_purchases"],
+    queryKey: ["warehouse_purchases", user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_purchases")
         .select("*, species(name)")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;

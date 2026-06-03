@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
 import { Card } from "@/components/ui/card";
@@ -66,6 +67,7 @@ function fmtDate(iso: string | null | undefined) {
 type SalesTab = "nueva-venta" | "pedidos-futuros";
 
 function SalesPage() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<SalesTab>("nueva-venta");
@@ -894,6 +896,24 @@ function SalesPage() {
                 <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
                   Sin resultados para los filtros aplicados.
                 </Card>
+              ) : isMobile ? (
+                <div className="space-y-3">
+                  {filteredHistorial.map((o: any) => (
+                    <div key={o.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm truncate">{(o as any).clients?.name ?? "—"}</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">#{o.id.slice(0, 8)}</div>
+                        </div>
+                        <span className="font-bold text-emerald-400 text-sm whitespace-nowrap shrink-0">{fmtMXN(o.total_mxn ?? 0)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{fmtDate(o.delivered_at)}</span>
+                        <span>{o.order_items?.length ?? 0} productos</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm">
                   <div className="overflow-x-auto">

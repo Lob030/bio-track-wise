@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Rat, Bug, Boxes, Warehouse, Bell, ShoppingCart,
-  Users, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings, Download, CalendarDays, LayoutGrid
+  Users, Users2, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings, Download, CalendarDays, LayoutGrid
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -12,9 +12,10 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { useProfile, tierAllows, type Tier } from "@/hooks/use-profile";
+import { useRole } from "@/hooks/use-role";
 import { supabase } from "@/integrations/supabase/client";
 
-type Item = { title: string; url: string; icon: any; minTier?: Tier; children?: { title: string; url: string }[] };
+type Item = { title: string; url: string; icon: any; minTier?: Tier; adminOnly?: boolean; children?: { title: string; url: string }[] };
 
 const MENU: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -25,6 +26,7 @@ const MENU: Item[] = [
       { title: "Líneas Genéticas", url: "/rodents/lines" },
       { title: "Cajas", url: "/rodents/boxes" },
       { title: "Lotes", url: "/rodents/lots" },
+      { title: "Árbol Genético", url: "/rodents/tree" },
     ],
   },
   {
@@ -34,17 +36,19 @@ const MENU: Item[] = [
       { title: "Líneas Genéticas", url: "/insects/lines" },
       { title: "Cajas", url: "/insects/boxes" },
       { title: "Lotes", url: "/insects/lots" },
+      { title: "Árbol Genético", url: "/insects/tree" },
     ],
   },
   { title: "Stock", url: "/stock", icon: Boxes, minTier: "gold" },
-  { title: "Almacén", url: "/warehouse", icon: Warehouse, minTier: "gold" },
+  { title: "Almacén", url: "/warehouse", icon: Warehouse, minTier: "gold", adminOnly: true },
   { title: "Alertas", url: "/alerts", icon: Bell },
-  { title: "Ventas", url: "/sales", icon: ShoppingCart, minTier: "gold" },
-  { title: "Clientes", url: "/clients", icon: Users, minTier: "gold" },
-  { title: "Reportes", url: "/reports", icon: BarChart3, minTier: "gold" },
-  { title: "Calendario", url: "/calendar", icon: CalendarDays, minTier: "gold" },
+  { title: "Ventas", url: "/sales", icon: ShoppingCart, minTier: "gold", adminOnly: true },
+  { title: "Clientes", url: "/clients", icon: Users, minTier: "gold", adminOnly: true },
+  { title: "Reportes", url: "/reports", icon: BarChart3, minTier: "gold", adminOnly: true },
+  { title: "Calendario", url: "/calendar", icon: CalendarDays, minTier: "gold", adminOnly: true },
   { title: "Kanban", url: "/kanban", icon: LayoutGrid, minTier: "silver" },
   { title: "Asistente IA", url: "/ai", icon: Sparkles, minTier: "gold" },
+  { title: "Equipo", url: "/team", icon: Users2 },
 ];
 
 const sidebarStyle: React.CSSProperties = {
@@ -148,6 +152,8 @@ export function AppSidebar() {
   const { data: profile } = useProfile();
   const tier = (profile?.tier ?? "bronze") as Tier;
   const alertCount = useAlertCount();
+  const { data: role } = useRole();
+  const isAdmin = role === "admin";
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -218,7 +224,7 @@ export function AppSidebar() {
           <SidebarGroupLabel style={groupLabelStyle}>Bioterio</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {MENU.map((item) => {
+              {MENU.filter(item => isAdmin || !item.adminOnly).map((item) => {
                 const allowed = !item.minTier || tierAllows(tier, item.minTier);
                 if (item.children) {
                   return (

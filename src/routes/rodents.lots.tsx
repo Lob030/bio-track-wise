@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, Area, ReferenceLine } from "recharts";
 import type { RodentRule } from "@/components/size-matrix";
 import { Rat, Plus, Edit2, Trash2, Split, Search, Skull, Download } from "lucide-react";
@@ -8,6 +9,7 @@ import { exportToCSV } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
+import { AdminOnly } from "@/components/role-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +38,7 @@ export const Route = createFileRoute("/rodents/lots")({
 });
 
 function Page() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -449,8 +452,9 @@ function Page() {
             )}>
             <Download className="h-4 w-4" /> Exportar CSV
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
+          <AdminOnly>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild><Button className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"><Plus className="h-5 md:h-4 w-5 md:w-4 mr-2" /> Nuevo lote</Button></DialogTrigger>
           <DialogContent className="max-w-3xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo lote de roedores</DialogTitle>
@@ -535,7 +539,8 @@ function Page() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
+          </AdminOnly>
+          </div>
       }
     >
       <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -574,7 +579,71 @@ function Page() {
       )}
 
       <div className="space-y-3">
-        {searchedLots.map((l) => {
+        {/* ── Mobile card list ── */}
+        {isMobile ? (
+          searchedLots.map((l) => {
+            const t = (l.males ?? 0) + (l.females ?? 0) + (l.unsexed ?? 0);
+            const speciesName = l.species_id ? speciesMap[l.species_id] ?? "" : "";
+            const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
+            return (
+              <div key={l.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <span className="font-semibold text-sm truncate">{l.lot_code ?? l.id.slice(0, 8)}</span>
+                    {parentCode && <span className="text-[10px] text-muted-foreground">↳ {parentCode}</span>}
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                    {l.lot_type === "breeder" ? "Reproductor" : l.lot_type === "engorda" ? "Engorda" : "Nacimiento"}
+                  </Badge>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {speciesName || "—"} · {new Date(l.started_at).toLocaleDateString("es-MX")}
+                </div>
+                <div className="text-xs font-medium">
+                  ♂{l.males ?? 0} / ♀{l.females ?? 0} / S{l.unsexed ?? 0} · Total: <span className="font-bold text-foreground">{t}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                    l.status === "active"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      : "bg-muted text-muted-foreground border-transparent"
+                  }`}>{l.status === "active" ? "Activo" : "Finalizado"}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {l.status === "active" && (
+                    <AdminOnly>
+                      <Button size="sm" variant="outline" className="flex-1 h-9 text-xs gap-1 font-medium border-border/60"
+                        onClick={() => initSplit(l)}>
+                        <Split className="h-3.5 w-3.5" /> Dividir
+                      </Button>
+                    </AdminOnly>
+                  )}
+                  {l.status === "active" && (
+                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs gap-1 font-medium text-destructive border-destructive/40"
+                      onClick={() => { setDeathLot(l); setDeathCount(1); setDeathCause("desconocida"); }}>
+                      <Skull className="h-3.5 w-3.5" /> Baja
+                    </Button>
+                  )}
+                  <AdminOnly>
+                    <Button size="sm" variant="secondary" className="flex-1 h-9 text-xs gap-1 font-medium"
+                      onClick={() => initEdit(l)}>
+                      <Edit2 className="h-3.5 w-3.5" /> Editar
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs gap-1 font-medium text-destructive border-destructive/40"
+                      onClick={() => setDeletingLot(l)}>
+                      <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                    </Button>
+                  </AdminOnly>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <>
+            {searchedLots.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
+            )}
+          {searchedLots.map((l) => {
           const t = (l.males ?? 0) + (l.females ?? 0) + (l.unsexed ?? 0);
           const childNames = childrenNamesMap[l.id];
           const parentCode = (l as any).parent_lot_id ? lotCodeMap[(l as any).parent_lot_id] : null;
@@ -668,9 +737,11 @@ function Page() {
                 <ProfitabilityDialog lot={l} species={l.species_id ? speciesDataMap[l.species_id] : null} />
                 <GrowthCurveDialog lot={l} species={l.species_id ? speciesDataMap[l.species_id] : null} />
                 {l.status === "active" && (
-                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
-                    <Split className="h-3.5 w-3.5" /> Dividir
-                  </Button>
+                  <AdminOnly>
+                    <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium border-border/60 hover:bg-accent hover:border-primary/50" onClick={() => initSplit(l)}>
+                      <Split className="h-3.5 w-3.5" /> Dividir
+                    </Button>
+                  </AdminOnly>
                 )}
                 {l.status === "active" && (
                   <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => { setDeathLot(l); setDeathCount(1); setDeathCause("desconocida"); }}>
@@ -678,18 +749,22 @@ function Page() {
                   </Button>
                 )}
 
-                <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
-                  <Edit2 className="h-3.5 w-3.5" /> Editar
-                </Button>
-                <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => setDeletingLot(l)}>
-                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                </Button>
+                <AdminOnly>
+                  <Button size="sm" variant="secondary" className="h-9 text-xs gap-1.5 px-3 font-medium" onClick={() => initEdit(l)}>
+                    <Edit2 className="h-3.5 w-3.5" /> Editar
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 px-3 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => setDeletingLot(l)}>
+                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                  </Button>
+                </AdminOnly>
               </div>
             </Card>
           );
         })}
         {searchedLots.length === 0 && (
           <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">{filterTag !== "all" || searchLot ? "No hay lotes con estos criterios." : "Sin lotes registrados."}</Card>
+        )}
+          </>
         )}
       </div>
 

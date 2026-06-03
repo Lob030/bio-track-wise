@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import {
-  Outlet, Link, createRootRouteWithContext, useRouter, HeadContent, Scripts,
+  Outlet, Link, createRootRouteWithContext, useRouter, useRouterState, HeadContent, Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import appCss from "../styles.css?url";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -137,9 +137,19 @@ function OfflineBanner() {
   );
 }
 
+function MobileSidebarCloser() {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  useEffect(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [pathname, isMobile, setOpenMobile]);
+  return null;
+}
+
 function AppShell() {
   return (
     <SidebarProvider>
+      <MobileSidebarCloser />
       <div className="min-h-screen flex w-full" style={{ backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }}>
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">

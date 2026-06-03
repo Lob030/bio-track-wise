@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as StockRouteImport } from './routes/stock'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesRouteImport } from './routes/sales'
@@ -22,10 +23,12 @@ import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RodentsTreeRouteImport } from './routes/rodents.tree'
 import { Route as RodentsSpeciesRouteImport } from './routes/rodents.species'
 import { Route as RodentsLotsRouteImport } from './routes/rodents.lots'
 import { Route as RodentsLinesRouteImport } from './routes/rodents.lines'
 import { Route as RodentsBoxesRouteImport } from './routes/rodents.boxes'
+import { Route as InsectsTreeRouteImport } from './routes/insects.tree'
 import { Route as InsectsSpeciesRouteImport } from './routes/insects.species'
 import { Route as InsectsLotsRouteImport } from './routes/insects.lots'
 import { Route as InsectsLinesRouteImport } from './routes/insects.lines'
@@ -34,6 +37,11 @@ import { Route as InsectsBoxesRouteImport } from './routes/insects.boxes'
 const WarehouseRoute = WarehouseRouteImport.update({
   id: '/warehouse',
   path: '/warehouse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StockRoute = StockRouteImport.update({
@@ -96,6 +104,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RodentsTreeRoute = RodentsTreeRouteImport.update({
+  id: '/rodents/tree',
+  path: '/rodents/tree',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RodentsSpeciesRoute = RodentsSpeciesRouteImport.update({
   id: '/rodents/species',
   path: '/rodents/species',
@@ -114,6 +127,11 @@ const RodentsLinesRoute = RodentsLinesRouteImport.update({
 const RodentsBoxesRoute = RodentsBoxesRouteImport.update({
   id: '/rodents/boxes',
   path: '/rodents/boxes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsectsTreeRoute = InsectsTreeRouteImport.update({
+  id: '/insects/tree',
+  path: '/insects/tree',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsectsSpeciesRoute = InsectsSpeciesRouteImport.update({
@@ -150,15 +168,18 @@ export interface FileRoutesByFullPath {
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
   '/stock': typeof StockRoute
+  '/team': typeof TeamRoute
   '/warehouse': typeof WarehouseRoute
   '/insects/boxes': typeof InsectsBoxesRoute
   '/insects/lines': typeof InsectsLinesRoute
   '/insects/lots': typeof InsectsLotsRoute
   '/insects/species': typeof InsectsSpeciesRoute
+  '/insects/tree': typeof InsectsTreeRoute
   '/rodents/boxes': typeof RodentsBoxesRoute
   '/rodents/lines': typeof RodentsLinesRoute
   '/rodents/lots': typeof RodentsLotsRoute
   '/rodents/species': typeof RodentsSpeciesRoute
+  '/rodents/tree': typeof RodentsTreeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,15 +194,18 @@ export interface FileRoutesByTo {
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
   '/stock': typeof StockRoute
+  '/team': typeof TeamRoute
   '/warehouse': typeof WarehouseRoute
   '/insects/boxes': typeof InsectsBoxesRoute
   '/insects/lines': typeof InsectsLinesRoute
   '/insects/lots': typeof InsectsLotsRoute
   '/insects/species': typeof InsectsSpeciesRoute
+  '/insects/tree': typeof InsectsTreeRoute
   '/rodents/boxes': typeof RodentsBoxesRoute
   '/rodents/lines': typeof RodentsLinesRoute
   '/rodents/lots': typeof RodentsLotsRoute
   '/rodents/species': typeof RodentsSpeciesRoute
+  '/rodents/tree': typeof RodentsTreeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -197,15 +221,18 @@ export interface FileRoutesById {
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
   '/stock': typeof StockRoute
+  '/team': typeof TeamRoute
   '/warehouse': typeof WarehouseRoute
   '/insects/boxes': typeof InsectsBoxesRoute
   '/insects/lines': typeof InsectsLinesRoute
   '/insects/lots': typeof InsectsLotsRoute
   '/insects/species': typeof InsectsSpeciesRoute
+  '/insects/tree': typeof InsectsTreeRoute
   '/rodents/boxes': typeof RodentsBoxesRoute
   '/rodents/lines': typeof RodentsLinesRoute
   '/rodents/lots': typeof RodentsLotsRoute
   '/rodents/species': typeof RodentsSpeciesRoute
+  '/rodents/tree': typeof RodentsTreeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,15 +249,18 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/stock'
+    | '/team'
     | '/warehouse'
     | '/insects/boxes'
     | '/insects/lines'
     | '/insects/lots'
     | '/insects/species'
+    | '/insects/tree'
     | '/rodents/boxes'
     | '/rodents/lines'
     | '/rodents/lots'
     | '/rodents/species'
+    | '/rodents/tree'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,15 +275,18 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/stock'
+    | '/team'
     | '/warehouse'
     | '/insects/boxes'
     | '/insects/lines'
     | '/insects/lots'
     | '/insects/species'
+    | '/insects/tree'
     | '/rodents/boxes'
     | '/rodents/lines'
     | '/rodents/lots'
     | '/rodents/species'
+    | '/rodents/tree'
   id:
     | '__root__'
     | '/'
@@ -268,15 +301,18 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/stock'
+    | '/team'
     | '/warehouse'
     | '/insects/boxes'
     | '/insects/lines'
     | '/insects/lots'
     | '/insects/species'
+    | '/insects/tree'
     | '/rodents/boxes'
     | '/rodents/lines'
     | '/rodents/lots'
     | '/rodents/species'
+    | '/rodents/tree'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -292,15 +328,18 @@ export interface RootRouteChildren {
   SalesRoute: typeof SalesRoute
   SettingsRoute: typeof SettingsRoute
   StockRoute: typeof StockRoute
+  TeamRoute: typeof TeamRoute
   WarehouseRoute: typeof WarehouseRoute
   InsectsBoxesRoute: typeof InsectsBoxesRoute
   InsectsLinesRoute: typeof InsectsLinesRoute
   InsectsLotsRoute: typeof InsectsLotsRoute
   InsectsSpeciesRoute: typeof InsectsSpeciesRoute
+  InsectsTreeRoute: typeof InsectsTreeRoute
   RodentsBoxesRoute: typeof RodentsBoxesRoute
   RodentsLinesRoute: typeof RodentsLinesRoute
   RodentsLotsRoute: typeof RodentsLotsRoute
   RodentsSpeciesRoute: typeof RodentsSpeciesRoute
+  RodentsTreeRoute: typeof RodentsTreeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -310,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/warehouse'
       fullPath: '/warehouse'
       preLoaderRoute: typeof WarehouseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stock': {
@@ -396,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rodents/tree': {
+      id: '/rodents/tree'
+      path: '/rodents/tree'
+      fullPath: '/rodents/tree'
+      preLoaderRoute: typeof RodentsTreeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rodents/species': {
       id: '/rodents/species'
       path: '/rodents/species'
@@ -422,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/rodents/boxes'
       fullPath: '/rodents/boxes'
       preLoaderRoute: typeof RodentsBoxesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/tree': {
+      id: '/insects/tree'
+      path: '/insects/tree'
+      fullPath: '/insects/tree'
+      preLoaderRoute: typeof InsectsTreeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insects/species': {
@@ -468,15 +528,18 @@ const rootRouteChildren: RootRouteChildren = {
   SalesRoute: SalesRoute,
   SettingsRoute: SettingsRoute,
   StockRoute: StockRoute,
+  TeamRoute: TeamRoute,
   WarehouseRoute: WarehouseRoute,
   InsectsBoxesRoute: InsectsBoxesRoute,
   InsectsLinesRoute: InsectsLinesRoute,
   InsectsLotsRoute: InsectsLotsRoute,
   InsectsSpeciesRoute: InsectsSpeciesRoute,
+  InsectsTreeRoute: InsectsTreeRoute,
   RodentsBoxesRoute: RodentsBoxesRoute,
   RodentsLinesRoute: RodentsLinesRoute,
   RodentsLotsRoute: RodentsLotsRoute,
   RodentsSpeciesRoute: RodentsSpeciesRoute,
+  RodentsTreeRoute: RodentsTreeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
