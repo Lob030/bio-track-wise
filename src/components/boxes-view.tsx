@@ -945,7 +945,7 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
           const occupied = occupants.length > 0;
           const feed = feedFor(b.id);
           return (
-            <Card key={b.id} className="p-4 border-border bg-card/60 space-y-3 relative overflow-hidden flex flex-col justify-between">
+            <Card key={b.id} id={`box-card-${b.id}`} className="p-4 border-border bg-card/60 space-y-3 relative overflow-hidden flex flex-col justify-between transition-all">
               <div>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
@@ -1002,7 +1002,7 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
                 </Button>
               )}
 
-              <div className="grid grid-cols-2 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
+              <div className="grid grid-cols-3 gap-1.5 pt-2.5 mt-3 border-t border-border/50 -mx-4 -mb-4 px-3 pb-3 bg-muted/30">
 
                 <Button size="sm" variant="secondary" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => {
                   setEditingBox(b);
@@ -1016,6 +1016,9 @@ export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId
                   setOpen(true);
                 }}>
                   <Edit2 className="h-3.5 w-3.5" /> Editar
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium" onClick={() => setQrBox(b)}>
+                  <QrCode className="h-3.5 w-3.5" /> QR
                 </Button>
                 <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 px-2 font-medium text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60" onClick={() => remove(b.id)}>
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar
