@@ -96,11 +96,56 @@ RESPUESTA EXACTA:
   "queryType": "active_rodents"
 }
 
+USUARIO: "Vendí 500 pesos a Juan"
+RESPUESTA EXACTA:
+{
+  "type": "register_sale",
+  "description": "Voy a registrar una venta de $500 MXN a Juan",
+  "clientName": "Juan",
+  "totalMxn": 500
+}
+
+USUARIO: "Murieron 3 ratones del lote L12 por enfermedad"
+RESPUESTA EXACTA:
+{
+  "type": "register_death",
+  "description": "Voy a registrar 3 bajas en el lote L12 por enfermedad",
+  "lotCode": "L12",
+  "count": 3,
+  "cause": "enfermedad"
+}
+
+USUARIO: "¿Qué insumos están en stock crítico?"
+RESPUESTA EXACTA:
+{
+  "type": "query",
+  "description": "Voy a consultar qué insumos están en stock crítico",
+  "queryType": "critical_stock"
+}
+
+USUARIO: "¿Cuántos pedidos pendientes tengo?"
+RESPUESTA EXACTA:
+{
+  "type": "query",
+  "description": "Voy a consultar cuántos pedidos pendientes tienes",
+  "queryType": "pending_orders"
+}
+
+USUARIO: "¿Cuánto vendí este mes?"
+RESPUESTA EXACTA:
+{
+  "type": "query",
+  "description": "Voy a consultar tus ingresos de este mes",
+  "queryType": "revenue_this_month"
+}
+
 REGLAS:
 - Devuelve SOLO el objeto JSON, sin markdown ni texto extra.
-- "type" debe ser uno de: "create_box" | "create_lot" | "query" | "clarify".
+- "type" debe ser uno de: "create_box" | "create_lot" | "register_sale" | "register_death" | "query" | "clarify".
+- "queryType" debe ser uno de: "active_rodents" | "active_insects" | "total_boxes" | "total_lots" | "critical_stock" | "pending_orders" | "revenue_this_month".
 - Rangos "RA1-RA5" o "RA1 a RA5" se expanden a ["RA1","RA2","RA3","RA4","RA5"].
 - "pinkys" o "crías" => kind="rodent".
+- "cause" de muerte debe ser uno de: "desconocida" | "enfermedad" | "pelea" | "escapo" | "estres" | "malas_condiciones" | "neonato" | "otro".
 - Fecha de hoy: ${today}.
 - Si no estás seguro: { "type": "clarify", "description": "No entendí. Sé más específico." }`;
 
