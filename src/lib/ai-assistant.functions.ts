@@ -27,9 +27,33 @@ const ParsedActionSchema = z.union([
     notes: z.string().optional(),
   }),
   z.object({
+    type: z.literal("register_sale"),
+    description: z.string(),
+    clientName: z.string().optional(),
+    totalMxn: z.number(),
+    notes: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal("register_death"),
+    description: z.string(),
+    lotCode: z.string(),
+    count: z.number(),
+    cause: z
+      .enum(["desconocida", "enfermedad", "pelea", "escapo", "estres", "malas_condiciones", "neonato", "otro"])
+      .default("desconocida"),
+  }),
+  z.object({
     type: z.literal("query"),
     description: z.string(),
-    queryType: z.enum(["active_rodents", "active_insects", "total_boxes", "total_lots"]),
+    queryType: z.enum([
+      "active_rodents",
+      "active_insects",
+      "total_boxes",
+      "total_lots",
+      "critical_stock",
+      "pending_orders",
+      "revenue_this_month",
+    ]),
   }),
   z.object({
     type: z.literal("clarify"),

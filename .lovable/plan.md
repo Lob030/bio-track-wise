@@ -1,52 +1,42 @@
-# QR de cajas + deep-link con resaltado
+# Ampliar el Asistente IA con 4 nuevas acciones
 
-Permite generar un código QR por caja que, al escanearse, abre la app directamente en la ruta de esa caja (`/rodents/boxes?box=<ID>` o `/insects/boxes?box=<ID>`), resaltando y haciendo scroll automático a la caja.
+Añade soporte para registrar ventas, registrar bajas (muertes) y dos nuevas consultas (stock crítico, pedidos pendientes), más una consulta extra de ingresos del mes. Se respeta el flujo actual: las mutaciones piden confirmación; las consultas se ejecutan directo.
 
-## Qué se construye
+## 1. `src/lib/ai-assistant.functions.ts`
 
-1. **Dependencia QR** — Instalar `qrcode.react`.
+**Schema (`ParsedActionSchema` union):**
+- Añadir `register_sale`: `{ type, description, clientName?, totalMxn:number, notes? }`.
+- Añadir `register_death`: `{ type, description, lotCode:string, count:number, cause: enum(desconocida|enfermedad|pelea|escapo|estres|malas_condiciones|neonato|otro).default("desconocida") }`.
+- Extender el enum `queryType` del tipo `query` con: `critical_stock`, `pending_orders`, `revenue_this_month` (además de los existentes).
 
-2. **Botón "QR" en cada card de caja** (`src/components/boxes-view.tsx`)
-   - El footer de cada card pasa de `grid-cols-2` a `grid-cols-3`.
-   - Nuevo botón "QR" entre "Editar" y "Eliminar" que abre el diálogo (`onClick={() => setQrBox(b)}`).
-   - Estado nuevo en `BoxesView`: `const [qrBox, setQrBox] = useState<any | null>(null);`
+**`buildSystemPrompt`:**
+- Añadir ejemplos en español para: "Vendí 500 pesos a Juan" → `register_sale`; "Murieron 3 ratones del lote L12 por enfermedad" → `register_death`; "¿Qué insumos están en stock crítico?" → `query/critical_stock`; "¿Cuántos pedidos pendientes tengo?" → `query/pending_orders`; "¿Cuánto vendí este mes?" → `query/revenue_this_month`.
+- Actualizar la línea de REGLAS de tipos válidos para incluir `register_sale` y `register_death`.
 
-3. **Diálogo de QR**
-   - `Dialog` controlado por `qrBox`, con `DialogContent id="qr-dialog"`.
-   - Renderiza `<QRCodeSVG>` con la URL `${window.location.origin}/${kind === "rodent" ? "rodents" : "insects"}/boxes?box=${qrBox.id}`.
-   - Muestra la URL en texto y un botón "Descargar QR" que serializa el SVG (XMLSerializer + Blob) y lo descarga como `QR-<code>.svg` (sin html2canvas).
+**`regexFallback`:** añadir heurísticas básicas (palabras "vend"/"venta" → register_sale con monto detectado; "muri"/"baja"/"murieron" + lote → register_death; "stock"/"crítico"/"insumo" → critical_stock; "pendiente"/"pedido" → pending_orders; "vend"/"ingreso"+"mes" → revenue_this_month) para no romper cuando el modelo falle.
 
-4. **Deep-link en las rutas de cajas**
-   - `src/routes/rodents.boxes.tsx` y `src/routes/insects.boxes.tsx`: añadir `validateSearch` que lee `box` (string | undefined) y pasar `highlightBoxId={box}` a `BoxesView` vía `Route.useSearch()`.
+## 2. `src/routes/ai.tsx`
 
-5. **Resaltado + scroll en `BoxesView`**
-   - Nueva prop opcional: `highlightBoxId?: string`.
-   - Cada `Card` recibe `id={\`box-card-${b.id}\`}`.
-   - `useEffect([highlightBoxId])`: hace `scrollIntoView` al card y aplica un `ring` durante 3s.
+**`requiresConfirmation`:** añadir `register_sale` y `register_death` (son mutaciones).
 
-## Detalles técnicos
+**Mensaje de bienvenida:** mencionar las nuevas capacidades (registrar ventas, registrar bajas, consultar stock crítico / pedidos pendientes / ingresos del mes).
 
-- **Imports nuevos en `boxes-view.tsx`:** `QRCodeSVG` desde `qrcode.react`; `QrCode` desde `lucide-react` (añadir a la línea de import existente, junto a `Download` que ya está importado); añadir `DialogDescription` al import de `@/components/ui/dialog` (actualmente no está) y `useEffect` al import de `react`.
-- **Firma del componente:** `export function BoxesView({ kind, highlightBoxId }: { kind: Kind; highlightBoxId?: string })`.
-- **Rutas:** patrón
-  ```tsx
-  export const Route = createFileRoute("/rodents/boxes")({
-    validateSearch: (search: Record<string, unknown>) => ({
-      box: typeof search.box === "string" ? search.box : undefined,
-    }),
-    component: RouteComponent,
-  });
-  function RouteComponent() {
-    const { box } = Route.useSearch();
-    return <BoxesView kind="rodent" highlightBoxId={box} />;
-  }
-  ```
-  (igual para `insects` con `kind="insect"`).
-- **Diálogo QR** se inserta antes del `Dialog` de nacimiento (línea ~1017).
-- **Descarga SVG:** seleccionar `#qr-dialog svg`, `XMLSerializer().serializeToString`, `Blob` tipo `image/svg+xml`, `URL.createObjectURL`, click en `<a download>`, `revokeObjectURL`.
+**`runQuery`** (nuevas ramas):
+- `critical_stock`: contar/listar `warehouse_food` con `quantity_grams <= min_stock_grams`.
+- `pending_orders`: contar `orders` con `status = "preparando"`.
+- `revenue_this_month`: sumar `total_mxn` de `orders` en estado `historial` con `delivered_at` dentro del mes actual.
+
+**`execute`** (nuevas ramas):
+- `register_sale`: resolver `client_id` por `clientName` (ilike, opcional → null si no existe); insertar en `orders` con `owner_id`, `client_id`, `subtotal_mxn=totalMxn`, `total_mxn=totalMxn`, `discount_pct=0`, `status="historial"`, `delivered_at=now()`, `notes`. Invalidar `["orders"]`. (Se registra como venta cerrada para que cuente en ingresos del mes.)
+- `register_death`: resolver lote por `lot_code` (eq owner_id). Reducir población en orden unsexed→females→males siguiendo el patrón de `rodents.lots.tsx`, sumar `count` a `total_deaths`, marcar `status="finalizado"` si la población llega a 0, y anexar nota `Baja <fecha>: <count> (<cause>)`. Validar que `count` no supere la población. Invalidar `["lots"]`.
+
+## Notas técnicas
+
+- Las nuevas consultas usan el cliente `supabase` del navegador (con RLS por `owner_id`), igual que las consultas existentes.
+- `register_sale` no crea `order_items` ni descuenta inventario (es un registro rápido de monto); el flujo completo sigue en `/sales`.
+- Tipado estricto: usar `Extract<ParsedAction, { type: "..." }>` en cada rama. Sin errores de TypeScript; el build debe pasar.
 
 ## Verificación
 
-- TypeScript estricto sin errores; el build debe pasar.
-- Escanear el QR abre la ruta correcta según el tipo de caja.
-- Al cargar `?box=<ID>` la caja correspondiente hace scroll y muestra el ring ~3s.
+- Probar cada comando nuevo en `/ai` y confirmar que las mutaciones piden confirmación y las consultas responden.
+- Confirmar que `revenue_this_month` refleja una venta recién registrada con `register_sale`.
