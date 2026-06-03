@@ -27,9 +27,33 @@ const ParsedActionSchema = z.union([
     notes: z.string().optional(),
   }),
   z.object({
+    type: z.literal("register_sale"),
+    description: z.string(),
+    clientName: z.string().optional(),
+    totalMxn: z.number(),
+    notes: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal("register_death"),
+    description: z.string(),
+    lotCode: z.string(),
+    count: z.number(),
+    cause: z
+      .enum(["desconocida", "enfermedad", "pelea", "escapo", "estres", "malas_condiciones", "neonato", "otro"])
+      .default("desconocida"),
+  }),
+  z.object({
     type: z.literal("query"),
     description: z.string(),
-    queryType: z.enum(["active_rodents", "active_insects", "total_boxes", "total_lots"]),
+    queryType: z.enum([
+      "active_rodents",
+      "active_insects",
+      "total_boxes",
+      "total_lots",
+      "critical_stock",
+      "pending_orders",
+      "revenue_this_month",
+    ]),
   }),
   z.object({
     type: z.literal("clarify"),
@@ -72,19 +96,107 @@ RESPUESTA EXACTA:
   "queryType": "active_rodents"
 }
 
+USUARIO: "Vendí 500 pesos a Juan"
+RESPUESTA EXACTA:
+{
+  "type": "register_sale",
+  "description": "Voy a registrar una venta de $500 MXN a Juan",
+  "clientName": "Juan",
+  "totalMxn": 500
+}
+
+USUARIO: "Murieron 3 ratones del lote L12 por enfermedad"
+RESPUESTA EXACTA:
+{
+  "type": "register_death",
+  "description": "Voy a registrar 3 bajas en el lote L12 por enfermedad",
+  "lotCode": "L12",
+  "count": 3,
+  "cause": "enfermedad"
+}
+
+USUARIO: "¿Qué insumos están en stock crítico?"
+RESPUESTA EXACTA:
+{
+  "type": "query",
+  "description": "Voy a consultar qué insumos están en stock crítico",
+  "queryType": "critical_stock"
+}
+
+USUARIO: "¿Cuántos pedidos pendientes tengo?"
+RESPUESTA EXACTA:
+{
+  "type": "query",
+  "description": "Voy a consultar cuántos pedidos pendientes tienes",
+  "queryType": "pending_orders"
+}
+
+USUARIO: "¿Cuánto vendí este mes?"
+RESPUESTA EXACTA:
+{
+  "type": "query",
+  "description": "Voy a consultar tus ingresos de este mes",
+  "queryType": "revenue_this_month"
+}
+
 REGLAS:
 - Devuelve SOLO el objeto JSON, sin markdown ni texto extra.
-- "type" debe ser uno de: "create_box" | "create_lot" | "query" | "clarify".
+- "type" debe ser uno de: "create_box" | "create_lot" | "register_sale" | "register_death" | "query" | "clarify".
+- "queryType" debe ser uno de: "active_rodents" | "active_insects" | "total_boxes" | "total_lots" | "critical_stock" | "pending_orders" | "revenue_this_month".
 - Rangos "RA1-RA5" o "RA1 a RA5" se expanden a ["RA1","RA2","RA3","RA4","RA5"].
 - "pinkys" o "crías" => kind="rodent".
+- "cause" de muerte debe ser uno de: "desconocida" | "enfermedad" | "pelea" | "escapo" | "estres" | "malas_condiciones" | "neonato" | "otro".
 - Fecha de hoy: ${today}.
 - Si no estás seguro: { "type": "clarify", "description": "No entendí. Sé más específico." }`;
 
 function regexFallback(userMessage: string, today: string): ParsedAction {
   const msg = userMessage.toLowerCase();
 
+  // Register death: "murieron/murió/baja(s) ... lote X"
+  if (/(muri|muert|baja|fallec)/.test(msg)) {
+    const lotMatch = userMessage.match(/lote\s+([A-Za-z0-9-]+)/i);
+    const numMatch = userMessage.match(/\d+/);
+    if (lotMatch && numMatch) {
+      const causes = ["enfermedad", "pelea", "escapo", "estres", "malas_condiciones", "neonato"] as const;
+      const cause = causes.find((c) => msg.includes(c.replace("_", " ")) || msg.includes(c)) ?? "desconocida";
+      return {
+        type: "register_death",
+        description: `Voy a registrar ${numMatch[0]} baja(s) en el lote ${lotMatch[1].toUpperCase()} (${cause})`,
+        lotCode: lotMatch[1].toUpperCase(),
+        count: parseInt(numMatch[0]),
+        cause,
+      };
+    }
+    return { type: "clarify", description: "¿En qué lote y cuántas bajas? Ej: \"Murieron 3 del lote L12\"." };
+  }
+
+  // Register sale: "vendí/venta ... $X"
+  if (/(vend|venta)/.test(msg) && !/(mes|ingres)/.test(msg)) {
+    const amountMatch = userMessage.match(/(\d+(?:\.\d+)?)/);
+    if (amountMatch) {
+      const clientMatch = userMessage.match(/\ba\s+([A-Za-zÁÉÍÓÚáéíóúñÑ]+)/);
+      const total = parseFloat(amountMatch[1]);
+      return {
+        type: "register_sale",
+        description: `Voy a registrar una venta de $${total} MXN${clientMatch ? ` a ${clientMatch[1]}` : ""}`,
+        totalMxn: total,
+        ...(clientMatch ? { clientName: clientMatch[1] } : {}),
+      };
+    }
+    return { type: "clarify", description: "¿Por qué monto fue la venta? Ej: \"Vendí 500 pesos a Juan\"." };
+  }
+
   // Query
-  if (/(cu[aá]nt[oa]s?|cu[aá]nto)/.test(msg)) {
+  if (/(cu[aá]nt[oa]s?|cu[aá]nto|qu[eé]|cu[aá]l)/.test(msg)) {
+    if (/(stock|cr[ií]tic|insumo|aliment)/.test(msg)) {
+      return { type: "query", description: "Voy a consultar qué insumos están en stock crítico", queryType: "critical_stock" };
+    }
+    if (/(mes|ingres)/.test(msg) && /(vend|ingres|venta)/.test(msg)) {
+      return { type: "query", description: "Voy a consultar tus ingresos de este mes", queryType: "revenue_this_month" };
+    }
+    if (/(pedido|orden|pendiente)/.test(msg)) {
+      return { type: "query", description: "Voy a consultar cuántos pedidos pendientes tienes", queryType: "pending_orders" };
+    }
     if (msg.includes("caja")) {
       return { type: "query", description: "Voy a consultar cuántas cajas tienes", queryType: "total_boxes" };
     }
