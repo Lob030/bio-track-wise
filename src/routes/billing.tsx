@@ -46,10 +46,10 @@ function Billing() {
           return (
             <Card key={p.tier} className={`p-5 border bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 ${p.accent} ${active ? "ring-2 ring-primary" : ""}`}>
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
                   {p.tier === "diamond" && <Crown className="h-4 w-4 text-cyan-300" />}
                   {p.name}
-                </h3>
+                </h2>
                 {active && <Badge className="bg-primary text-primary-foreground font-semibold">Actual</Badge>}
               </div>
               <div className="text-2xl font-bold mb-4 text-foreground">{p.price}</div>
