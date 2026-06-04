@@ -55,7 +55,7 @@ function LoginPage() {
         <div className="flex items-center justify-center mb-6">
           <div className="h-12 w-12 rounded-xl bg-gradient-emerald grid place-items-center text-primary-foreground font-bold text-xl mr-3">B</div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">BioTrack</h1>
+            <h1 className="text-2xl font-bold tracking-tight">BioTrack — Gestión profesional de bioterio</h1>
             <p className="text-xs text-muted-foreground">Gestión profesional de bioterio</p>
           </div>
         </div>
