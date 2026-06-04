@@ -19,7 +19,17 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/")({ component: Dashboard });
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: 'BioTrack — Panel de gestión de bioterio' },
+      { name: "description", content: 'Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.' },
+      { property: "og:title", content: 'BioTrack — Panel de gestión de bioterio' },
+      { property: "og:description", content: 'Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/' }],
+  }), component: Dashboard });
 
 function KPI({ icon: Icon, label, value, sub, tone = "default" }: any) {
   const toneClass = {

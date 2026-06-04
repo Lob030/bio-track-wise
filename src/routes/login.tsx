@@ -13,6 +13,16 @@ import { useEffect } from "react";
 import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: 'Iniciar sesión — BioTrack' },
+      { name: "description", content: 'Accede a BioTrack para gestionar tu bioterio de forma profesional.' },
+      { property: "og:title", content: 'Iniciar sesión — BioTrack' },
+      { property: "og:description", content: 'Accede a BioTrack para gestionar tu bioterio de forma profesional.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/login' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/login' }],
+  }),
   component: LoginPage,
 });
 

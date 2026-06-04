@@ -14,7 +14,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { toast } from "sonner";
 import { toUserFriendlyError } from "@/lib/errors";
 
-export const Route = createFileRoute("/insects/species")({ component: Page });
+export const Route = createFileRoute("/insects/species")({
+  head: () => ({
+    meta: [
+      { title: 'Especies de insectos — BioTrack' },
+      { name: "description", content: 'Configura las especies de insectos registradas en BioTrack.' },
+      { property: "og:title", content: 'Especies de insectos — BioTrack' },
+      { property: "og:description", content: 'Configura las especies de insectos registradas en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/insects/species' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/insects/species' }],
+  }), component: Page });
 
 const TENEBRIOS: InsectRule[] = [
   { label: "Huevo", min_days: 0, max_days: 14, individuals_per_gram: 50000, price_mxn: 8 },

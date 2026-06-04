@@ -14,7 +14,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { toast } from "sonner";
 import { toUserFriendlyError } from "@/lib/errors";
 
-export const Route = createFileRoute("/rodents/species")({ component: Page });
+export const Route = createFileRoute("/rodents/species")({
+  head: () => ({
+    meta: [
+      { title: 'Especies de roedores — BioTrack' },
+      { name: "description", content: 'Configura las especies de roedores registradas en BioTrack.' },
+      { property: "og:title", content: 'Especies de roedores — BioTrack' },
+      { property: "og:description", content: 'Configura las especies de roedores registradas en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/rodents/species' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/rodents/species' }],
+  }), component: Page });
 
 const LONG_EVANS: RodentRule[] = [
   { label: "Pinky", min_days: 0, max_days: 6, min_weight_g: 0, max_weight_g: 16, daily_feed_g: 0, price_mxn: 25 },

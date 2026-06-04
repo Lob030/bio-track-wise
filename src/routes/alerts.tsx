@@ -15,7 +15,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { toUserFriendlyError } from "@/lib/errors";
 
-export const Route = createFileRoute("/alerts")({ component: Page });
+export const Route = createFileRoute("/alerts")({
+  head: () => ({
+    meta: [
+      { title: 'Alertas — BioTrack' },
+      { name: "description", content: 'Configura reglas de alertas y notificaciones para tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Alertas — BioTrack' },
+      { property: "og:description", content: 'Configura reglas de alertas y notificaciones para tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/alerts' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/alerts' }],
+  }), component: Page });
 
 type RuleForm = {
   scope: "all" | "lot";

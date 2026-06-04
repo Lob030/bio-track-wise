@@ -10,6 +10,16 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/calendar")({
+  head: () => ({
+    meta: [
+      { title: 'Calendario — BioTrack' },
+      { name: "description", content: 'Visualiza eventos, tareas y fechas clave de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Calendario — BioTrack' },
+      { property: "og:description", content: 'Visualiza eventos, tareas y fechas clave de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/calendar' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/calendar' }],
+  }),
   component: () => (
     <TierGate min="gold" module="Calendario">
       <CalendarPage />

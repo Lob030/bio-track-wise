@@ -40,6 +40,16 @@ import {
 } from "recharts";
 
 export const Route = createFileRoute("/reports")({
+  head: () => ({
+    meta: [
+      { title: 'Reportes — BioTrack' },
+      { name: "description", content: 'Genera reportes y estadísticas detalladas de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Reportes — BioTrack' },
+      { property: "og:description", content: 'Genera reportes y estadísticas detalladas de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/reports' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/reports' }],
+  }),
   component: () => (
     <TierGate min="gold" module="Reportes">
       <ReportsPage />

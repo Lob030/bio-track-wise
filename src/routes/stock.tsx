@@ -567,6 +567,16 @@ function StockPage() {
 }
 
 export const Route = createFileRoute("/stock")({
+  head: () => ({
+    meta: [
+      { title: 'Inventario — BioTrack' },
+      { name: "description", content: 'Controla el stock y los niveles de inventario de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Inventario — BioTrack' },
+      { property: "og:description", content: 'Controla el stock y los niveles de inventario de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/stock' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/stock' }],
+  }),
   component: () => (
     <TierGate min="gold" module="Stock">
       <StockPage />
