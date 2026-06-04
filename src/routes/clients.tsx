@@ -302,6 +302,7 @@ function Clients() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        aria-label="Editar cliente"
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-primary cursor-pointer"
                         onClick={() => openEdit(c)}
                       >
@@ -310,6 +311,7 @@ function Clients() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        aria-label="Eliminar cliente"
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
                         onClick={() => setDeletingClient(c)}
                       >
