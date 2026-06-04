@@ -1,0 +1,8 @@
+# BioTrack
+
+> BioTrack es una plataforma profesional de gestión de bioterio: control de roedores, insectos, lotes, ventas, alertas, inventario y reportes.
+
+## Pages
+
+- [Inicio](/): Resumen general de la plataforma de gestión de bioterio.
+- [Iniciar sesión](/login): Accede a BioTrack para gestionar tu bioterio.
