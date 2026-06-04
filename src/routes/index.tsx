@@ -331,7 +331,7 @@ function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Weekly sales bar chart */}
         <Card className="p-5 border-border bg-card/60 lg:col-span-2">
-          <h3 className="font-semibold mb-3">Ventas del mes por semana</h3>
+          <h2 className="font-semibold mb-3">Ventas del mes por semana</h2>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={weeklyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
