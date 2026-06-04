@@ -981,6 +981,16 @@ function SalesPage() {
 }
 
 export const Route = createFileRoute("/sales")({
+  head: () => ({
+    meta: [
+      { title: 'Ventas — BioTrack' },
+      { name: "description", content: 'Registra y consulta las ventas y pedidos de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Ventas — BioTrack' },
+      { property: "og:description", content: 'Registra y consulta las ventas y pedidos de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/sales' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/sales' }],
+  }),
   validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
     new: search.new === "1" ? true : undefined,
   }),

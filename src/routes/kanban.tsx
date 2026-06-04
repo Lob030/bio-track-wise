@@ -9,6 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { LayoutGrid } from "lucide-react";
 
 export const Route = createFileRoute("/kanban")({
+  head: () => ({
+    meta: [
+      { title: 'Tablero Kanban — BioTrack' },
+      { name: "description", content: 'Organiza tareas y flujos de trabajo de tu bioterio en un tablero Kanban.' },
+      { property: "og:title", content: 'Tablero Kanban — BioTrack' },
+      { property: "og:description", content: 'Organiza tareas y flujos de trabajo de tu bioterio en un tablero Kanban.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/kanban' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/kanban' }],
+  }),
   component: () => (
     <TierGate min="silver" module="Kanban">
       <KanbanPage />

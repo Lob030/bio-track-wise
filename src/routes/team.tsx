@@ -13,6 +13,16 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/team")({
+  head: () => ({
+    meta: [
+      { title: 'Equipo — BioTrack' },
+      { name: "description", content: 'Gestiona los miembros y roles de tu equipo en BioTrack.' },
+      { property: "og:title", content: 'Equipo — BioTrack' },
+      { property: "og:description", content: 'Gestiona los miembros y roles de tu equipo en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/team' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/team' }],
+  }),
   component: TeamPage,
 });
 

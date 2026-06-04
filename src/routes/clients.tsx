@@ -26,6 +26,16 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/clients")({
+  head: () => ({
+    meta: [
+      { title: 'Clientes — BioTrack' },
+      { name: "description", content: 'Gestiona tu cartera de clientes y sus datos de contacto en BioTrack.' },
+      { property: "og:title", content: 'Clientes — BioTrack' },
+      { property: "og:description", content: 'Gestiona tu cartera de clientes y sus datos de contacto en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/clients' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/clients' }],
+  }),
   component: () => (
     <TierGate min="gold" module="Clientes">
       <Clients />
@@ -302,6 +312,7 @@ function Clients() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        aria-label="Editar cliente"
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-primary cursor-pointer"
                         onClick={() => openEdit(c)}
                       >
@@ -310,6 +321,7 @@ function Clients() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        aria-label="Eliminar cliente"
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
                         onClick={() => setDeletingClient(c)}
                       >

@@ -14,6 +14,16 @@ import { parseAiCommand, type ParsedAction } from "@/lib/ai-assistant.functions"
 import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/ai")({
+  head: () => ({
+    meta: [
+      { title: 'Asistente IA — BioTrack' },
+      { name: "description", content: 'Registra ventas, bajas y consulta tu bioterio con el asistente de IA de BioTrack.' },
+      { property: "og:title", content: 'Asistente IA — BioTrack' },
+      { property: "og:description", content: 'Registra ventas, bajas y consulta tu bioterio con el asistente de IA de BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/ai' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/ai' }],
+  }),
   component: () => (
     <TierGate min="gold" module="Asistente IA">
       <AIAssistantPage />

@@ -52,6 +52,16 @@ import { toUserFriendlyError } from "@/lib/errors";
 /*  Route export                                                       */
 /* ------------------------------------------------------------------ */
 export const Route = createFileRoute("/warehouse")({
+  head: () => ({
+    meta: [
+      { title: 'Almacén — BioTrack' },
+      { name: "description", content: 'Administra el almacén y los insumos de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Almacén — BioTrack' },
+      { property: "og:description", content: 'Administra el almacén y los insumos de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/warehouse' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/warehouse' }],
+  }),
   component: () => (
     <TierGate min="gold" module="Almacén">
       <WarehousePage />

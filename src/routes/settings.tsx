@@ -6,6 +6,16 @@ import { Settings, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/settings")({
+  head: () => ({
+    meta: [
+      { title: 'Configuración — BioTrack' },
+      { name: "description", content: 'Personaliza el aspecto visual y los ajustes de tu cuenta de BioTrack.' },
+      { property: "og:title", content: 'Configuración — BioTrack' },
+      { property: "og:description", content: 'Personaliza el aspecto visual y los ajustes de tu cuenta de BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/settings' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/settings' }],
+  }),
   component: SettingsPage,
 });
 

@@ -31,6 +31,16 @@ import { toast } from "sonner";
 import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/rodents/lots")({
+  head: () => ({
+    meta: [
+      { title: 'Lotes de roedores — BioTrack' },
+      { name: "description", content: 'Gestiona los lotes de roedores y su población en BioTrack.' },
+      { property: "og:title", content: 'Lotes de roedores — BioTrack' },
+      { property: "og:description", content: 'Gestiona los lotes de roedores y su población en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/rodents/lots' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/rodents/lots' }],
+  }),
   validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
     new: search.new === "1" ? true : undefined,
   }),

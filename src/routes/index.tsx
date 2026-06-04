@@ -19,7 +19,17 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/")({ component: Dashboard });
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: 'BioTrack — Panel de gestión de bioterio' },
+      { name: "description", content: 'Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.' },
+      { property: "og:title", content: 'BioTrack — Panel de gestión de bioterio' },
+      { property: "og:description", content: 'Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/' },
+    ],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/' }],
+  }), component: Dashboard });
 
 function KPI({ icon: Icon, label, value, sub, tone = "default" }: any) {
   const toneClass = {
@@ -298,7 +308,7 @@ function Dashboard() {
 
       {/* ── Pending orders ── */}
       <Card className="p-5 border-border bg-card/60">
-        <h3 className="font-semibold mb-3">Pendientes de entrega</h3>
+        <h2 className="font-semibold mb-3">Pendientes de entrega</h2>
         {pendingOrders.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
             No hay órdenes pendientes · Todo al día ✓
@@ -331,7 +341,7 @@ function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Weekly sales bar chart */}
         <Card className="p-5 border-border bg-card/60 lg:col-span-2">
-          <h3 className="font-semibold mb-3">Ventas del mes por semana</h3>
+          <h2 className="font-semibold mb-3">Ventas del mes por semana</h2>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={weeklyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -368,7 +378,7 @@ function Dashboard() {
 
         {/* Species distribution */}
         <Card className="p-5 border-border bg-card/60">
-          <h3 className="font-semibold mb-4">Distribución demográfica</h3>
+          <h2 className="font-semibold mb-4">Distribución demográfica</h2>
           <div className="space-y-4">
             {speciesDistribution.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">Sin lotes activos.</p>
