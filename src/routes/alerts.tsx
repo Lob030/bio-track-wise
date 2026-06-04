@@ -284,7 +284,7 @@ function Page() {
                   </div>
                 </div>
                 <Switch checked={r.enabled} onCheckedChange={(v) => toggleEnabled(r.id, v)} />
-                <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive transition-all duration-200" onClick={() => deleteRule(r.id)}>
+                <Button size="icon" variant="ghost" aria-label="Eliminar regla de alerta" className="h-9 w-9 text-muted-foreground hover:text-destructive transition-all duration-200" onClick={() => deleteRule(r.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </Card>
