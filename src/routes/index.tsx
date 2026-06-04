@@ -368,7 +368,7 @@ function Dashboard() {
 
         {/* Species distribution */}
         <Card className="p-5 border-border bg-card/60">
-          <h3 className="font-semibold mb-4">Distribución demográfica</h3>
+          <h2 className="font-semibold mb-4">Distribución demográfica</h2>
           <div className="space-y-4">
             {speciesDistribution.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">Sin lotes activos.</p>
