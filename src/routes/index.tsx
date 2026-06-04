@@ -298,7 +298,7 @@ function Dashboard() {
 
       {/* ── Pending orders ── */}
       <Card className="p-5 border-border bg-card/60">
-        <h3 className="font-semibold mb-3">Pendientes de entrega</h3>
+        <h2 className="font-semibold mb-3">Pendientes de entrega</h2>
         {pendingOrders.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
             No hay órdenes pendientes · Todo al día ✓
