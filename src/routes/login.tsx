@@ -36,28 +36,40 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { next } = Route.useSearch();
 
-  useEffect(() => { if (user) navigate({ to: "/" }); }, [user, navigate]);
+  const goNext = () => {
+    if (next) window.location.assign(next);
+    else navigate({ to: "/" });
+  };
+
+  useEffect(() => { if (user) goNext(); }, [user]);
 
   const signIn = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error(toUserFriendlyError(error));
-    navigate({ to: "/" });
+    goNext();
   };
   const signUp = async () => {
     setLoading(true);
+    const redirect = next
+      ? `${window.location.origin}${next}`
+      : window.location.origin;
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
+      options: { emailRedirectTo: redirect, data: { full_name: name } },
     });
     setLoading(false);
     if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Cuenta creada. Verifica tu email.");
   };
   const google = async () => {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const redirect = next
+      ? `${window.location.origin}${next}`
+      : window.location.origin;
+    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirect });
     if (r.error) toast.error(String(r.error));
   };
 
