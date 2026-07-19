@@ -16,6 +16,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesRouteImport } from './routes/sales'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KanbanRouteImport } from './routes/kanban'
 import { Route as ClientsRouteImport } from './routes/clients'
@@ -34,6 +35,10 @@ import { Route as InsectsSpeciesRouteImport } from './routes/insects.species'
 import { Route as InsectsLotsRouteImport } from './routes/insects.lots'
 import { Route as InsectsLinesRouteImport } from './routes/insects.lines'
 import { Route as InsectsBoxesRouteImport } from './routes/insects.boxes'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const WarehouseRoute = WarehouseRouteImport.update({
   id: '/warehouse',
@@ -68,6 +73,11 @@ const SalesRoute = SalesRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -160,6 +170,29 @@ const InsectsBoxesRoute = InsectsBoxesRouteImport.update({
   path: '/insects/boxes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -170,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/clients': typeof ClientsRoute
   '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
@@ -177,6 +211,8 @@ export interface FileRoutesByFullPath {
   '/stock': typeof StockRoute
   '/team': typeof TeamRoute
   '/warehouse': typeof WarehouseRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/insects/boxes': typeof InsectsBoxesRoute
   '/insects/lines': typeof InsectsLinesRoute
   '/insects/lots': typeof InsectsLotsRoute
@@ -187,6 +223,8 @@ export interface FileRoutesByFullPath {
   '/rodents/lots': typeof RodentsLotsRoute
   '/rodents/species': typeof RodentsSpeciesRoute
   '/rodents/tree': typeof RodentsTreeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -197,6 +235,7 @@ export interface FileRoutesByTo {
   '/clients': typeof ClientsRoute
   '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
@@ -204,6 +243,8 @@ export interface FileRoutesByTo {
   '/stock': typeof StockRoute
   '/team': typeof TeamRoute
   '/warehouse': typeof WarehouseRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/insects/boxes': typeof InsectsBoxesRoute
   '/insects/lines': typeof InsectsLinesRoute
   '/insects/lots': typeof InsectsLotsRoute
@@ -214,6 +255,8 @@ export interface FileRoutesByTo {
   '/rodents/lots': typeof RodentsLotsRoute
   '/rodents/species': typeof RodentsSpeciesRoute
   '/rodents/tree': typeof RodentsTreeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -225,6 +268,7 @@ export interface FileRoutesById {
   '/clients': typeof ClientsRoute
   '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/reports': typeof ReportsRoute
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
@@ -232,6 +276,8 @@ export interface FileRoutesById {
   '/stock': typeof StockRoute
   '/team': typeof TeamRoute
   '/warehouse': typeof WarehouseRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/insects/boxes': typeof InsectsBoxesRoute
   '/insects/lines': typeof InsectsLinesRoute
   '/insects/lots': typeof InsectsLotsRoute
@@ -242,6 +288,8 @@ export interface FileRoutesById {
   '/rodents/lots': typeof RodentsLotsRoute
   '/rodents/species': typeof RodentsSpeciesRoute
   '/rodents/tree': typeof RodentsTreeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -254,6 +302,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/kanban'
     | '/login'
+    | '/mcp'
     | '/reports'
     | '/sales'
     | '/settings'
@@ -261,6 +310,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/team'
     | '/warehouse'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/insects/boxes'
     | '/insects/lines'
     | '/insects/lots'
@@ -271,6 +322,8 @@ export interface FileRouteTypes {
     | '/rodents/lots'
     | '/rodents/species'
     | '/rodents/tree'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -281,6 +334,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/kanban'
     | '/login'
+    | '/mcp'
     | '/reports'
     | '/sales'
     | '/settings'
@@ -288,6 +342,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/team'
     | '/warehouse'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/insects/boxes'
     | '/insects/lines'
     | '/insects/lots'
@@ -298,6 +354,8 @@ export interface FileRouteTypes {
     | '/rodents/lots'
     | '/rodents/species'
     | '/rodents/tree'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
   id:
     | '__root__'
     | '/'
@@ -308,6 +366,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/kanban'
     | '/login'
+    | '/mcp'
     | '/reports'
     | '/sales'
     | '/settings'
@@ -315,6 +374,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/team'
     | '/warehouse'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/insects/boxes'
     | '/insects/lines'
     | '/insects/lots'
@@ -325,6 +386,8 @@ export interface FileRouteTypes {
     | '/rodents/lots'
     | '/rodents/species'
     | '/rodents/tree'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -336,6 +399,7 @@ export interface RootRouteChildren {
   ClientsRoute: typeof ClientsRoute
   KanbanRoute: typeof KanbanRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   ReportsRoute: typeof ReportsRoute
   SalesRoute: typeof SalesRoute
   SettingsRoute: typeof SettingsRoute
@@ -343,6 +407,8 @@ export interface RootRouteChildren {
   StockRoute: typeof StockRoute
   TeamRoute: typeof TeamRoute
   WarehouseRoute: typeof WarehouseRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   InsectsBoxesRoute: typeof InsectsBoxesRoute
   InsectsLinesRoute: typeof InsectsLinesRoute
   InsectsLotsRoute: typeof InsectsLotsRoute
@@ -353,6 +419,8 @@ export interface RootRouteChildren {
   RodentsLotsRoute: typeof RodentsLotsRoute
   RodentsSpeciesRoute: typeof RodentsSpeciesRoute
   RodentsTreeRoute: typeof RodentsTreeRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -404,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -532,6 +607,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsectsBoxesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -544,6 +647,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientsRoute: ClientsRoute,
   KanbanRoute: KanbanRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   ReportsRoute: ReportsRoute,
   SalesRoute: SalesRoute,
   SettingsRoute: SettingsRoute,
@@ -551,6 +655,9 @@ const rootRouteChildren: RootRouteChildren = {
   StockRoute: StockRoute,
   TeamRoute: TeamRoute,
   WarehouseRoute: WarehouseRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   InsectsBoxesRoute: InsectsBoxesRoute,
   InsectsLinesRoute: InsectsLinesRoute,
   InsectsLotsRoute: InsectsLotsRoute,
@@ -561,6 +668,8 @@ const rootRouteChildren: RootRouteChildren = {
   RodentsLotsRoute: RodentsLotsRoute,
   RodentsSpeciesRoute: RodentsSpeciesRoute,
   RodentsTreeRoute: RodentsTreeRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
