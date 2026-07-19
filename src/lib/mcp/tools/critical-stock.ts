@@ -27,7 +27,7 @@ export default defineTool({
     const { data, error } = await supabaseForUser(ctx)
       .from("warehouse_food")
       .select("id, name, quantity_grams, min_stock_grams")
-      .eq("owner_id", ctx.getUserId());
+      .eq("owner_id", ctx.getUserId()!);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     const critical = (data ?? []).filter(
       (r) => (r.min_stock_grams ?? 0) > 0 && (r.quantity_grams ?? 0) <= (r.min_stock_grams ?? 0),

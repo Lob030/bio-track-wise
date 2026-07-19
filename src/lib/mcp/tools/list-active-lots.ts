@@ -31,7 +31,7 @@ export default defineTool({
     let q = supabaseForUser(ctx)
       .from("lots")
       .select("lot_code, kind, species_id, box_id, males, females, unsexed, mass_grams, started_at, status")
-      .eq("owner_id", ctx.getUserId())
+      .eq("owner_id", ctx.getUserId()!)
       .eq("status", "active")
       .order("started_at", { ascending: false })
       .limit(limit ?? 100);

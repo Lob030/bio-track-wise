@@ -30,7 +30,7 @@ export default defineTool({
     const { data, error } = await supabaseForUser(ctx)
       .from("orders")
       .select("total_mxn, delivered_at")
-      .eq("owner_id", ctx.getUserId())
+      .eq("owner_id", ctx.getUserId()!)
       .eq("status", "historial")
       .gte("delivered_at", start)
       .lt("delivered_at", end);

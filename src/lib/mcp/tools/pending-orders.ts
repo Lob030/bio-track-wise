@@ -26,7 +26,7 @@ export default defineTool({
     const { data, error } = await supabaseForUser(ctx)
       .from("orders")
       .select("id, client_id, subtotal_mxn, total_mxn, status, created_at, delivered_at, notes")
-      .eq("owner_id", ctx.getUserId())
+      .eq("owner_id", ctx.getUserId()!)
       .eq("status", "preparando")
       .order("created_at", { ascending: false })
       .limit(200);

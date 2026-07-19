@@ -34,7 +34,7 @@ export default defineTool({
     let q = supabaseForUser(ctx)
       .from("boxes")
       .select("code, kind, location, capacity")
-      .eq("owner_id", ctx.getUserId())
+      .eq("owner_id", ctx.getUserId()!)
       .order("code", { ascending: true })
       .limit(limit ?? 100);
     if (kind) q = q.eq("kind", kind);
