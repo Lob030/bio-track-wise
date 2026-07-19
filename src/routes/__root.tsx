@@ -211,8 +211,8 @@ function AuthOrApp() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const path = router.state.location.pathname;
-  // /login route handles its own layout
-  if (path === "/login") return <Outlet />;
+  // /login and OAuth consent route handle their own layout/session flow
+  if (path === "/login" || path.startsWith("/.lovable/oauth/consent")) return <Outlet />;
   if (loading) {
     return <div className="min-h-screen grid place-items-center bg-background text-muted-foreground">Cargando…</div>;
   }
