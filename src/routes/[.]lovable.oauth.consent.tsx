@@ -40,9 +40,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     <main className="min-h-screen grid place-items-center p-6 bg-background text-foreground">
       <Card className="max-w-md p-6 text-center">
         <h1 className="text-lg font-semibold mb-2">No se pudo cargar la autorización</h1>
-        <p className="text-sm text-muted-foreground">
-          {String((error as Error)?.message ?? error)}
-        </p>
+        <p className="text-sm text-muted-foreground">{String((error as Error)?.message ?? error)}</p>
       </Card>
     </main>
   ),
@@ -60,22 +58,13 @@ function Consent() {
     (async () => {
       const { data, error } = await oauth.getAuthorizationDetails(authorization_id);
       if (cancelled) return;
-      if (error) {
-        setError(error.message ?? "Authorization error");
-        setLoading(false);
-        return;
-      }
+      if (error) { setError(error.message ?? "Authorization error"); setLoading(false); return; }
       const immediate = data?.redirect_url ?? data?.redirect_to;
-      if (immediate && !data?.client) {
-        window.location.href = immediate;
-        return;
-      }
+      if (immediate && !data?.client) { window.location.href = immediate; return; }
       setDetails(data ?? null);
       setLoading(false);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [authorization_id]);
 
   async function decide(approve: boolean) {
@@ -84,17 +73,9 @@ function Consent() {
     const { data, error } = approve
       ? await oauth.approveAuthorization(authorization_id)
       : await oauth.denyAuthorization(authorization_id);
-    if (error) {
-      setBusy(false);
-      setError(error.message ?? "Request failed");
-      return;
-    }
+    if (error) { setBusy(false); setError(error.message ?? "Request failed"); return; }
     const target = data?.redirect_url ?? data?.redirect_to;
-    if (!target) {
-      setBusy(false);
-      setError("No redirect returned by the authorization server.");
-      return;
-    }
+    if (!target) { setBusy(false); setError("No redirect returned by the authorization server."); return; }
     window.location.href = target;
   }
 
@@ -111,21 +92,19 @@ function Consent() {
   return (
     <main className="min-h-screen grid place-items-center p-6 bg-background text-foreground">
       <Card className="w-full max-w-md p-6">
-        <h1 className="text-xl font-semibold mb-2">Conectar {clientName} a BioTrack</h1>
+        <h1 className="text-xl font-semibold mb-2">
+          Conectar {clientName} a BioTrack
+        </h1>
         <p className="text-sm text-muted-foreground mb-4">
-          {clientName} podrá usar las herramientas de BioTrack habilitadas mientras estés
-          autenticado. Los permisos y políticas de tu cuenta siguen aplicando.
+          {clientName} podrá usar las herramientas de BioTrack habilitadas mientras estés autenticado.
+          Los permisos y políticas de tu cuenta siguen aplicando.
         </p>
         {details?.client?.redirect_uri && (
           <p className="text-xs text-muted-foreground mb-4 break-all">
             Redirige a: <span className="font-mono">{details.client.redirect_uri}</span>
           </p>
         )}
-        {error && (
-          <p role="alert" className="text-sm text-destructive mb-3">
-            {error}
-          </p>
-        )}
+        {error && <p role="alert" className="text-sm text-destructive mb-3">{error}</p>}
         <div className="flex gap-2 justify-end">
           <Button variant="outline" disabled={busy} onClick={() => decide(false)}>
             Cancelar conexión

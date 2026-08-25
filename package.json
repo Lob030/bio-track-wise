@@ -4,29 +4,15 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --configLoader runner",
-    "build": "vite build --configLoader runner",
-    "build:dev": "vite build --mode development --configLoader runner",
-    "preview": "vite preview --configLoader runner",
+    "dev": "vite dev",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "test": "npm run test:unit",
-    "test:unit": "vitest run --config vitest.config.ts --configLoader native tests/unit",
-    "test:integration": "vitest run --config vitest.config.ts --configLoader native tests/rls-integration.test.ts tests/security-integration.test.ts",
-    "test:all": "npm run test:unit && npm run test:integration",
-    "typecheck": "tsc --noEmit",
-    "verify:migrations": "powershell -ExecutionPolicy Bypass -File scripts/verify-clean-db.ps1",
-    "check": "npm run lint && npm run typecheck && npm run test:unit && npm run build",
-    "test:ci": "npm run check",
-    "verify:production": "node scripts/verify-production.mjs",
-    "test:security": "vitest run --config vitest.config.ts --configLoader native tests/security-integration.test.ts",
-    "test:transactions": "vitest run --config vitest.config.ts --configLoader native tests/security-integration.test.ts -t \"create_sale_tx|create_purchase_tx\"",
-    "test:audit": "vitest run --config vitest.config.ts --configLoader native tests/security-integration.test.ts -t \"audit trail\"",
-    "test:alerts": "vitest run --config vitest.config.ts --configLoader native tests/security-integration.test.ts -t \"alerts:|continuity:\"",
-    "types:generate:local": "supabase gen types typescript --local --schema public > src/integrations/supabase/types.ts",
-    "types:generate:linked": "supabase gen types typescript --linked --schema public > src/integrations/supabase/types.ts"
+    "format": "prettier --write ."
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.48",
     "@cloudflare/vite-plugin": "^1.25.5",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
@@ -63,6 +49,7 @@
     "@tanstack/react-router": "^1.168.25",
     "@tanstack/react-start": "^1.167.50",
     "@tanstack/router-plugin": "^1.167.28",
+    "ai": "^6.0.191",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -107,7 +94,6 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
-    "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^3.0.7"
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

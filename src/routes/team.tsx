@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Users2, Trash2, UserPlus, ShieldCheck, User, UserCheck, UserX } from "lucide-react";
+import { Users2, Trash2, UserPlus, ShieldCheck, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { AdminOnly } from "@/components/role-gate";
@@ -11,27 +11,17 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  changeUserRoleFn,
-  inviteUserFn,
-  reinstateUserFn,
-  revokeUserFn,
-  suspendUserFn,
-} from "@/lib/team-actions";
 
 export const Route = createFileRoute("/team")({
   head: () => ({
     meta: [
-      { title: "Equipo — BioTrack" },
-      { name: "description", content: "Gestiona los miembros y roles de tu equipo en BioTrack." },
-      { property: "og:title", content: "Equipo — BioTrack" },
-      {
-        property: "og:description",
-        content: "Gestiona los miembros y roles de tu equipo en BioTrack.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/team" },
+      { title: 'Equipo — BioTrack' },
+      { name: "description", content: 'Gestiona los miembros y roles de tu equipo en BioTrack.' },
+      { property: "og:title", content: 'Equipo — BioTrack' },
+      { property: "og:description", content: 'Gestiona los miembros y roles de tu equipo en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/team' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/team" }],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/team' }],
   }),
   component: TeamPage,
 });
@@ -58,13 +48,13 @@ function TeamPageInner() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch all users with roles
+  // Fetch all users with roles (joined with profiles for name/email)
   const { data: members, isLoading } = useQuery({
     queryKey: ["team-members"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_roles")
-        .select("user_id, role, status, profiles(email, full_name)")
+        .select("user_id, role, profiles(email, full_name)")
         .order("role");
       if (error) throw error;
       return data ?? [];
@@ -72,55 +62,30 @@ function TeamPageInner() {
   });
 
   const handleRevoke = async (userId: string) => {
-    try {
-      await (revokeUserFn as any)({ data: { userId } });
-      toast.success("Acceso revocado correctamente");
-      qc.invalidateQueries({ queryKey: ["team-members"] });
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Error al revocar el acceso");
+    const { error } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("No se pudo revocar el acceso: " + error.message);
+      return;
     }
-  };
-
-  const handleSuspend = async (userId: string) => {
-    try {
-      await (suspendUserFn as any)({ data: { userId } });
-      toast.success("Acceso suspendido");
-      qc.invalidateQueries({ queryKey: ["team-members"] });
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Error al suspender el acceso");
-    }
-  };
-
-  const handleReinstate = async (userId: string) => {
-    try {
-      await (reinstateUserFn as any)({ data: { userId } });
-      toast.success("Acceso reinstaurado");
-      qc.invalidateQueries({ queryKey: ["team-members"] });
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Error al reinstaurar el acceso");
-    }
-  };
-
-  const handleRoleChange = async (userId: string, role: "admin" | "operator") => {
-    try {
-      await (changeUserRoleFn as any)({ data: { userId, role } });
-      toast.success(role === "admin" ? "Administrador asignado" : "Operador asignado");
-      qc.invalidateQueries({ queryKey: ["team-members"] });
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Error al cambiar el rol");
-    }
+    toast.success("Acceso revocado");
+    qc.invalidateQueries({ queryKey: ["team-members"] });
   };
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) return;
     setSubmitting(true);
     try {
-      await (inviteUserFn as any)({ data: { email: inviteEmail.trim(), role: "operator" } });
-      toast.success(`Invitación enviada a ${inviteEmail.trim()}`);
+      // inviteUserByEmail requires service_key and is not available from the browser client.
+      // The admin should send the link manually or use the Supabase dashboard.
+      // We simulate the UX and inform the admin.
+      toast.info(
+        "La invitación vía email requiere acceso al backend. Puedes agregar al operador manualmente desde el dashboard de Supabase.",
+        { duration: 6000 }
+      );
       setInviteEmail("");
-      qc.invalidateQueries({ queryKey: ["team-members"] });
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Error al enviar la invitación");
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +100,7 @@ function TeamPageInner() {
       {/* Members list */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Miembros del equipo
+          Miembros con acceso
         </h2>
 
         {isLoading && (
@@ -146,7 +111,8 @@ function TeamPageInner() {
 
         {!isLoading && (!members || members.length === 0) && (
           <Card className="p-8 text-center text-muted-foreground text-sm border-dashed border-border/50">
-            No hay operadores registrados aún. El administrador gestiona los accesos.
+            No hay operadores registrados aún. El dueño de la cuenta
+            (administrador) siempre tiene acceso.
           </Card>
         )}
 
@@ -155,7 +121,6 @@ function TeamPageInner() {
           const name = profile?.full_name ?? "Sin nombre";
           const email = profile?.email ?? m.user_id.slice(0, 8);
           const isAdmin = m.role === "admin";
-          const status = m.status ?? "active";
 
           return (
             <Card
@@ -171,26 +136,10 @@ function TeamPageInner() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium text-sm truncate flex items-center gap-2">
-                    {name}
-                    {status === "suspended" && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/30"
-                      >
-                        Suspendido
-                      </Badge>
-                    )}
-                    {status === "revoked" && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] bg-rose-500/10 text-rose-400 border-rose-500/30"
-                      >
-                        Revocado
-                      </Badge>
-                    )}
+                  <div className="font-medium text-sm truncate">{name}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {email}
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">{email}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -204,54 +153,15 @@ function TeamPageInner() {
                 >
                   {isAdmin ? "Administrador" : "Operador"}
                 </Badge>
-                {status === "active" && (
+                {!isAdmin && (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs gap-1.5"
-                    onClick={() => handleRoleChange(m.user_id, isAdmin ? "operator" : "admin")}
+                    className="h-8 text-xs gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60"
+                    onClick={() => handleRevoke(m.user_id)}
                   >
-                    {isAdmin ? (
-                      <User className="h-3.5 w-3.5" />
-                    ) : (
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                    )}
-                    {isAdmin ? "Hacer operador" : "Hacer admin"}
+                    <Trash2 className="h-3.5 w-3.5" /> Revocar acceso
                   </Button>
-                )}
-                {!isAdmin && (
-                  <>
-                    {status === "active" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1.5 text-amber-400 border-amber-500/40 hover:bg-amber-500/10"
-                        onClick={() => handleSuspend(m.user_id)}
-                      >
-                        <UserX className="h-3.5 w-3.5" /> Suspender
-                      </Button>
-                    )}
-                    {status === "suspended" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1.5 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10"
-                        onClick={() => handleReinstate(m.user_id)}
-                      >
-                        <UserCheck className="h-3.5 w-3.5" /> Reinstaurar
-                      </Button>
-                    )}
-                    {status !== "revoked" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/60"
-                        onClick={() => handleRevoke(m.user_id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Revocar
-                      </Button>
-                    )}
-                  </>
                 )}
               </div>
             </Card>
@@ -266,8 +176,10 @@ function TeamPageInner() {
         </h2>
         <Card className="p-5 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-4">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Envía una invitación formal por correo electrónico. El operador podrá acceder a los
-            datos del bioterio y registrar eventos según su nivel de autorización.
+            Para agregar un operador, envíale una invitación. El operador podrá
+            ver lotes, cajas y el dashboard, y registrar bajas — sin acceso a
+            crear, editar ni eliminar registros, ni a almacén, reportes o
+            clientes.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1">
@@ -294,6 +206,11 @@ function TeamPageInner() {
               </Button>
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground/70">
+            ℹ️ Las invitaciones por email requieren configuración del backend
+            (service key). Puedes agregar usuarios directamente desde el
+            dashboard de Supabase → Authentication → Users.
+          </p>
         </Card>
       </div>
     </PageShell>

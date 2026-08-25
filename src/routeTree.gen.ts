@@ -15,21 +15,15 @@ import { Route as StockRouteImport } from './routes/stock'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SalesRouteImport } from './routes/sales'
-import { Route as ReproductionRouteImport } from './routes/reproduction'
 import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as ProfessionalRouteImport } from './routes/professional'
-import { Route as OperationsRouteImport } from './routes/operations'
-import { Route as OperateRouteImport } from './routes/operate'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KanbanRouteImport } from './routes/kanban'
-import { Route as CostsRouteImport } from './routes/costs'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BillingRouteImport } from './routes/billing'
-import { Route as AuditLogRouteImport } from './routes/audit-log'
 import { Route as AlertsRouteImport } from './routes/alerts'
-import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
+import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RodentsTreeRouteImport } from './routes/rodents.tree'
 import { Route as RodentsSpeciesRouteImport } from './routes/rodents.species'
@@ -76,29 +70,9 @@ const SalesRoute = SalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReproductionRoute = ReproductionRouteImport.update({
-  id: '/reproduction',
-  path: '/reproduction',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfessionalRoute = ProfessionalRouteImport.update({
-  id: '/professional',
-  path: '/professional',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OperationsRoute = OperationsRouteImport.update({
-  id: '/operations',
-  path: '/operations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OperateRoute = OperateRouteImport.update({
-  id: '/operate',
-  path: '/operate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -116,11 +90,6 @@ const KanbanRoute = KanbanRouteImport.update({
   path: '/kanban',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CostsRoute = CostsRouteImport.update({
-  id: '/costs',
-  path: '/costs',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ClientsRoute = ClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
@@ -136,19 +105,14 @@ const BillingRoute = BillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuditLogRoute = AuditLogRouteImport.update({
-  id: '/audit-log',
-  path: '/audit-log',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AlertsRoute = AlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AcceptInviteRoute = AcceptInviteRouteImport.update({
-  id: '/accept-invite',
-  path: '/accept-invite',
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -232,21 +196,15 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/accept-invite': typeof AcceptInviteRoute
+  '/ai': typeof AiRoute
   '/alerts': typeof AlertsRoute
-  '/audit-log': typeof AuditLogRoute
   '/billing': typeof BillingRoute
   '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
-  '/costs': typeof CostsRoute
   '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
-  '/operate': typeof OperateRoute
-  '/operations': typeof OperationsRoute
-  '/professional': typeof ProfessionalRoute
   '/reports': typeof ReportsRoute
-  '/reproduction': typeof ReproductionRoute
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -270,21 +228,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/accept-invite': typeof AcceptInviteRoute
+  '/ai': typeof AiRoute
   '/alerts': typeof AlertsRoute
-  '/audit-log': typeof AuditLogRoute
   '/billing': typeof BillingRoute
   '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
-  '/costs': typeof CostsRoute
   '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
-  '/operate': typeof OperateRoute
-  '/operations': typeof OperationsRoute
-  '/professional': typeof ProfessionalRoute
   '/reports': typeof ReportsRoute
-  '/reproduction': typeof ReproductionRoute
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -309,21 +261,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/accept-invite': typeof AcceptInviteRoute
+  '/ai': typeof AiRoute
   '/alerts': typeof AlertsRoute
-  '/audit-log': typeof AuditLogRoute
   '/billing': typeof BillingRoute
   '/calendar': typeof CalendarRoute
   '/clients': typeof ClientsRoute
-  '/costs': typeof CostsRoute
   '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
-  '/operate': typeof OperateRoute
-  '/operations': typeof OperationsRoute
-  '/professional': typeof ProfessionalRoute
   '/reports': typeof ReportsRoute
-  '/reproduction': typeof ReproductionRoute
   '/sales': typeof SalesRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -349,21 +295,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/accept-invite'
+    | '/ai'
     | '/alerts'
-    | '/audit-log'
     | '/billing'
     | '/calendar'
     | '/clients'
-    | '/costs'
     | '/kanban'
     | '/login'
     | '/mcp'
-    | '/operate'
-    | '/operations'
-    | '/professional'
     | '/reports'
-    | '/reproduction'
     | '/sales'
     | '/settings'
     | '/sitemap.xml'
@@ -387,21 +327,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/accept-invite'
+    | '/ai'
     | '/alerts'
-    | '/audit-log'
     | '/billing'
     | '/calendar'
     | '/clients'
-    | '/costs'
     | '/kanban'
     | '/login'
     | '/mcp'
-    | '/operate'
-    | '/operations'
-    | '/professional'
     | '/reports'
-    | '/reproduction'
     | '/sales'
     | '/settings'
     | '/sitemap.xml'
@@ -425,21 +359,15 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/accept-invite'
+    | '/ai'
     | '/alerts'
-    | '/audit-log'
     | '/billing'
     | '/calendar'
     | '/clients'
-    | '/costs'
     | '/kanban'
     | '/login'
     | '/mcp'
-    | '/operate'
-    | '/operations'
-    | '/professional'
     | '/reports'
-    | '/reproduction'
     | '/sales'
     | '/settings'
     | '/sitemap.xml'
@@ -464,21 +392,15 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AcceptInviteRoute: typeof AcceptInviteRoute
+  AiRoute: typeof AiRoute
   AlertsRoute: typeof AlertsRoute
-  AuditLogRoute: typeof AuditLogRoute
   BillingRoute: typeof BillingRoute
   CalendarRoute: typeof CalendarRoute
   ClientsRoute: typeof ClientsRoute
-  CostsRoute: typeof CostsRoute
   KanbanRoute: typeof KanbanRoute
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
-  OperateRoute: typeof OperateRoute
-  OperationsRoute: typeof OperationsRoute
-  ProfessionalRoute: typeof ProfessionalRoute
   ReportsRoute: typeof ReportsRoute
-  ReproductionRoute: typeof ReproductionRoute
   SalesRoute: typeof SalesRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -545,39 +467,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reproduction': {
-      id: '/reproduction'
-      path: '/reproduction'
-      fullPath: '/reproduction'
-      preLoaderRoute: typeof ReproductionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reports': {
       id: '/reports'
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/professional': {
-      id: '/professional'
-      path: '/professional'
-      fullPath: '/professional'
-      preLoaderRoute: typeof ProfessionalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/operations': {
-      id: '/operations'
-      path: '/operations'
-      fullPath: '/operations'
-      preLoaderRoute: typeof OperationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/operate': {
-      id: '/operate'
-      path: '/operate'
-      fullPath: '/operate'
-      preLoaderRoute: typeof OperateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -601,13 +495,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KanbanRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/costs': {
-      id: '/costs'
-      path: '/costs'
-      fullPath: '/costs'
-      preLoaderRoute: typeof CostsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/clients': {
       id: '/clients'
       path: '/clients'
@@ -629,13 +516,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/audit-log': {
-      id: '/audit-log'
-      path: '/audit-log'
-      fullPath: '/audit-log'
-      preLoaderRoute: typeof AuditLogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/alerts': {
       id: '/alerts'
       path: '/alerts'
@@ -643,11 +523,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/accept-invite': {
-      id: '/accept-invite'
-      path: '/accept-invite'
-      fullPath: '/accept-invite'
-      preLoaderRoute: typeof AcceptInviteRouteImport
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -760,21 +640,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AcceptInviteRoute: AcceptInviteRoute,
+  AiRoute: AiRoute,
   AlertsRoute: AlertsRoute,
-  AuditLogRoute: AuditLogRoute,
   BillingRoute: BillingRoute,
   CalendarRoute: CalendarRoute,
   ClientsRoute: ClientsRoute,
-  CostsRoute: CostsRoute,
   KanbanRoute: KanbanRoute,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
-  OperateRoute: OperateRoute,
-  OperationsRoute: OperationsRoute,
-  ProfessionalRoute: ProfessionalRoute,
   ReportsRoute: ReportsRoute,
-  ReproductionRoute: ReproductionRoute,
   SalesRoute: SalesRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

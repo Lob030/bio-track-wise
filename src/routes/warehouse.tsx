@@ -1,14 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
-import { AdminPageOnly } from "@/components/role-gate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -49,7 +47,6 @@ import {
 import { toast } from "sonner";
 import { Plus, Trash2, Warehouse, DollarSign } from "lucide-react";
 import { toUserFriendlyError } from "@/lib/errors";
-import { useTransactionRequest } from "@/hooks/use-transaction-request";
 
 /* ------------------------------------------------------------------ */
 /*  Route export                                                       */
@@ -57,33 +54,26 @@ import { useTransactionRequest } from "@/hooks/use-transaction-request";
 export const Route = createFileRoute("/warehouse")({
   head: () => ({
     meta: [
-      { title: "Almacén — BioTrack" },
-      {
-        name: "description",
-        content: "Administra el almacén y los insumos de tu bioterio en BioTrack.",
-      },
-      { property: "og:title", content: "Almacén — BioTrack" },
-      {
-        property: "og:description",
-        content: "Administra el almacén y los insumos de tu bioterio en BioTrack.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/warehouse" },
+      { title: 'Almacén — BioTrack' },
+      { name: "description", content: 'Administra el almacén y los insumos de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Almacén — BioTrack' },
+      { property: "og:description", content: 'Administra el almacén y los insumos de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/warehouse' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/warehouse" }],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/warehouse' }],
   }),
   component: () => (
-    <AdminPageOnly>
-      <TierGate min="gold" module="Almacén">
-        <WarehousePage />
-      </TierGate>
-    </AdminPageOnly>
+    <TierGate min="gold" module="Almacén">
+      <WarehousePage />
+    </TierGate>
   ),
 });
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-const fmtMXN = (v: number) => v.toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+const fmtMXN = (v: number) =>
+  v.toLocaleString("es-MX", { style: "currency", currency: "MXN" });
 
 const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d + "T00:00:00").toLocaleDateString("es-MX") : "—";
@@ -98,7 +88,9 @@ function WarehousePage() {
     <div className="p-6 max-w-6xl mx-auto space-y-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Almacén</h1>
-        <p className="text-sm text-muted-foreground">Inventario operativo en 5 categorías.</p>
+        <p className="text-sm text-muted-foreground">
+          Inventario operativo en 5 categorías.
+        </p>
       </div>
 
       <Tabs defaultValue="alimento">
@@ -161,6 +153,7 @@ function FoodTab() {
       const { data, error } = await supabase
         .from("warehouse_food")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -171,18 +164,17 @@ function FoodTab() {
   const { data: activeLots } = useQuery({
     queryKey: ["lots-for-feed"],
     queryFn: async () =>
-      (
-        await supabase
-          .from("lots")
-          .select("id, species_id, males, females, unsexed, started_at, kind")
-          .eq("status", "active")
-          .eq("kind", "rodent")
-      ).data ?? [],
+      (await supabase
+        .from("lots")
+        .select("id, species_id, males, females, unsexed, started_at, kind")
+        .eq("status", "active")
+        .eq("kind", "rodent")).data ?? [],
   });
 
   const { data: allSpecies } = useQuery({
     queryKey: ["species-for-feed"],
-    queryFn: async () => (await supabase.from("species").select("id, size_rules")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("species").select("id, size_rules")).data ?? [],
   });
 
   const totalValue = useMemo(() => {
@@ -199,28 +191,29 @@ function FoodTab() {
     (activeLots ?? []).forEach((lot: any) => {
       const sp = (allSpecies ?? []).find((s: any) => s.id === lot.species_id);
       const rules = (sp?.size_rules as any[]) ?? [];
-      const ageToday = Math.floor((Date.now() - new Date(lot.started_at).getTime()) / 86400000);
-      const rule = rules.find((r: any) => ageToday >= r.min_days && ageToday <= r.max_days);
+      const ageToday = Math.floor(
+        (Date.now() - new Date(lot.started_at).getTime()) / 86400000,
+      );
+      const rule = rules.find(
+        (r: any) => ageToday >= r.min_days && ageToday <= r.max_days,
+      );
       const count = (lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0);
       dailyGrams += (rule?.daily_feed_g ?? 0) * count;
     });
     const totalFoodGrams = (data ?? []).reduce(
-      (sum, f) => sum + (Number(f.quantity_grams) || 0),
+      (sum, f) => sum + (Number(f.quantity_grams) ?? 0),
       0,
     );
-    const daysRemaining = dailyGrams > 0 ? Math.floor(totalFoodGrams / dailyGrams) : null;
+    const daysRemaining =
+      dailyGrams > 0 ? Math.floor(totalFoodGrams / dailyGrams) : null;
     return { dailyGrams, totalFoodGrams, daysRemaining };
   }, [activeLots, allSpecies, data]);
 
   const lowStockItems = useMemo(
-    () =>
-      (data ?? []).filter(
-        (f) =>
-          f.min_stock_grams != null &&
-          f.min_stock_grams > 0 &&
-          f.quantity_grams < f.min_stock_grams,
-      ),
-    [data],
+    () => (data ?? []).filter(f =>
+      f.min_stock_grams != null && f.min_stock_grams > 0 && f.quantity_grams < f.min_stock_grams
+    ),
+    [data]
   );
 
   const handleSave = async () => {
@@ -231,6 +224,7 @@ function FoodTab() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("warehouse_food").insert({
+      owner_id: u.user.id,
       name: form.name,
       quantity_grams: Number(form.quantity_grams),
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
@@ -245,14 +239,7 @@ function FoodTab() {
     toast.success("Alimento registrado.");
     qc.invalidateQueries({ queryKey: ["warehouse_food"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    setForm({
-      name: "",
-      quantity_grams: "",
-      unit_cost: "",
-      min_stock_grams: "",
-      notes: "",
-      audited_at: today(),
-    });
+    setForm({ name: "", quantity_grams: "", unit_cost: "", min_stock_grams: "", notes: "", audited_at: today() });
     setOpen(false);
   };
 
@@ -275,7 +262,7 @@ function FoodTab() {
             ⚠️ {lowStockItems.length} producto{lowStockItems.length > 1 ? "s" : ""} con stock bajo:
           </span>
           <span className="text-xs text-rose-300">
-            {lowStockItems.map((f) => f.name).join(", ")}
+            {lowStockItems.map(f => f.name).join(", ")}
           </span>
         </Card>
       )}
@@ -286,7 +273,9 @@ function FoodTab() {
           <DollarSign className="h-5 w-5 text-emerald-400" />
         </div>
         <div>
-          <p className="text-[10px] uppercase text-muted-foreground">Valor total del inventario</p>
+          <p className="text-[10px] uppercase text-muted-foreground">
+            Valor total del inventario
+          </p>
           <p className="text-xl font-bold">{fmtMXN(totalValue)}</p>
         </div>
       </Card>
@@ -299,15 +288,11 @@ function FoodTab() {
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg bg-muted/40 p-3">
             <p className="text-[10px] uppercase text-muted-foreground">Consumo diario</p>
-            <p className="text-lg font-bold tabular-nums">
-              {feedProjection.dailyGrams.toFixed(0)}g
-            </p>
+            <p className="text-lg font-bold tabular-nums">{feedProjection.dailyGrams.toFixed(0)}g</p>
           </div>
           <div className="rounded-lg bg-muted/40 p-3">
             <p className="text-[10px] uppercase text-muted-foreground">Stock actual</p>
-            <p className="text-lg font-bold tabular-nums">
-              {(feedProjection.totalFoodGrams / 1000).toFixed(1)}kg
-            </p>
+            <p className="text-lg font-bold tabular-nums">{(feedProjection.totalFoodGrams / 1000).toFixed(1)}kg</p>
           </div>
           <div className="rounded-lg bg-muted/40 p-3">
             <p className="text-[10px] uppercase text-muted-foreground">Alcanza para</p>
@@ -321,20 +306,13 @@ function FoodTab() {
           </div>
         </div>
         {feedProjection.daysRemaining !== null && feedProjection.daysRemaining <= 7 && (
-          <p className="text-xs font-medium text-destructive">
-            ⚠️ Stock crítico — reponer alimento pronto
-          </p>
+          <p className="text-xs font-medium text-destructive">⚠️ Stock crítico — reponer alimento pronto</p>
         )}
-        {feedProjection.daysRemaining !== null &&
-          feedProjection.daysRemaining > 7 &&
-          feedProjection.daysRemaining <= 14 && (
-            <p className="text-xs font-medium text-amber-500">Reponer en los próximos días</p>
-          )}
+        {feedProjection.daysRemaining !== null && feedProjection.daysRemaining > 7 && feedProjection.daysRemaining <= 14 && (
+          <p className="text-xs font-medium text-amber-500">Reponer en los próximos días</p>
+        )}
         {feedProjection.dailyGrams === 0 && (
-          <p className="text-[11px] text-muted-foreground">
-            Define el consumo diario (daily_feed_g) en las reglas de tamaño de cada especie para ver
-            la proyección.
-          </p>
+          <p className="text-[11px] text-muted-foreground">Define el consumo diario (daily_feed_g) en las reglas de tamaño de cada especie para ver la proyección.</p>
         )}
       </Card>
 
@@ -357,30 +335,21 @@ function FoodTab() {
             <div className="grid gap-3">
               <div className="grid gap-1.5">
                 <Label>Nombre *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Gramos actuales *</Label>
-                <Input
-                  type="number"
-                  value={form.quantity_grams}
-                  onChange={(e) => setForm({ ...form, quantity_grams: e.target.value })}
-                />
+                <Input type="number" value={form.quantity_grams} onChange={(e) => setForm({ ...form, quantity_grams: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>
-                  Stock mínimo (g){" "}
-                  <span className="text-muted-foreground font-normal">(opcional)</span>
+                  Stock mínimo (g) <span className="text-muted-foreground font-normal">(opcional)</span>
                 </Label>
                 <Input
-                  type="number"
-                  min={0}
+                  type="number" min={0}
                   placeholder="Ej. 5000"
                   value={form.min_stock_grams}
-                  onChange={(e) => setForm({ ...form, min_stock_grams: e.target.value })}
+                  onChange={e => setForm({ ...form, min_stock_grams: e.target.value })}
                 />
                 <p className="text-[10px] text-muted-foreground">
                   Recibirás una alerta cuando el stock baje de este valor
@@ -388,39 +357,20 @@ function FoodTab() {
               </div>
               <div className="grid gap-1.5">
                 <Label>Costo por kg MXN</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.unit_cost}
-                  onChange={(e) => setForm({ ...form, unit_cost: e.target.value })}
-                />
+                <Input type="number" step="0.01" value={form.unit_cost} onChange={(e) => setForm({ ...form, unit_cost: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Stock mínimo (g)</Label>
-                <Input
-                  type="number"
-                  value={form.min_stock_grams}
-                  onChange={(e) => setForm({ ...form, min_stock_grams: e.target.value })}
-                  placeholder="Ej. 5000"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Recibirás una alerta cuando el stock baje de este nivel.
-                </p>
+                <Input type="number" value={form.min_stock_grams} onChange={(e) => setForm({ ...form, min_stock_grams: e.target.value })} placeholder="Ej. 5000" />
+                <p className="text-[11px] text-muted-foreground">Recibirás una alerta cuando el stock baje de este nivel.</p>
               </div>
               <div className="grid gap-1.5">
                 <Label>Notas</Label>
-                <Input
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                />
+                <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Fecha de auditoría</Label>
-                <Input
-                  type="date"
-                  value={form.audited_at}
-                  onChange={(e) => setForm({ ...form, audited_at: e.target.value })}
-                />
+                <Input type="date" value={form.audited_at} onChange={(e) => setForm({ ...form, audited_at: e.target.value })} />
               </div>
             </div>
             <DialogFooter>
@@ -438,20 +388,15 @@ function FoodTab() {
       ) : (
         <div className="grid gap-2">
           {data.map((r) => (
-            <Card
-              key={r.id}
-              className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between"
-            >
+            <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm">{r.name}</p>
-                  {r.min_stock_grams != null &&
-                    r.min_stock_grams > 0 &&
-                    (Number(r.quantity_grams) || 0) < r.min_stock_grams && (
-                      <Badge className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/30">
-                        ⚠️ Stock bajo
-                      </Badge>
-                    )}
+                  {r.min_stock_grams != null && r.min_stock_grams > 0 && (Number(r.quantity_grams) || 0) < r.min_stock_grams && (
+                    <Badge className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/30">
+                      ⚠️ Stock bajo
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex gap-3 text-xs text-muted-foreground">
                   <span>{((Number(r.quantity_grams) || 0) / 1000).toFixed(1)} kg</span>
@@ -469,15 +414,11 @@ function FoodTab() {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción no se puede deshacer.
-                    </AlertDialogDescription>
+                    <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(r.id)}>
-                      Eliminar
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -519,6 +460,7 @@ function CleaningTab() {
       const { data, error } = await supabase
         .from("warehouse_cleaning")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -533,6 +475,7 @@ function CleaningTab() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("warehouse_cleaning").insert({
+      owner_id: u.user.id,
       name: form.name,
       quantity: Number(form.quantity),
       unit: form.unit,
@@ -567,8 +510,16 @@ function CleaningTab() {
     if (isNaN(expiry.getTime())) return null;
 
     const today = new Date();
-    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const expiryMidnight = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+    const todayMidnight = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const expiryMidnight = new Date(
+      expiry.getFullYear(),
+      expiry.getMonth(),
+      expiry.getDate()
+    );
 
     const diffTime = expiryMidnight.getTime() - todayMidnight.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
@@ -607,25 +558,16 @@ function CleaningTab() {
             <div className="grid gap-3">
               <div className="grid gap-1.5">
                 <Label>Nombre *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Cantidad *</Label>
-                <Input
-                  type="number"
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                />
+                <Input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Unidad</Label>
                 <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ml">ml</SelectItem>
                     <SelectItem value="g">g</SelectItem>
@@ -636,20 +578,11 @@ function CleaningTab() {
               </div>
               <div className="grid gap-1.5">
                 <Label>Fecha de caducidad</Label>
-                <Input
-                  type="date"
-                  value={form.expiry_date}
-                  onChange={(e) => setForm({ ...form, expiry_date: e.target.value })}
-                />
+                <Input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Costo MXN</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.cost}
-                  onChange={(e) => setForm({ ...form, cost: e.target.value })}
-                />
+                <Input type="number" step="0.01" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
               </div>
             </div>
             <DialogFooter>
@@ -666,19 +599,14 @@ function CleaningTab() {
       ) : (
         <div className="grid gap-2">
           {data.map((r) => (
-            <Card
-              key={r.id}
-              className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between"
-            >
+            <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm">{r.name}</p>
                   {getExpiryBadge(r.expiry_date)}
                 </div>
                 <div className="flex gap-3 text-xs text-muted-foreground">
-                  <span>
-                    {r.quantity} {r.unit}
-                  </span>
+                  <span>{r.quantity} {r.unit}</span>
                   {r.cost && <span>{fmtMXN(Number(r.cost))}</span>}
                   {r.expiry_date && <span>Caduca: {fmtDate(r.expiry_date)}</span>}
                 </div>
@@ -692,15 +620,11 @@ function CleaningTab() {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción no se puede deshacer.
-                    </AlertDialogDescription>
+                    <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(r.id)}>
-                      Eliminar
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -749,6 +673,7 @@ function ToolsTab() {
       const { data, error } = await supabase
         .from("warehouse_tools")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -763,6 +688,7 @@ function ToolsTab() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("warehouse_tools").insert({
+      owner_id: u.user.id,
       name: form.name,
       value: form.value ? Number(form.value) : 0,
       condition: form.condition as "bueno" | "malo" | "nuevo" | "regular" | "reparacion",
@@ -807,29 +733,16 @@ function ToolsTab() {
             <div className="grid gap-3">
               <div className="grid gap-1.5">
                 <Label>Nombre *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Valor MXN</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.value}
-                  onChange={(e) => setForm({ ...form, value: e.target.value })}
-                />
+                <Input type="number" step="0.01" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Condición</Label>
-                <Select
-                  value={form.condition}
-                  onValueChange={(v) => setForm({ ...form, condition: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={form.condition} onValueChange={(v) => setForm({ ...form, condition: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nuevo">Nuevo</SelectItem>
                     <SelectItem value="bueno">Bueno</SelectItem>
@@ -841,10 +754,7 @@ function ToolsTab() {
               </div>
               <div className="grid gap-1.5">
                 <Label>Notas</Label>
-                <Input
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                />
+                <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
             </div>
             <DialogFooter>
@@ -861,10 +771,7 @@ function ToolsTab() {
       ) : (
         <div className="grid gap-2">
           {data.map((r) => (
-            <Card
-              key={r.id}
-              className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between"
-            >
+            <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm">{r.name}</p>
@@ -886,15 +793,11 @@ function ToolsTab() {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción no se puede deshacer.
-                    </AlertDialogDescription>
+                    <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(r.id)}>
-                      Eliminar
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -934,6 +837,7 @@ function PackagingTab() {
       const { data, error } = await supabase
         .from("warehouse_packaging")
         .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -948,6 +852,7 @@ function PackagingTab() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("warehouse_packaging").insert({
+      owner_id: u.user.id,
       name: form.name,
       units: Number(form.units),
       unit_cost: form.unit_cost ? Number(form.unit_cost) : null,
@@ -991,27 +896,15 @@ function PackagingTab() {
             <div className="grid gap-3">
               <div className="grid gap-1.5">
                 <Label>Nombre *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Unidades *</Label>
-                <Input
-                  type="number"
-                  value={form.units}
-                  onChange={(e) => setForm({ ...form, units: e.target.value })}
-                />
+                <Input type="number" value={form.units} onChange={(e) => setForm({ ...form, units: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Costo unitario MXN</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.unit_cost}
-                  onChange={(e) => setForm({ ...form, unit_cost: e.target.value })}
-                />
+                <Input type="number" step="0.01" value={form.unit_cost} onChange={(e) => setForm({ ...form, unit_cost: e.target.value })} />
               </div>
             </div>
             <DialogFooter>
@@ -1030,10 +923,7 @@ function PackagingTab() {
           {data.map((r) => {
             const total = (Number(r.units) || 0) * (Number(r.unit_cost) || 0);
             return (
-              <Card
-                key={r.id}
-                className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between"
-              >
+              <Card key={r.id} className="border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 p-3 flex items-center justify-between">
                 <div className="space-y-0.5">
                   <p className="font-medium text-sm">{r.name}</p>
                   <div className="flex gap-3 text-xs text-muted-foreground">
@@ -1051,15 +941,11 @@ function PackagingTab() {
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta acción no se puede deshacer.
-                      </AlertDialogDescription>
+                      <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(r.id)}>
-                        Eliminar
-                      </AlertDialogAction>
+                      <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -1077,8 +963,10 @@ function PackagingTab() {
 /* ================================================================== */
 function PurchasesTab() {
   const qc = useQueryClient();
-  const { getRequestId, resetRequestId } = useTransactionRequest();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [lotDialogOpen, setLotDialogOpen] = useState(false);
+  const [savedKind, setSavedKind] = useState<"rodent" | "insect">("rodent");
 
   const [form, setForm] = useState({
     invoice_id: "",
@@ -1092,10 +980,6 @@ function PurchasesTab() {
     total_cost: "",
     provider: "",
     notes: "",
-    create_lot: false,
-    box_id: "",
-    lot_code: "",
-    started_at: today(),
   });
 
   const { data: user } = useQuery({
@@ -1115,6 +999,7 @@ function PurchasesTab() {
       const { data, error } = await supabase
         .from("warehouse_purchases")
         .select("*, species(name)")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -1141,15 +1026,6 @@ function PurchasesTab() {
     },
   });
 
-  const { data: boxesList } = useQuery({
-    queryKey: ["boxes"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("boxes").select("id,code,kind");
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const filteredSpecies = useMemo(
     () => (speciesList ?? []).filter((s) => s.kind === form.kind),
     [speciesList, form.kind],
@@ -1158,11 +1034,6 @@ function PurchasesTab() {
   const filteredLines = useMemo(
     () => (linesList ?? []).filter((l) => l.species_id === form.species_id),
     [linesList, form.species_id],
-  );
-
-  const filteredBoxes = useMemo(
-    () => (boxesList ?? []).filter((box) => box.kind === form.kind),
-    [boxesList, form.kind],
   );
 
   const totalInvestment = useMemo(() => {
@@ -1183,10 +1054,6 @@ function PurchasesTab() {
       total_cost: "",
       provider: "",
       notes: "",
-      create_lot: false,
-      box_id: "",
-      lot_code: "",
-      started_at: today(),
     });
 
   const handleSave = async () => {
@@ -1202,34 +1069,28 @@ function PurchasesTab() {
       toast.error("El peso es obligatorio para insectos.");
       return;
     }
-    if (!form.species_id) {
-      toast.error("La especie es obligatoria.");
-      return;
-    }
-    if (form.create_lot && !form.box_id) {
-      toast.error("Selecciona la caja donde se activará el lote.");
-      return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+
+    const payload: Record<string, unknown> = {
+      owner_id: u.user.id,
+      kind: form.kind,
+      total_cost: Number(form.total_cost),
+      invoice_id: form.invoice_id || null,
+      species_id: form.species_id || null,
+      line_id: form.line_id || null,
+      provider: form.provider || null,
+      notes: form.notes || null,
+    };
+    if (form.kind === "rodent") {
+      payload.population = Number(form.population);
+      payload.mass_grams = null;
+    } else {
+      payload.mass_grams = Number(form.mass_grams);
+      payload.population = null;
     }
 
-    const operation = "purchase:create";
-    const { error } = await supabase.rpc("create_purchase_tx", {
-      _request_id: getRequestId(operation),
-      _kind: form.kind,
-      _species_id: form.species_id,
-      _line_id: form.line_id || null,
-      _population: form.kind === "rodent" ? Number(form.population) : null,
-      _males: form.kind === "rodent" ? Number(form.males) || 0 : 0,
-      _females: form.kind === "rodent" ? Number(form.females) || 0 : 0,
-      _mass_grams: form.kind === "insect" ? Number(form.mass_grams) : null,
-      _total_cost: Number(form.total_cost),
-      _invoice_id: form.invoice_id || null,
-      _provider: form.provider || null,
-      _notes: form.notes || null,
-      _create_lot: form.create_lot,
-      _box_id: form.create_lot ? form.box_id : null,
-      _lot_code: form.create_lot ? form.lot_code || null : null,
-      _started_at: form.started_at,
-    });
+    const { error } = await supabase.from("warehouse_purchases").insert(payload as any);
     if (error) {
       toast.error(toUserFriendlyError(error));
       return;
@@ -1240,9 +1101,10 @@ function PurchasesTab() {
     qc.invalidateQueries({ queryKey: ["species"] });
     qc.invalidateQueries({ queryKey: ["genetic_lines"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    resetRequestId(operation);
+    setSavedKind(form.kind);
     resetForm();
     setOpen(false);
+    setLotDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -1290,10 +1152,7 @@ function PurchasesTab() {
             <div className="grid gap-3">
               <div className="grid gap-1.5">
                 <Label>Folio/Factura</Label>
-                <Input
-                  value={form.invoice_id}
-                  onChange={(e) => setForm({ ...form, invoice_id: e.target.value })}
-                />
+                <Input value={form.invoice_id} onChange={(e) => setForm({ ...form, invoice_id: e.target.value })} />
               </div>
 
               <div className="grid gap-1.5">
@@ -1301,17 +1160,10 @@ function PurchasesTab() {
                 <Select
                   value={form.kind}
                   onValueChange={(v) =>
-                    setForm({
-                      ...form,
-                      kind: v as "rodent" | "insect",
-                      species_id: "",
-                      line_id: "",
-                    })
+                    setForm({ ...form, kind: v as "rodent" | "insect", species_id: "", line_id: "" })
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="rodent">Roedores</SelectItem>
                     <SelectItem value="insect">Insectos</SelectItem>
@@ -1325,14 +1177,10 @@ function PurchasesTab() {
                   value={form.species_id}
                   onValueChange={(v) => setForm({ ...form, species_id: v, line_id: "" })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar especie" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar especie" /></SelectTrigger>
                   <SelectContent>
                     {filteredSpecies.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1341,18 +1189,11 @@ function PurchasesTab() {
               {filteredLines.length > 0 && (
                 <div className="grid gap-1.5">
                   <Label>Línea genética</Label>
-                  <Select
-                    value={form.line_id}
-                    onValueChange={(v) => setForm({ ...form, line_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar línea" />
-                    </SelectTrigger>
+                  <Select value={form.line_id} onValueChange={(v) => setForm({ ...form, line_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar línea" /></SelectTrigger>
                     <SelectContent>
                       {filteredLines.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.name}
-                        </SelectItem>
+                        <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -1363,115 +1204,38 @@ function PurchasesTab() {
                 <>
                   <div className="grid gap-1.5">
                     <Label>Población *</Label>
-                    <Input
-                      type="number"
-                      value={form.population}
-                      onChange={(e) => setForm({ ...form, population: e.target.value })}
-                    />
+                    <Input type="number" value={form.population} onChange={(e) => setForm({ ...form, population: e.target.value })} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="grid gap-1.5">
                       <Label>Machos</Label>
-                      <Input
-                        type="number"
-                        value={form.males}
-                        onChange={(e) => setForm({ ...form, males: e.target.value })}
-                      />
+                      <Input type="number" value={form.males} onChange={(e) => setForm({ ...form, males: e.target.value })} />
                     </div>
                     <div className="grid gap-1.5">
                       <Label>Hembras</Label>
-                      <Input
-                        type="number"
-                        value={form.females}
-                        onChange={(e) => setForm({ ...form, females: e.target.value })}
-                      />
+                      <Input type="number" value={form.females} onChange={(e) => setForm({ ...form, females: e.target.value })} />
                     </div>
                   </div>
                 </>
               ) : (
                 <div className="grid gap-1.5">
                   <Label>Peso aprox. en gramos *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={form.mass_grams}
-                    onChange={(e) => setForm({ ...form, mass_grams: e.target.value })}
-                  />
+                  <Input type="number" step="0.01" value={form.mass_grams} onChange={(e) => setForm({ ...form, mass_grams: e.target.value })} />
                 </div>
               )}
 
               <div className="grid gap-1.5">
                 <Label>Costo total MXN *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.total_cost}
-                  onChange={(e) => setForm({ ...form, total_cost: e.target.value })}
-                />
+                <Input type="number" step="0.01" value={form.total_cost} onChange={(e) => setForm({ ...form, total_cost: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Proveedor / PIMVS</Label>
-                <Input
-                  value={form.provider}
-                  onChange={(e) => setForm({ ...form, provider: e.target.value })}
-                />
+                <Input value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Notas</Label>
-                <Input
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                />
+                <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
-              <div className="flex items-center gap-2 py-1">
-                <Checkbox
-                  id="create-purchase-lot"
-                  checked={form.create_lot}
-                  onCheckedChange={(checked) =>
-                    setForm({ ...form, create_lot: checked === true, box_id: "" })
-                  }
-                />
-                <Label htmlFor="create-purchase-lot">Activar estos ejemplares como lote</Label>
-              </div>
-              {form.create_lot && (
-                <div className="grid gap-3 border-t pt-3">
-                  <div className="grid gap-1.5">
-                    <Label>Caja *</Label>
-                    <Select
-                      value={form.box_id}
-                      onValueChange={(value) => setForm({ ...form, box_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar caja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredBoxes.map((box) => (
-                          <SelectItem key={box.id} value={box.id}>
-                            {box.code}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="grid gap-1.5">
-                      <Label>Código de lote</Label>
-                      <Input
-                        value={form.lot_code}
-                        onChange={(event) => setForm({ ...form, lot_code: event.target.value })}
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label>Fecha inicial</Label>
-                      <Input
-                        type="date"
-                        value={form.started_at}
-                        onChange={(event) => setForm({ ...form, started_at: event.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
             <DialogFooter>
               <Button onClick={handleSave}>Guardar</Button>
@@ -1479,6 +1243,32 @@ function PurchasesTab() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Post-save: lot creation dialog */}
+      <AlertDialog open={lotDialogOpen} onOpenChange={setLotDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              ¿Deseas activar estos ejemplares como un nuevo lote ahora?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Puedes crear el lote de producción ahora o solo registrar el gasto.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, solo registrar gasto</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                navigate({
+                  to: savedKind === "rodent" ? "/rodents/lots" : "/insects/lots",
+                })
+              }
+            >
+              Sí, crear lote
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Table list */}
       {!data || data.length === 0 ? (
@@ -1491,68 +1281,39 @@ function PurchasesTab() {
             <Table>
               <TableHeader className="bg-accent/20 border-b border-border/30">
                 <TableRow>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">
-                    Folio
-                  </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">
-                    Especie
-                  </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">
-                    Proveedor
-                  </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">
-                    Costo
-                  </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">
-                    Fecha
-                  </TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Folio</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Especie</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Proveedor</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Costo</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3">Fecha</TableHead>
                   <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground px-4 py-3 w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((r, i) => (
-                  <TableRow
-                    key={r.id}
-                    className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
-                  >
-                    <TableCell className="text-sm px-4 py-3 font-medium text-foreground">
-                      {r.invoice_id || "—"}
-                    </TableCell>
+                  <TableRow key={r.id} className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}>
+                    <TableCell className="text-sm px-4 py-3 font-medium text-foreground">{r.invoice_id || "—"}</TableCell>
                     <TableCell className="text-sm px-4 py-3 text-foreground">
                       {(r as any).species?.name ?? "—"}
                     </TableCell>
-                    <TableCell className="text-sm px-4 py-3 text-muted-foreground">
-                      {r.provider || "—"}
-                    </TableCell>
-                    <TableCell className="text-sm px-4 py-3 font-semibold text-emerald-400">
-                      {fmtMXN(Number(r.total_cost) || 0)}
-                    </TableCell>
-                    <TableCell className="text-sm px-4 py-3 text-muted-foreground">
-                      {fmtDate(r.created_at)}
-                    </TableCell>
+                    <TableCell className="text-sm px-4 py-3 text-muted-foreground">{r.provider || "—"}</TableCell>
+                    <TableCell className="text-sm px-4 py-3 font-semibold text-emerald-400">{fmtMXN(Number(r.total_cost) || 0)}</TableCell>
+                    <TableCell className="text-sm px-4 py-3 text-muted-foreground">{fmtDate(r.created_at)}</TableCell>
                     <TableCell className="px-4 py-3">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive transition-all"
-                          >
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-all">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(r.id)}>
-                              Eliminar
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleDelete(r.id)}>Eliminar</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

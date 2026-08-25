@@ -9,31 +9,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { toUserFriendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>) => ({
-    next:
-      typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
-        ? s.next
-        : "",
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : "",
   }),
   head: () => ({
     meta: [
-      { title: "Iniciar sesión — BioTrack" },
-      {
-        name: "description",
-        content: "Accede a BioTrack para gestionar tu bioterio de forma profesional.",
-      },
-      { property: "og:title", content: "Iniciar sesión — BioTrack" },
-      {
-        property: "og:description",
-        content: "Accede a BioTrack para gestionar tu bioterio de forma profesional.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/login" },
+      { title: 'Iniciar sesión — BioTrack' },
+      { name: "description", content: 'Accede a BioTrack para gestionar tu bioterio de forma profesional.' },
+      { property: "og:title", content: 'Iniciar sesión — BioTrack' },
+      { property: "og:description", content: 'Accede a BioTrack para gestionar tu bioterio de forma profesional.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/login' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/login" }],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/login' }],
   }),
   component: LoginPage,
 });
@@ -47,14 +38,12 @@ function LoginPage() {
   const { user } = useAuth();
   const { next } = Route.useSearch();
 
-  const goNext = useCallback(() => {
+  const goNext = () => {
     if (next) window.location.assign(next);
     else navigate({ to: "/" });
-  }, [next, navigate]);
+  };
 
-  useEffect(() => {
-    if (user) goNext();
-  }, [user, goNext]);
+  useEffect(() => { if (user) goNext(); }, [user]);
 
   const signIn = async () => {
     setLoading(true);
@@ -65,10 +54,11 @@ function LoginPage() {
   };
   const signUp = async () => {
     setLoading(true);
-    const redirect = next ? `${window.location.origin}${next}` : window.location.origin;
+    const redirect = next
+      ? `${window.location.origin}${next}`
+      : window.location.origin;
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email, password,
       options: { emailRedirectTo: redirect, data: { full_name: name } },
     });
     setLoading(false);
@@ -76,7 +66,9 @@ function LoginPage() {
     toast.success("Cuenta creada. Verifica tu email.");
   };
   const google = async () => {
-    const redirect = next ? `${window.location.origin}${next}` : window.location.origin;
+    const redirect = next
+      ? `${window.location.origin}${next}`
+      : window.location.origin;
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirect });
     if (r.error) toast.error(String(r.error));
   };
@@ -86,13 +78,9 @@ function LoginPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,oklch(0.72_0.17_158/0.15),transparent_60%),radial-gradient(circle_at_70%_80%,oklch(0.70_0.16_280/0.10),transparent_60%)]" />
       <div className="relative w-full max-w-md">
         <div className="flex items-center justify-center mb-6">
-          <div className="h-12 w-12 rounded-xl bg-gradient-emerald grid place-items-center text-primary-foreground font-bold text-xl mr-3">
-            B
-          </div>
+          <div className="h-12 w-12 rounded-xl bg-gradient-emerald grid place-items-center text-primary-foreground font-bold text-xl mr-3">B</div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              BioTrack — Gestión profesional de bioterio
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">BioTrack — Gestión profesional de bioterio</h1>
             <p className="text-xs text-muted-foreground">Gestión profesional de bioterio</p>
           </div>
         </div>
@@ -104,43 +92,16 @@ function LoginPage() {
             </TabsList>
 
             <TabsContent value="signin" className="space-y-3">
-              <div>
-                <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <Label>Contraseña</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button className="w-full" onClick={signIn} disabled={loading}>
-                Entrar
-              </Button>
+              <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div><Label>Contraseña</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+              <Button className="w-full" onClick={signIn} disabled={loading}>Entrar</Button>
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-3">
-              <div>
-                <Label>Nombre</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <Label>Contraseña</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button className="w-full" onClick={signUp} disabled={loading}>
-                Crear cuenta
-              </Button>
+              <div><Label>Nombre</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+              <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div><Label>Contraseña</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+              <Button className="w-full" onClick={signUp} disabled={loading}>Crear cuenta</Button>
             </TabsContent>
           </Tabs>
 
