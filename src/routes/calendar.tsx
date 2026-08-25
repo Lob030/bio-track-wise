@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
+import { AdminPageOnly } from "@/components/role-gate";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,18 +13,26 @@ import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 export const Route = createFileRoute("/calendar")({
   head: () => ({
     meta: [
-      { title: 'Calendario — BioTrack' },
-      { name: "description", content: 'Visualiza eventos, tareas y fechas clave de tu bioterio en BioTrack.' },
-      { property: "og:title", content: 'Calendario — BioTrack' },
-      { property: "og:description", content: 'Visualiza eventos, tareas y fechas clave de tu bioterio en BioTrack.' },
-      { property: "og:url", content: 'https://biostrack.lovable.app/calendar' },
+      { title: "Calendario — BioTrack" },
+      {
+        name: "description",
+        content: "Visualiza eventos, tareas y fechas clave de tu bioterio en BioTrack.",
+      },
+      { property: "og:title", content: "Calendario — BioTrack" },
+      {
+        property: "og:description",
+        content: "Visualiza eventos, tareas y fechas clave de tu bioterio en BioTrack.",
+      },
+      { property: "og:url", content: "https://biostrack.lovable.app/calendar" },
     ],
-    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/calendar' }],
+    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/calendar" }],
   }),
   component: () => (
-    <TierGate min="gold" module="Calendario">
-      <CalendarPage />
-    </TierGate>
+    <AdminPageOnly>
+      <TierGate min="gold" module="Calendario">
+        <CalendarPage />
+      </TierGate>
+    </AdminPageOnly>
   ),
 });
 
@@ -59,9 +68,7 @@ function CalendarPage() {
   const { data: species } = useQuery({
     queryKey: ["species-calendar"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("species")
-        .select("id, name, size_rules, kind");
+      const { data, error } = await supabase.from("species").select("id, name, size_rules, kind");
       if (error) throw error;
       return data;
     },
@@ -85,8 +92,8 @@ function CalendarPage() {
   const events = useMemo((): CalendarEvent[] => {
     const evts: CalendarEvent[] = [];
 
-    (lots ?? []).forEach(lot => {
-      const sp = (species ?? []).find(s => s.id === lot.species_id);
+    (lots ?? []).forEach((lot) => {
+      const sp = (species ?? []).find((s) => s.id === lot.species_id);
       const rules = (sp?.size_rules as any[]) ?? [];
       const startDate = new Date(lot.started_at);
 
@@ -136,7 +143,7 @@ function CalendarPage() {
   // Group events by date
   const eventsByDate = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
-    events.forEach(e => {
+    events.forEach((e) => {
       if (!map[e.date]) map[e.date] = [];
       map[e.date].push(e);
     });
@@ -146,16 +153,23 @@ function CalendarPage() {
   // Calendar grid generation
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  const monthName = new Date(currentYear, currentMonth).toLocaleString('es-MX', { month: 'long', year: 'numeric' });
+  const monthName = new Date(currentYear, currentMonth).toLocaleString("es-MX", {
+    month: "long",
+    year: "numeric",
+  });
 
   const prevMonth = () => {
-    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
-    else setCurrentMonth(m => m - 1);
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear((y) => y - 1);
+    } else setCurrentMonth((m) => m - 1);
   };
 
   const nextMonth = () => {
-    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
-    else setCurrentMonth(m => m + 1);
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear((y) => y + 1);
+    } else setCurrentMonth((m) => m + 1);
   };
 
   const selectedEvents = selectedDate ? (eventsByDate[selectedDate] ?? []) : [];
@@ -172,15 +186,24 @@ function CalendarPage() {
           <Card className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <Button variant="ghost" size="sm" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="sm" onClick={prevMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
               <h2 className="text-lg font-semibold capitalize">{monthName}</h2>
-              <Button variant="ghost" size="sm" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="sm" onClick={nextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
 
             {/* Weekday headers */}
             <div className="grid grid-cols-7 mb-2">
-              {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => (
-                <div key={d} className="text-center text-xs text-muted-foreground py-1 font-semibold">{d}</div>
+              {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((d) => (
+                <div
+                  key={d}
+                  className="text-center text-xs text-muted-foreground py-1 font-semibold"
+                >
+                  {d}
+                </div>
               ))}
             </div>
 
@@ -194,7 +217,7 @@ function CalendarPage() {
               {/* Day cells */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
-                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                 const dayEvents = eventsByDate[dateStr] ?? [];
                 const isToday = dateStr === today.toISOString().split("T")[0];
                 const isSelected = dateStr === selectedDate;
@@ -209,17 +232,26 @@ function CalendarPage() {
                       ${isSelected ? "bg-primary/20 ring-1 ring-primary" : "hover:bg-muted/50"}
                     `}
                   >
-                    <span className={`text-xs font-medium ${isToday ? "text-primary" : "text-foreground"}`}>{day}</span>
+                    <span
+                      className={`text-xs font-medium ${isToday ? "text-primary" : "text-foreground"}`}
+                    >
+                      {day}
+                    </span>
                     <div className="flex flex-col gap-0.5 mt-0.5">
                       {dayEvents.slice(0, 2).map((e, idx) => (
-                        <div key={idx}
+                        <div
+                          key={idx}
                           className="text-[9px] leading-tight px-1 rounded-sm truncate"
-                          style={{ backgroundColor: `${e.color}25`, color: e.color }}>
-                          {e.type === "order_due" ? "📦" : e.type === "ready_to_sell" ? "💰" : "📈"} {e.size ?? e.title.split(" ")[1]}
+                          style={{ backgroundColor: `${e.color}25`, color: e.color }}
+                        >
+                          {e.type === "order_due" ? "📦" : e.type === "ready_to_sell" ? "💰" : "📈"}{" "}
+                          {e.size ?? e.title.split(" ")[1]}
                         </div>
                       ))}
                       {dayEvents.length > 2 && (
-                        <span className="text-[9px] text-muted-foreground">+{dayEvents.length - 2}</span>
+                        <span className="text-[9px] text-muted-foreground">
+                          +{dayEvents.length - 2}
+                        </span>
                       )}
                     </div>
                   </button>
@@ -250,18 +282,32 @@ function CalendarPage() {
           {selectedDate ? (
             <Card className="p-4">
               <h3 className="font-semibold mb-3 text-sm">
-                {new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {new Date(selectedDate + "T12:00:00").toLocaleDateString("es-MX", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })}
               </h3>
               {selectedEvents.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Sin eventos este día.</p>
               ) : (
                 <div className="space-y-2">
                   {selectedEvents.map((e, i) => (
-                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg border border-border/50" style={{ backgroundColor: `${e.color}10` }}>
-                      <span>{e.type === "order_due" ? "📦" : e.type === "ready_to_sell" ? "💰" : "📈"}</span>
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 p-2 rounded-lg border border-border/50"
+                      style={{ backgroundColor: `${e.color}10` }}
+                    >
+                      <span>
+                        {e.type === "order_due" ? "📦" : e.type === "ready_to_sell" ? "💰" : "📈"}
+                      </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: e.color }}>{e.title}</p>
-                        {e.lotCode && <p className="text-xs text-muted-foreground">Lote: {e.lotCode}</p>}
+                        <p className="text-sm font-medium truncate" style={{ color: e.color }}>
+                          {e.title}
+                        </p>
+                        {e.lotCode && (
+                          <p className="text-xs text-muted-foreground">Lote: {e.lotCode}</p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -270,7 +316,9 @@ function CalendarPage() {
             </Card>
           ) : (
             <Card className="p-4">
-              <p className="text-sm text-muted-foreground text-center py-4">Selecciona un día para ver sus eventos</p>
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Selecciona un día para ver sus eventos
+              </p>
             </Card>
           )}
 
@@ -278,22 +326,38 @@ function CalendarPage() {
           <Card className="p-4">
             <h3 className="font-semibold mb-3 text-sm">Próximos 7 días</h3>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {Array.from({ length: 7 }).map((_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() + i);
-                const dateStr = d.toISOString().split("T")[0];
-                const dayEvts = eventsByDate[dateStr] ?? [];
-                if (dayEvts.length === 0) return null;
-                return (
-                  <div key={dateStr}>
-                    <p className="text-xs text-muted-foreground font-medium">{i === 0 ? "🔴 Hoy" : i === 1 ? "🟡 Mañana" : d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })}</p>
-                    {dayEvts.slice(0, 2).map((e, j) => (
-                      <p key={j} className="text-xs font-medium truncate" style={{ color: e.color }}>{e.title}</p>
-                    ))}
-                    {dayEvts.length > 2 && <p className="text-xs text-muted-foreground">+{dayEvts.length-2} más</p>}
-                  </div>
-                );
-              }).filter(Boolean)}
+              {Array.from({ length: 7 })
+                .map((_, i) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + i);
+                  const dateStr = d.toISOString().split("T")[0];
+                  const dayEvts = eventsByDate[dateStr] ?? [];
+                  if (dayEvts.length === 0) return null;
+                  return (
+                    <div key={dateStr}>
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {i === 0
+                          ? "🔴 Hoy"
+                          : i === 1
+                            ? "🟡 Mañana"
+                            : d.toLocaleDateString("es-MX", { weekday: "short", day: "numeric" })}
+                      </p>
+                      {dayEvts.slice(0, 2).map((e, j) => (
+                        <p
+                          key={j}
+                          className="text-xs font-medium truncate"
+                          style={{ color: e.color }}
+                        >
+                          {e.title}
+                        </p>
+                      ))}
+                      {dayEvts.length > 2 && (
+                        <p className="text-xs text-muted-foreground">+{dayEvts.length - 2} más</p>
+                      )}
+                    </div>
+                  );
+                })
+                .filter(Boolean)}
             </div>
           </Card>
         </div>

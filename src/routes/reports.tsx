@@ -2,11 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { FileDown, Loader2 } from "lucide-react";
+import { Activity, ArrowDownUp, FileDown, Loader2, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
+import { AdminPageOnly } from "@/components/role-gate";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,21 +38,37 @@ import {
   CartesianGrid,
 } from "recharts";
 
+function lotCodeForReport(
+  lots: Array<{ id: string; lot_code: string | null }> | null | undefined,
+  lotId: string,
+) {
+  const lot = lots?.find((item) => item.id === lotId);
+  return lot?.lot_code ?? lotId.slice(0, 8);
+}
+
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: 'Reportes — BioTrack' },
-      { name: "description", content: 'Genera reportes y estadísticas detalladas de tu bioterio en BioTrack.' },
-      { property: "og:title", content: 'Reportes — BioTrack' },
-      { property: "og:description", content: 'Genera reportes y estadísticas detalladas de tu bioterio en BioTrack.' },
-      { property: "og:url", content: 'https://biostrack.lovable.app/reports' },
+      { title: "Reportes — BioTrack" },
+      {
+        name: "description",
+        content: "Genera reportes y estadísticas detalladas de tu bioterio en BioTrack.",
+      },
+      { property: "og:title", content: "Reportes — BioTrack" },
+      {
+        property: "og:description",
+        content: "Genera reportes y estadísticas detalladas de tu bioterio en BioTrack.",
+      },
+      { property: "og:url", content: "https://biostrack.lovable.app/reports" },
     ],
-    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/reports' }],
+    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/reports" }],
   }),
   component: () => (
-    <TierGate min="gold" module="Reportes">
-      <ReportsPage />
-    </TierGate>
+    <AdminPageOnly>
+      <TierGate min="gold" module="Reportes">
+        <ReportsPage />
+      </TierGate>
+    </AdminPageOnly>
   ),
 });
 
@@ -65,12 +80,23 @@ function ReportsPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>("month");
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
+  const reportStartAt = useMemo(() => {
+    const date = new Date();
+    const days =
+      timeframe === "day" ? 1 : timeframe === "week" ? 7 : timeframe === "month" ? 30 : 365;
+    date.setDate(date.getDate() - days);
+    return date.toISOString();
+  }, [timeframe]);
 
   const downloadPDF = async () => {
     if (!reportRef.current) return;
     setGeneratingPDF(true);
 
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         useCORS: true,
@@ -86,7 +112,7 @@ function ReportsPage() {
       });
 
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-      
+
       const dateStr = new Date().toISOString().split("T")[0];
       pdf.save(`BioTrack-Reporte-${dateStr}.pdf`);
 
@@ -101,59 +127,67 @@ function ReportsPage() {
 
   /* ── Fetching Data via React Query ── */
   const { data: orders, isLoading: isLoadingOrders } = useQuery({
-    queryKey: ["orders", "all"],
+    queryKey: ["reports", "orders", reportStartAt],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, clients(id, name, profile)")
-        .order("created_at", { ascending: false });
+        .select("id,client_id,status,total_mxn,created_at,clients(id,name,profile)")
+        .gte("created_at", reportStartAt)
+        .order("created_at", { ascending: false })
+        .limit(1000);
       if (error) throw error;
       return data;
     },
   });
 
   const { data: clients, isLoading: isLoadingClients } = useQuery({
-    queryKey: ["clients", "all"],
+    queryKey: ["reports", "clients", reportStartAt],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("id,profile,created_at")
+        .gte("created_at", reportStartAt)
+        .order("created_at", { ascending: false })
+        .limit(1000);
       if (error) throw error;
       return data;
     },
   });
 
   const { data: warehouseFood, isLoading: isLoadingFood } = useQuery({
-    queryKey: ["warehouse_food", "all"],
+    queryKey: ["reports", "warehouse-food"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouse_food")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("id,quantity_grams,unit_cost,audited_at,created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
       if (error) throw error;
       return data;
     },
   });
 
   const { data: lots, isLoading: isLoadingLots } = useQuery({
-    queryKey: ["lots", "all"],
+    queryKey: ["reports", "lots"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lots")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select(
+          "id,lot_code,kind,lot_type,status,box_id,species_id,parent_lot_id,males,females,unsexed,mass_grams",
+        )
+        .order("created_at", { ascending: false })
+        .limit(2000);
       if (error) throw error;
       return data;
     },
   });
 
   const { data: boxes, isLoading: isLoadingBoxes } = useQuery({
-    queryKey: ["boxes", "all"],
+    queryKey: ["reports", "boxes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("boxes")
-        .select("*")
+        .select("id,code,location")
         .order("code", { ascending: true });
       if (error) throw error;
       return data;
@@ -161,12 +195,60 @@ function ReportsPage() {
   });
 
   const { data: species, isLoading: isLoadingSpecies } = useQuery({
-    queryKey: ["species", "all"],
+    queryKey: ["reports", "species"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("species")
-        .select("*")
+        .select("id,name")
         .order("name", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: lotEvents, isLoading: isLoadingLotEvents } = useQuery({
+    queryKey: ["reports", "lot-events", reportStartAt],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lot_events")
+        .select(
+          "id,event_at,created_at,event_type,lot_id,cause,observations,notes,mass_delta,males_delta,females_delta,unsexed_delta",
+        )
+        .gte("event_at", reportStartAt)
+        .order("event_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: inventoryEvents, isLoading: isLoadingInventoryEvents } = useQuery({
+    queryKey: ["reports", "inventory-events", reportStartAt],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("inventory_events")
+        .select(
+          "id,event_at,created_at,event_type,lot_id,cause,observations,mass_delta,males_delta,females_delta,unsexed_delta",
+        )
+        .gte("event_at", reportStartAt)
+        .order("event_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: reproductionEvents, isLoading: isLoadingReproductionEvents } = useQuery({
+    queryKey: ["reports", "reproduction-events", reportStartAt],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reproduction_events")
+        .select(
+          "id,event_at,created_at,event_type,primary_lot_id,cause,observations,mass_grams,quantity",
+        )
+        .gte("event_at", reportStartAt)
+        .order("event_at", { ascending: false })
+        .limit(250);
       if (error) throw error;
       return data;
     },
@@ -178,7 +260,10 @@ function ReportsPage() {
     isLoadingFood ||
     isLoadingLots ||
     isLoadingBoxes ||
-    isLoadingSpecies;
+    isLoadingSpecies ||
+    isLoadingLotEvents ||
+    isLoadingInventoryEvents ||
+    isLoadingReproductionEvents;
 
   /* ── Date Filtering Helpers ── */
   const filteredData = useMemo(() => {
@@ -229,10 +314,7 @@ function ReportsPage() {
   const kpis = useMemo(() => {
     const historicalOrders = filteredData.orders.filter((o) => o.status === "historial");
 
-    const totalRevenue = historicalOrders.reduce(
-      (sum, o) => sum + (Number(o.total_mxn) || 0),
-      0
-    );
+    const totalRevenue = historicalOrders.reduce((sum, o) => sum + (Number(o.total_mxn) || 0), 0);
 
     return {
       netEarnings: totalRevenue,
@@ -294,7 +376,7 @@ function ReportsPage() {
       filteredData.food.forEach((f) => {
         const d = f.audited_at
           ? new Date(
-              ...((f.audited_at.split("-").map(Number) as [number, number, number]) || [0, 0, 0])
+              ...((f.audited_at.split("-").map(Number) as [number, number, number]) || [0, 0, 0]),
             )
           : new Date(f.created_at);
         if (d.toDateString() === todayStr) {
@@ -370,7 +452,7 @@ function ReportsPage() {
         if (o.status !== "historial") return;
         const d = new Date(o.created_at);
         const diffDays = Math.floor(
-          (todayMidnight.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)
+          (todayMidnight.getTime() - d.getTime()) / (1000 * 60 * 60 * 24),
         );
         const found = weeks.find((w) => diffDays >= w.endDaysAgo && diffDays <= w.startDaysAgo);
         if (found) found.Ventas += Number(o.total_mxn) || 0;
@@ -385,7 +467,7 @@ function ReportsPage() {
           d = new Date(f.created_at);
         }
         const diffDays = Math.floor(
-          (todayMidnight.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)
+          (todayMidnight.getTime() - d.getTime()) / (1000 * 60 * 60 * 24),
         );
         const found = weeks.find((w) => diffDays >= w.endDaysAgo && diffDays <= w.startDaysAgo);
         if (found) {
@@ -401,7 +483,13 @@ function ReportsPage() {
     }
 
     // timeframe === "year"
-    const months: { year: number; month: number; label: string; Alimento: number; Ventas: number }[] = [];
+    const months: {
+      year: number;
+      month: number;
+      label: string;
+      Alimento: number;
+      Ventas: number;
+    }[] = [];
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -449,11 +537,12 @@ function ReportsPage() {
   const rodentBreederPerformance = useMemo(() => {
     if (!lots) return [];
 
-    const rodentBirthLots = lots.filter(
-      (l) => l.kind === "rodent" && l.lot_type === "birth"
-    );
+    const rodentBirthLots = lots.filter((l) => l.kind === "rodent" && l.lot_type === "birth");
 
-    const boxPerformance: Record<string, { totalOffspring: number; boxCode: string; location: string }> = {};
+    const boxPerformance: Record<
+      string,
+      { totalOffspring: number; boxCode: string; location: string }
+    > = {};
 
     rodentBirthLots.forEach((l) => {
       const boxId = l.box_id;
@@ -481,10 +570,13 @@ function ReportsPage() {
     if (!lots) return [];
 
     const insectEngordaLots = lots.filter(
-      (l) => l.kind === "insect" && l.lot_type === "engorda" && l.parent_lot_id !== null
+      (l) => l.kind === "insect" && l.lot_type === "engorda" && l.parent_lot_id !== null,
     );
 
-    const breederCounts: Record<string, { count: number; parentCode: string; speciesName: string }> = {};
+    const breederCounts: Record<
+      string,
+      { count: number; parentCode: string; speciesName: string }
+    > = {};
 
     insectEngordaLots.forEach((l) => {
       const parentId = l.parent_lot_id;
@@ -506,6 +598,74 @@ function ReportsPage() {
 
     return Object.values(breederCounts).sort((a, b) => b.count - a.count);
   }, [lots, species]);
+
+  const operationalReport = useMemo(() => {
+    const days =
+      timeframe === "day" ? 1 : timeframe === "week" ? 7 : timeframe === "month" ? 30 : 365;
+    const threshold = Date.now() - days * 86400000;
+    const inPeriod = (event: { event_at?: string; created_at?: string }) =>
+      new Date(event.event_at ?? event.created_at ?? 0).getTime() >= threshold;
+    const biological = (lotEvents ?? []).filter(inPeriod);
+    const inventory = (inventoryEvents ?? []).filter(inPeriod);
+    const reproduction = (reproductionEvents ?? []).filter(inPeriod);
+    const activeLots = (lots ?? []).filter((lot) => lot.status === "active");
+    const rodentPopulation = activeLots
+      .filter((lot) => lot.kind === "rodent")
+      .reduce((sum, lot) => sum + (lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0), 0);
+    const insectBiomass = activeLots
+      .filter((lot) => lot.kind === "insect")
+      .reduce((sum, lot) => sum + Number(lot.mass_grams ?? 0), 0);
+    const recent = [
+      ...biological.map((event) => ({
+        id: `lot-${event.id}`,
+        date: event.event_at,
+        type: event.event_type,
+        lotId: event.lot_id,
+        detail: event.cause ?? event.observations ?? event.notes,
+        delta:
+          event.mass_delta !== 0
+            ? `${Number(event.mass_delta).toLocaleString("es-MX")} g`
+            : `${event.males_delta + event.females_delta + event.unsexed_delta} ind.`,
+      })),
+      ...inventory
+        .filter((event) => !["birth_in", "mortality_out"].includes(event.event_type))
+        .map((event) => ({
+          id: `inventory-${event.id}`,
+          date: event.event_at,
+          type: `inventory:${event.event_type}`,
+          lotId: event.lot_id,
+          detail: event.cause ?? event.observations,
+          delta:
+            Number(event.mass_delta) !== 0
+              ? `${Number(event.mass_delta).toLocaleString("es-MX")} g`
+              : `${Number(event.males_delta) + Number(event.females_delta) + Number(event.unsexed_delta)} ind.`,
+        })),
+      ...reproduction.map((event) => ({
+        id: `repro-${event.id}`,
+        date: event.event_at,
+        type: `reproduction:${event.event_type}`,
+        lotId: event.primary_lot_id,
+        detail: event.cause ?? event.observations,
+        delta: event.mass_grams
+          ? `${event.mass_grams} g`
+          : event.quantity
+            ? `${event.quantity} ind.`
+            : "-",
+      })),
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 12);
+    return {
+      rodentPopulation,
+      insectBiomass,
+      mortalityCount: biological.filter((event) => event.event_type === "mortality").length,
+      movementCount: biological.filter((event) => event.event_type === "move").length,
+      inventoryCount: inventory.length,
+      reproductionCount: reproduction.length,
+      activeLots,
+      recent,
+    };
+  }, [timeframe, lotEvents, inventoryEvents, reproductionEvents, lots]);
 
   /* ── Empty State Check ── */
   const isPeriodEmpty = useMemo(() => {
@@ -529,7 +689,10 @@ function ReportsPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {[1, 2, 3].map((n) => (
-              <Card key={n} className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-3 shadow-sm animate-pulse">
+              <Card
+                key={n}
+                className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-3 shadow-sm animate-pulse"
+              >
                 <div className="h-4 w-24 bg-card/60 rounded" />
                 <div className="h-8 w-32 bg-card/60 rounded" />
                 <div className="h-3 w-16 bg-card/60 rounded" />
@@ -538,7 +701,10 @@ function ReportsPage() {
           </div>
           <div className="grid lg:grid-cols-2 gap-4">
             {[1, 2].map((n) => (
-              <Card key={n} className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 h-80 space-y-4 shadow-sm animate-pulse">
+              <Card
+                key={n}
+                className="p-6 border-border/50 bg-gradient-to-br from-card to-card/40 h-80 space-y-4 shadow-sm animate-pulse"
+              >
                 <div className="h-5 w-48 bg-card/60 rounded" />
                 <div className="h-56 bg-card/40 rounded-md" />
               </Card>
@@ -601,10 +767,23 @@ function ReportsPage() {
           <div className="mb-6 p-4 border-b border-border/50">
             <h1 className="text-2xl font-bold">BioTrack Central — Reporte de Bioterio</h1>
             <p className="text-muted-foreground text-sm">
-              Generado: {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              Generado:{" "}
+              {new Date().toLocaleDateString("es-MX", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </p>
             <p className="text-muted-foreground text-sm capitalize">
-              Período: {timeframe === "day" ? "Día" : timeframe === "week" ? "Semana" : timeframe === "month" ? "Mes" : "Año"}
+              Período:{" "}
+              {timeframe === "day"
+                ? "Día"
+                : timeframe === "week"
+                  ? "Semana"
+                  : timeframe === "month"
+                    ? "Mes"
+                    : "Año"}
             </p>
           </div>
         )}
@@ -619,7 +798,8 @@ function ReportsPage() {
                 ${kpis.netEarnings.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN
               </div>
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-emerald-glow" /> Ventas completadas en el período
+                <TrendingUp className="h-3 w-3 text-emerald-glow" /> Ventas completadas en el
+                período
               </div>
             </div>
             <div className="h-10 w-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-glow shadow-[0_0_15px_rgba(16,185,129,0.1)]">
@@ -653,7 +833,8 @@ function ReportsPage() {
                 +{kpis.newClients} registrados
               </div>
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Users className="h-3 w-3 text-muted-foreground" /> Adquisición en el período elegido
+                <Users className="h-3 w-3 text-muted-foreground" /> Adquisición en el período
+                elegido
               </div>
             </div>
             <div className="h-10 w-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-glow shadow-[0_0_15px_rgba(245,158,11,0.1)]">
@@ -668,9 +849,12 @@ function ReportsPage() {
             <div className="h-12 w-12 bg-accent/20 border border-border/40 rounded-full flex items-center justify-center mx-auto text-muted-foreground">
               <Calendar className="h-6 w-6" />
             </div>
-            <h3 className="font-semibold text-foreground text-sm">No hay datos analíticos para este período</h3>
+            <h3 className="font-semibold text-foreground text-sm">
+              No hay datos analíticos para este período
+            </h3>
             <p className="text-xs text-muted-foreground px-4">
-              Intenta cambiar el rango de tiempo seleccionado a un período más amplio como "Mes" o "Año" para visualizar la actividad histórica de ventas y gastos.
+              Intenta cambiar el rango de tiempo seleccionado a un período más amplio como "Mes" o
+              "Año" para visualizar la actividad histórica de ventas y gastos.
             </p>
           </Card>
         ) : (
@@ -679,15 +863,19 @@ function ReportsPage() {
             <Card className="p-5 border-border/50 bg-gradient-to-br from-card to-card/40 space-y-4 shadow-sm hover:shadow-md transition-all duration-200">
               <div className="flex items-center gap-2 border-b border-border/40 pb-3">
                 <PieChartIcon className="h-4 w-4 text-emerald-glow" />
-                <h3 className="font-semibold text-sm text-foreground">Ventas por Perfil de Cliente</h3>
+                <h3 className="font-semibold text-sm text-foreground">
+                  Ventas por Perfil de Cliente
+                </h3>
               </div>
               <div className="h-[280px] w-full flex items-center justify-center">
                 {clientProfileChartData.length === 0 ? (
-                  <div className="text-xs text-muted-foreground">Sin registros de ventas concretadas en este período.</div>
+                  <div className="text-xs text-muted-foreground">
+                    Sin registros de ventas concretadas en este período.
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                       <Pie
+                      <Pie
                         data={clientProfileChartData}
                         cx="50%"
                         cy="50%"
@@ -729,17 +917,41 @@ function ReportsPage() {
               <div className="flex items-center justify-between border-b border-border/40 pb-3">
                 <div className="flex items-center gap-2">
                   <Utensils className="h-4 w-4 text-emerald-glow" />
-                  <h3 className="font-semibold text-sm text-foreground">Costo de Alimento vs Ventas</h3>
+                  <h3 className="font-semibold text-sm text-foreground">
+                    Costo de Alimento vs Ventas
+                  </h3>
                 </div>
-                <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase tracking-widest border-border/40">
-                  {timeframe === "day" ? "24 Horas" : timeframe === "week" ? "Semanal" : timeframe === "month" ? "Mensual" : "Anual"}
+                <Badge
+                  variant="outline"
+                  className="text-[10px] text-muted-foreground uppercase tracking-widest border-border/40"
+                >
+                  {timeframe === "day"
+                    ? "24 Horas"
+                    : timeframe === "week"
+                      ? "Semanal"
+                      : timeframe === "month"
+                        ? "Mensual"
+                        : "Anual"}
                 </Badge>
               </div>
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={feedCostChartData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #1e293b)" opacity={0.25} />
-                    <XAxis dataKey="label" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                  <ComposedChart
+                    data={feedCostChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border, #1e293b)"
+                      opacity={0.25}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      stroke="#64748b"
+                      fontSize={9}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <YAxis stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
                     <Tooltip
                       contentStyle={{
@@ -753,14 +965,134 @@ function ReportsPage() {
                       formatter={(val, name) => [`$${Number(val).toLocaleString()} MXN`, name]}
                     />
                     <Legend iconType="rect" iconSize={10} wrapperStyle={{ fontSize: "10px" }} />
-                    <Bar dataKey="Ventas" name="Venta Comercial" fill="#34d399" radius={[4, 4, 0, 0]} opacity={0.85} />
-                    <Line type="monotone" dataKey="Alimento" name="Costo de Alimento" stroke="#94a3b8" strokeWidth={2} dot={{ r: 3 }} />
+                    <Bar
+                      dataKey="Ventas"
+                      name="Venta Comercial"
+                      fill="#34d399"
+                      radius={[4, 4, 0, 0]}
+                      opacity={0.85}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Alimento"
+                      name="Costo de Alimento"
+                      stroke="#94a3b8"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </Card>
           </div>
         )}
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="border border-border/50 bg-card/50 p-4 rounded-md">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Activity className="h-4 w-4" /> Poblacion activa
+            </div>
+            <div className="mt-2 text-xl font-bold">{operationalReport.rodentPopulation} ind.</div>
+          </div>
+          <div className="border border-border/50 bg-card/50 p-4 rounded-md">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Scale className="h-4 w-4" /> Biomasa activa
+            </div>
+            <div className="mt-2 text-xl font-bold">
+              {operationalReport.insectBiomass.toLocaleString("es-MX")} g
+            </div>
+          </div>
+          <div className="border border-border/50 bg-card/50 p-4 rounded-md">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ArrowDownUp className="h-4 w-4" /> Movimientos de saldo
+            </div>
+            <div className="mt-2 text-xl font-bold">{operationalReport.inventoryCount}</div>
+          </div>
+          <div className="border border-border/50 bg-card/50 p-4 rounded-md">
+            <div className="text-xs text-muted-foreground">Mortalidad / reproduccion</div>
+            <div className="mt-2 text-xl font-bold">
+              {operationalReport.mortalityCount} / {operationalReport.reproductionCount}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-[1.35fr_1fr] gap-4">
+          <Card className="border-border/50 overflow-hidden">
+            <div className="p-4 border-b border-border/40">
+              <h3 className="font-semibold text-sm">Eventos biologicos y operativos recientes</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                {operationalReport.movementCount} movimientos entre cajas en el periodo
+              </p>
+            </div>
+            <div className="overflow-x-auto max-h-[340px] overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-accent/20 text-muted-foreground sticky top-0">
+                  <tr>
+                    <th className="text-left p-3">Fecha</th>
+                    <th className="text-left p-3">Evento</th>
+                    <th className="text-left p-3">Lote</th>
+                    <th className="text-right p-3">Cambio</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {operationalReport.recent.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                        Sin eventos en el periodo.
+                      </td>
+                    </tr>
+                  ) : (
+                    operationalReport.recent.map((event) => (
+                      <tr key={event.id} title={event.detail ?? undefined}>
+                        <td className="p-3 whitespace-nowrap">
+                          {new Date(event.date).toLocaleString("es-MX")}
+                        </td>
+                        <td className="p-3">
+                          <Badge variant="outline">{event.type}</Badge>
+                        </td>
+                        <td className="p-3 font-mono">{lotCodeForReport(lots, event.lotId)}</td>
+                        <td className="p-3 text-right font-medium">{event.delta}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          <Card className="border-border/50 overflow-hidden">
+            <div className="p-4 border-b border-border/40">
+              <h3 className="font-semibold text-sm">Saldos actuales por lote</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Derivados de operaciones transaccionales
+              </p>
+            </div>
+            <div className="max-h-[340px] overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-accent/20 text-muted-foreground sticky top-0">
+                  <tr>
+                    <th className="text-left p-3">Lote</th>
+                    <th className="text-left p-3">Tipo</th>
+                    <th className="text-right p-3">Saldo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {operationalReport.activeLots.slice(0, 20).map((lot) => (
+                    <tr key={lot.id}>
+                      <td className="p-3 font-mono">{lot.lot_code ?? lot.id.slice(0, 8)}</td>
+                      <td className="p-3">{lot.kind === "rodent" ? "Roedor" : "Insecto"}</td>
+                      <td className="p-3 text-right font-medium">
+                        {lot.kind === "rodent"
+                          ? `${(lot.males ?? 0) + (lot.females ?? 0) + (lot.unsexed ?? 0)} ind.`
+                          : `${Number(lot.mass_grams ?? 0).toLocaleString("es-MX")} g`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
 
         {/* ── BIOLOGICAL BREEDER PERFORMANCE SECTION ── */}
         <div className="grid lg:grid-cols-2 gap-4">
@@ -769,9 +1101,14 @@ function ReportsPage() {
             <div className="p-4 border-b border-border/40 bg-accent/15 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-glow" />
-                <h3 className="font-semibold text-sm text-foreground">Rendimiento de Cajas (Roedores)</h3>
+                <h3 className="font-semibold text-sm text-foreground">
+                  Rendimiento de Cajas (Roedores)
+                </h3>
               </div>
-              <Badge variant="outline" className="text-[9px] border-emerald-500/20 text-emerald-glow bg-emerald-500/5">
+              <Badge
+                variant="outline"
+                className="text-[9px] border-emerald-500/20 text-emerald-glow bg-emerald-500/5"
+              >
                 Cunas de Nacimiento
               </Badge>
             </div>
@@ -793,14 +1130,20 @@ function ReportsPage() {
                     </tr>
                   ) : (
                     rodentBreederPerformance.map((box, idx) => (
-                      <tr key={idx} className={`hover:bg-accent/15 transition-colors ${idx % 2 === 0 ? "bg-accent/5" : ""}`}>
+                      <tr
+                        key={idx}
+                        className={`hover:bg-accent/15 transition-colors ${idx % 2 === 0 ? "bg-accent/5" : ""}`}
+                      >
                         <td className="p-3 font-mono font-bold text-emerald-glow flex items-center gap-1.5">
                           <span className="w-4 text-[9px] text-muted-foreground">#{idx + 1}</span>
                           {box.boxCode}
                         </td>
                         <td className="p-3 text-muted-foreground font-medium">{box.location}</td>
                         <td className="p-3 text-right font-bold text-foreground">
-                          {box.totalOffspring} <span className="text-[10px] font-normal text-muted-foreground">ind.</span>
+                          {box.totalOffspring}{" "}
+                          <span className="text-[10px] font-normal text-muted-foreground">
+                            ind.
+                          </span>
                         </td>
                       </tr>
                     ))
@@ -815,9 +1158,14 @@ function ReportsPage() {
             <div className="p-4 border-b border-border/40 bg-accent/15 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Layers className="h-4 w-4 text-emerald-glow" />
-                <h3 className="font-semibold text-sm text-foreground">Desempeño de Lotes Insectos</h3>
+                <h3 className="font-semibold text-sm text-foreground">
+                  Desempeño de Lotes Insectos
+                </h3>
               </div>
-              <Badge variant="outline" className="text-[9px] border-amber-500/20 text-amber-glow bg-amber-500/5">
+              <Badge
+                variant="outline"
+                className="text-[9px] border-amber-500/20 text-amber-glow bg-amber-500/5"
+              >
                 Proliferación de Colonias
               </Badge>
             </div>
@@ -839,12 +1187,17 @@ function ReportsPage() {
                     </tr>
                   ) : (
                     insectBreederPerformance.map((parent, idx) => (
-                      <tr key={idx} className={`hover:bg-accent/15 transition-colors ${idx % 2 === 0 ? "bg-accent/5" : ""}`}>
+                      <tr
+                        key={idx}
+                        className={`hover:bg-accent/15 transition-colors ${idx % 2 === 0 ? "bg-accent/5" : ""}`}
+                      >
                         <td className="p-3 font-mono font-bold text-amber-glow flex items-center gap-1.5">
                           <span className="w-4 text-[9px] text-muted-foreground">#{idx + 1}</span>
                           {parent.parentCode}
                         </td>
-                        <td className="p-3 text-muted-foreground font-medium">{parent.speciesName}</td>
+                        <td className="p-3 text-muted-foreground font-medium">
+                          {parent.speciesName}
+                        </td>
                         <td className="p-3 text-right font-bold text-foreground flex items-center justify-end gap-1.5">
                           {parent.count}
                           <ChevronRight className="h-3 w-3 text-muted-foreground opacity-55" />

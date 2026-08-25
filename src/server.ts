@@ -2,17 +2,24 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  isAllowedTelemetryOrigin,
+  parseClientErrorPayload,
+  withSecurityHeaders,
+} from "./lib/server-security";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
+
+type RuntimeEnv = { APP_VERSION?: string };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => ((m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry)),
+      (m) => (m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry),
     );
   }
   return serverEntryPromise;
@@ -67,14 +74,45 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 }
 
 export default {
-  async fetch(request: Request, env: unknown, ctx: unknown) {
+  async fetch(request: Request, env: RuntimeEnv, ctx: unknown) {
+    const url = new URL(request.url);
+    if (url.pathname === "/healthz") {
+      return withSecurityHeaders(
+        request,
+        new Response(
+          JSON.stringify({
+            status: "ok",
+            service: "biotrack",
+            version: env.APP_VERSION ?? "unknown",
+          }),
+          { headers: { "cache-control": "no-store", "content-type": "application/json" } },
+        ),
+      );
+    }
+    if (url.pathname === "/client-errors" && request.method === "POST") {
+      if (!isAllowedTelemetryOrigin(request)) {
+        return withSecurityHeaders(request, new Response(null, { status: 403 }));
+      }
+      if (!request.headers.get("content-type")?.startsWith("application/json")) {
+        return withSecurityHeaders(request, new Response(null, { status: 415 }));
+      }
+      const contentLength = Number(request.headers.get("content-length") ?? "0");
+      if (contentLength > 16_384) {
+        return withSecurityHeaders(request, new Response(null, { status: 413 }));
+      }
+
+      const payload = parseClientErrorPayload(await request.text());
+      if (!payload) return withSecurityHeaders(request, new Response(null, { status: 400 }));
+      console.error("[biotrack-client-error]", JSON.stringify(payload));
+      return withSecurityHeaders(request, new Response(null, { status: 204 }));
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(request, await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
-      return brandedErrorResponse();
+      return withSecurityHeaders(request, brandedErrorResponse());
     }
   },
 };

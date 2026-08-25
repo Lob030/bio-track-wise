@@ -22,6 +22,28 @@ export function useProfile() {
   });
 }
 
+export function useOrgTier(): Tier {
+  const { data: profile } = useProfile();
+  const orgId = profile?.organization_id;
+
+  const { data: orgTier } = useQuery({
+    queryKey: ["org-tier", orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("tier")
+        .eq("id", orgId!)
+        .single();
+      if (error) throw error;
+      return (data?.tier ?? "bronze") as Tier;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return orgTier ?? "bronze";
+}
+
 export function tierAllows(userTier: Tier | undefined, min: Tier): boolean {
   if (!userTier) return false;
   return RANK[userTier] >= RANK[min];

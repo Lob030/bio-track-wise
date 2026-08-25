@@ -86,9 +86,7 @@ function TreeNode({ node, kind, speciesMap, depth = 0 }: TreeNodeProps) {
   const hasChildren = node.children.length > 0;
 
   const population =
-    kind === "rodent"
-      ? (node.males ?? 0) + (node.females ?? 0) + (node.unsexed ?? 0)
-      : null;
+    kind === "rodent" ? (node.males ?? 0) + (node.females ?? 0) + (node.unsexed ?? 0) : null;
   const massGrams = kind === "insect" ? node.mass_grams : null;
 
   const isActive = node.status === "active";
@@ -97,7 +95,8 @@ function TreeNode({ node, kind, speciesMap, depth = 0 }: TreeNodeProps) {
     <div style={{ paddingLeft: depth > 0 ? "2rem" : 0 }}>
       <div
         style={{
-          borderLeft: depth > 0 ? "2px solid var(--color-border-secondary, hsl(var(--border)))" : "none",
+          borderLeft:
+            depth > 0 ? "2px solid var(--color-border-secondary, hsl(var(--border)))" : "none",
           paddingLeft: depth > 0 ? "0.75rem" : 0,
           marginBottom: "0.5rem",
         }}
@@ -150,8 +149,7 @@ function TreeNode({ node, kind, speciesMap, depth = 0 }: TreeNodeProps) {
               <span className="text-[11px] text-muted-foreground">
                 {kind === "rodent" && population !== null && (
                   <>
-                    <span className="font-semibold text-foreground">{population}</span>{" "}
-                    indiv.
+                    <span className="font-semibold text-foreground">{population}</span> indiv.
                     {(node.males !== null || node.females !== null || node.unsexed !== null) && (
                       <span className="ml-1 text-muted-foreground/70">
                         (♂{node.males ?? 0} ♀{node.females ?? 0}{" "}
@@ -220,7 +218,7 @@ export function LotTree({ kind }: { kind: Kind }) {
         await supabase
           .from("lots")
           .select(
-            "id, lot_code, parent_lot_id, lot_type, species_id, status, started_at, males, females, unsexed, mass_grams"
+            "id, lot_code, parent_lot_id, lot_type, species_id, status, started_at, males, females, unsexed, mass_grams",
           )
           .eq("kind", kind)
           .order("started_at", { ascending: true })
@@ -278,18 +276,14 @@ export function LotTree({ kind }: { kind: Kind }) {
       {/* Tree */}
       {filteredRoots.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
-          {lots.length === 0 ? "Sin lotes registrados." : "No hay lotes para la especie seleccionada."}
+          {lots.length === 0
+            ? "Sin lotes registrados."
+            : "No hay lotes para la especie seleccionada."}
         </Card>
       ) : (
         <div className="space-y-2">
           {filteredRoots.map((root) => (
-            <TreeNode
-              key={root.id}
-              node={root}
-              kind={kind}
-              speciesMap={speciesMap}
-              depth={0}
-            />
+            <TreeNode key={root.id} node={root} kind={kind} speciesMap={speciesMap} depth={0} />
           ))}
         </div>
       )}

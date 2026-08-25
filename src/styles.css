@@ -49,7 +49,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* BioTrack — dynamic responsive theme variable mapping */
+/* BioTrack dynamic responsive theme variable mapping */
 /* Note: --color-background, --color-text, --color-surface, --color-primary,
    --color-secondary, --color-text-muted, --color-surface-border, etc. are
    injected dynamically by use-theme.ts into :root element style.
@@ -57,7 +57,7 @@
 :root {
   --radius: 0.625rem;
 
-  /* Tailwind shadcn tokens → dynamic theme vars */
+  /* Tailwind shadcn tokens to dynamic theme vars */
   --background: var(--color-background);
   --foreground: var(--color-text);
 
@@ -137,29 +137,240 @@
   --sidebar-ring: var(--color-primary);
 }
 
-html, body { background-color: var(--color-background); color: var(--color-foreground); }
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
-  h1, h2, h3 { letter-spacing: -0.02em; }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: 0;
+  }
 }
 
-.bg-gradient-emerald { background: linear-gradient(135deg, oklch(0.72 0.17 158), oklch(0.55 0.16 180)); }
-.text-emerald-glow { color: oklch(0.78 0.17 158); }
-.text-amber-glow { color: oklch(0.82 0.17 75); }
-.text-red-glow { color: oklch(0.70 0.22 25); }
+.premium-app-shell {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 24rem
+    ),
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--color-secondary) 7%, transparent),
+      transparent 34rem
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-surface) 18%, var(--color-background)),
+      var(--color-background)
+    );
+  position: relative;
+}
 
-/* Global card surface — uses theme tokens. Subtle, no aggressive hover transform */
+.premium-app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--color-surface-border) 18%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-surface-border) 18%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.36), transparent 70%);
+}
+
+.premium-topbar {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--color-text) 4%, transparent),
+    0 14px 40px -30px rgba(0, 0, 0, 0.7);
+}
+
+.premium-main {
+  position: relative;
+  isolation: isolate;
+}
+
+.premium-page {
+  animation: premium-page-enter 260ms ease-out both;
+}
+
+@keyframes premium-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.premium-page-header {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.premium-page-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+.premium-page-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.premium-content {
+  position: relative;
+}
+
+.premium-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-surface-border) 82%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  color: var(--color-text-muted);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text) 7%, transparent);
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.premium-icon-button:hover {
+  color: var(--color-text);
+  border-color: color-mix(in srgb, var(--color-primary) 36%, var(--color-surface-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  transform: translateY(-1px);
+}
+
+.premium-status-pill {
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--color-success) 82%, var(--color-text));
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  background: color-mix(in srgb, var(--color-success) 9%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dashboard-hero {
+  padding: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--color-surface-border) 72%, transparent);
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--color-surface) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-text) 6%, transparent),
+    0 20px 54px -46px rgba(0, 0, 0, 0.95);
+}
+
+.premium-plan-badge {
+  min-height: 2rem;
+  align-items: center;
+  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.premium-kpi {
+  min-height: 8.25rem;
+}
+
+.premium-kpi:hover {
+  transform: translateY(-2px);
+}
+
+.premium-kpi-icon {
+  color: var(--color-primary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 16%, transparent),
+    color-mix(in srgb, var(--color-secondary) 8%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+.bg-gradient-emerald {
+  background: linear-gradient(135deg, oklch(0.72 0.17 158), oklch(0.55 0.16 180));
+}
+.text-emerald-glow {
+  color: oklch(0.78 0.17 158);
+}
+.text-amber-glow {
+  color: oklch(0.82 0.17 75);
+}
+.text-red-glow {
+  color: oklch(0.7 0.22 25);
+}
+
+/* Global card surface uses theme tokens. Subtle, no aggressive hover transform */
 .bg-card,
 .card {
-  background-color: var(--card);
-  border-color: var(--border);
-  transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card) 94%, var(--color-text) 4%),
+    var(--card)
+  );
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--color-text) 5%, transparent),
+    0 16px 48px -38px rgba(0, 0, 0, 0.8);
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.bg-card:hover,
+.card:hover {
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--color-text) 6%, transparent),
+    0 20px 54px -42px rgba(0, 0, 0, 0.95);
 }
 
 /* Opt-in premium glass treatment via [data-glass="true"] */
@@ -173,14 +384,21 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 
 [data-glass="true"]:hover {
   border-color: color-mix(in srgb, var(--primary) 45%, transparent);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 0 16px color-mix(in srgb, var(--primary) 14%, transparent);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.28),
+    0 0 16px color-mix(in srgb, var(--primary) 14%, transparent);
 }
 
 /* Sidebar clean bg-sidebar overrides */
 [data-sidebar="sidebar"],
 [data-sidebar="sidebar"] .bg-sidebar {
-  background-color: var(--sidebar) !important;
-  border-color: var(--sidebar-border) !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sidebar) 92%, var(--color-primary) 6%),
+    var(--sidebar)
+  ) !important;
+  border-color: color-mix(in srgb, var(--sidebar-border) 78%, transparent) !important;
+  box-shadow: 18px 0 46px -42px rgba(0, 0, 0, 0.85);
 }
 
 /* Sidebar Active Item Premium Styling */
@@ -198,7 +416,7 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 .text-red-500,
 .text-destructive,
 .text-red-glow {
-  color: oklch(0.70 0.19 15) !important; /* vivid rose-400 */
+  color: oklch(0.7 0.19 15) !important; /* vivid rose-400 */
 }
 .bg-rose-500\/10,
 .bg-destructive\/10,
@@ -249,6 +467,42 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
   border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
 }
 
+input,
+textarea,
+[role="combobox"] {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+input:focus,
+textarea:focus,
+[role="combobox"]:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+tbody tr {
+  transition: background-color 160ms ease;
+}
+
+tbody tr:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.recharts-bar-rectangle path {
+  transition: opacity 160ms ease;
+}
+
+.recharts-bar-rectangle:hover path {
+  opacity: 0.82;
+}
+
 /* Biological Structure Toggles Accents */
 .text-cyan-glow,
 .text-cyan-400 {
@@ -278,11 +532,39 @@ html, body { background-color: var(--color-background); color: var(--color-foreg
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 70%, transparent));
+  background: linear-gradient(
+    180deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 70%, transparent)
+  );
   border-radius: 4px;
   border: 2px solid var(--sidebar);
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .qr-print-area,
+  .qr-print-area * {
+    visibility: visible;
+  }
+
+  .qr-print-area {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8mm;
+  }
+
+  .qr-label {
+    break-inside: avoid;
+    border: 1px solid #000;
+  }
 }

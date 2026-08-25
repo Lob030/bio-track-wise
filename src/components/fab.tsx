@@ -31,7 +31,10 @@ export function FAB() {
   };
 
   return (
-    <div ref={ref} className="fixed bottom-6 right-6 z-40 flex flex-col-reverse items-end gap-2">
+    <div
+      ref={ref}
+      className="fixed bottom-6 right-6 z-40 hidden flex-col-reverse items-end gap-2 md:flex"
+    >
       {/* Main FAB button */}
       <button
         onClick={() => setOpen((v) => !v)}

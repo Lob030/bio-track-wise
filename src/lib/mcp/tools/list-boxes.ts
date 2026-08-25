@@ -4,14 +4,10 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 function supabaseForUser(ctx: ToolContext) {
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY!,
-    {
-      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    },
-  );
+  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 export default defineTool({
@@ -20,10 +16,7 @@ export default defineTool({
   description:
     "List the signed-in user's boxes (rodent or insect). Returns code, kind, location, and capacity for each box.",
   inputSchema: {
-    kind: z
-      .enum(["rodent", "insect"])
-      .optional()
-      .describe("Filter by kind. Omit to list all."),
+    kind: z.enum(["rodent", "insect"]).optional().describe("Filter by kind. Omit to list all."),
     limit: z.number().int().min(1).max(200).optional().describe("Max rows (default 100)."),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },

@@ -45,11 +45,7 @@ export function CommandPalette({ open, onOpenChange }: Props) {
         .select("id, name, email")
         .or(`name.ilike.${pattern},email.ilike.${pattern}`)
         .limit(5),
-      supabase
-        .from("orders")
-        .select("id, total_mxn")
-        .or(`id.ilike.${pattern}`)
-        .limit(5),
+      supabase.from("orders").select("id, total_mxn").or(`id.ilike.${pattern}`).limit(5),
     ]);
 
     setLots(lotsRes.data ?? []);
@@ -88,9 +84,7 @@ export function CommandPalette({ open, onOpenChange }: Props) {
         onValueChange={setQuery}
       />
       <CommandList>
-        {query.trim() && !hasResults && (
-          <CommandEmpty>Sin resultados para "{query}"</CommandEmpty>
-        )}
+        {query.trim() && !hasResults && <CommandEmpty>Sin resultados para "{query}"</CommandEmpty>}
 
         {lots.length > 0 && (
           <CommandGroup heading="Lotes">
@@ -98,9 +92,7 @@ export function CommandPalette({ open, onOpenChange }: Props) {
               <CommandItem
                 key={l.id}
                 value={`lot-${l.id}`}
-                onSelect={() =>
-                  go(l.kind === "rodent" ? "/rodents/lots" : "/insects/lots")
-                }
+                onSelect={() => go(l.kind === "rodent" ? "/rodents/lots" : "/insects/lots")}
               >
                 {l.kind === "rodent" ? (
                   <Rat className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -121,39 +113,23 @@ export function CommandPalette({ open, onOpenChange }: Props) {
         {clients.length > 0 && (
           <CommandGroup heading="Clientes">
             {clients.map((c) => (
-              <CommandItem
-                key={c.id}
-                value={`client-${c.id}`}
-                onSelect={() => go("/clients")}
-              >
+              <CommandItem key={c.id} value={`client-${c.id}`} onSelect={() => go("/clients")}>
                 <Users className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">{c.name}</span>
-                {c.email && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {c.email}
-                  </span>
-                )}
+                {c.email && <span className="ml-2 text-xs text-muted-foreground">{c.email}</span>}
               </CommandItem>
             ))}
           </CommandGroup>
         )}
 
-        {(lots.length > 0 || clients.length > 0) && orders.length > 0 && (
-          <CommandSeparator />
-        )}
+        {(lots.length > 0 || clients.length > 0) && orders.length > 0 && <CommandSeparator />}
 
         {orders.length > 0 && (
           <CommandGroup heading="Órdenes">
             {orders.map((o) => (
-              <CommandItem
-                key={o.id}
-                value={`order-${o.id}`}
-                onSelect={() => go("/sales")}
-              >
+              <CommandItem key={o.id} value={`order-${o.id}`} onSelect={() => go("/sales")}>
                 <ShoppingCart className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span className="font-mono text-xs">
-                  #{o.id.slice(0, 8)}
-                </span>
+                <span className="font-mono text-xs">#{o.id.slice(0, 8)}</span>
                 <span className="ml-2 text-xs text-muted-foreground">
                   ${Number(o.total_mxn ?? 0).toLocaleString("es-MX")}
                 </span>
