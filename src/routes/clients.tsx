@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TierGate } from "@/components/tier-gate";
-import { AdminPageOnly } from "@/components/role-gate";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,21 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Users, Edit2, Trash2, Search, Mail, MessageSquare, Download } from "lucide-react";
 import { exportToCSV } from "@/lib/utils";
 import { toast } from "sonner";
@@ -42,26 +28,18 @@ import {
 export const Route = createFileRoute("/clients")({
   head: () => ({
     meta: [
-      { title: "Clientes — BioTrack" },
-      {
-        name: "description",
-        content: "Gestiona tu cartera de clientes y sus datos de contacto en BioTrack.",
-      },
-      { property: "og:title", content: "Clientes — BioTrack" },
-      {
-        property: "og:description",
-        content: "Gestiona tu cartera de clientes y sus datos de contacto en BioTrack.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/clients" },
+      { title: 'Clientes — BioTrack' },
+      { name: "description", content: 'Gestiona tu cartera de clientes y sus datos de contacto en BioTrack.' },
+      { property: "og:title", content: 'Clientes — BioTrack' },
+      { property: "og:description", content: 'Gestiona tu cartera de clientes y sus datos de contacto en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/clients' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/clients" }],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/clients' }],
   }),
   component: () => (
-    <AdminPageOnly>
-      <TierGate min="gold" module="Clientes">
-        <Clients />
-      </TierGate>
-    </AdminPageOnly>
+    <TierGate min="gold" module="Clientes">
+      <Clients />
+    </TierGate>
   ),
 });
 
@@ -137,7 +115,10 @@ function Clients() {
 
   const deleteClient = async () => {
     if (!deletingClient) return;
-    const { error } = await supabase.from("clients").delete().eq("id", deletingClient.id);
+    const { error } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", deletingClient.id);
     if (error) {
       toast.error(toUserFriendlyError(error));
       return;
@@ -154,7 +135,7 @@ function Clients() {
       (c) =>
         (c.name ?? "").toLowerCase().includes(q) ||
         (c.phone ?? "").toLowerCase().includes(q) ||
-        (c.email ?? "").toLowerCase().includes(q),
+        (c.email ?? "").toLowerCase().includes(q)
     );
   }, [clients, searchClient]);
 
@@ -163,7 +144,8 @@ function Clients() {
     if (!u.user) return;
     if (!form.name || !form.phone) return toast.error("Nombre y teléfono son obligatorios");
     const { error } = await supabase.from("clients").insert({
-      name: form.name.trim(),
+      owner_id: u.user.id,
+      name: form.name,
       phone: form.phone,
       email: form.email || null,
       notes: form.notes || null,
@@ -183,21 +165,17 @@ function Clients() {
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-foreground">
             <Users className="h-6 w-6" /> Clientes
           </h1>
-          <p className="text-sm text-muted-foreground">Directorio de clientes y perfiles.</p>
+          <p className="text-sm text-muted-foreground">
+            Directorio de clientes y perfiles.
+          </p>
         </div>
         <div className="flex gap-2 items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 h-9"
-            onClick={() =>
-              exportToCSV(
-                `clientes-${new Date().toISOString().slice(0, 10)}.csv`,
-                ["Nombre", "Teléfono", "Email", "Perfil", "Notas"],
-                (clients ?? []).map((c) => [c.name, c.phone, c.email, c.profile, c.notes]),
-              )
-            }
-          >
+          <Button variant="outline" size="sm" className="gap-1.5 h-9"
+            onClick={() => exportToCSV(
+              `clientes-${new Date().toISOString().slice(0,10)}.csv`,
+              ["Nombre", "Teléfono", "Email", "Perfil", "Notas"],
+              (clients ?? []).map(c => [c.name, c.phone, c.email, c.profile, c.notes])
+            )}>
             <Download className="h-4 w-4" /> Exportar CSV
           </Button>
 
@@ -218,15 +196,11 @@ function Clients() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
-                  Nuevo cliente
-                </DialogTitle>
+                <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Nuevo cliente</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-2">
                 <div>
-                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">
-                    Nombre *
-                  </Label>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Nombre *</Label>
                   <Input
                     className="h-10 focus-visible:ring-2 focus-visible:ring-primary"
                     value={form.name}
@@ -235,9 +209,7 @@ function Clients() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">
-                    Celular *
-                  </Label>
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Celular *</Label>
                   <Input
                     className="h-10 focus-visible:ring-2 focus-visible:ring-primary"
                     value={form.phone}
@@ -269,25 +241,13 @@ function Clients() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">
-                    Perfil
-                  </Label>
-                  <Select
-                    value={form.profile}
-                    onValueChange={(v) => setForm({ ...form, profile: v })}
-                  >
+                  <Label className="text-sm font-medium mb-1.5 block text-foreground/90">Perfil</Label>
+                  <Select value={form.profile} onValueChange={(v) => setForm({ ...form, profile: v })}>
                     <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[
-                        "particular",
-                        "pimvs",
-                        "uma",
-                        "veterinaria",
-                        "comercializadora",
-                        "uso_propio",
-                      ].map((p) => (
+                      {["particular", "pimvs", "uma", "veterinaria", "comercializadora", "uso_propio"].map((p) => (
                         <SelectItem key={p} value={p} className="capitalize">
                           {p.replace("_", " ")}
                         </SelectItem>
@@ -309,21 +269,11 @@ function Clients() {
           <table className="w-full text-sm">
             <thead className="bg-accent/20 border-b border-border/30 text-xs uppercase text-muted-foreground font-semibold">
               <tr>
-                <th className="text-left p-3.5 pl-4 text-[11px] font-semibold uppercase text-muted-foreground">
-                  Nombre
-                </th>
-                <th className="text-left p-3.5 text-[11px] font-semibold uppercase text-muted-foreground">
-                  Celular
-                </th>
-                <th className="text-left p-3.5 text-[11px] font-semibold uppercase text-muted-foreground">
-                  Email
-                </th>
-                <th className="text-left p-3.5 text-[11px] font-semibold uppercase text-muted-foreground">
-                  Perfil
-                </th>
-                <th className="text-left p-3.5 pr-4 text-[11px] font-semibold uppercase text-muted-foreground">
-                  Acciones
-                </th>
+                <th className="text-left p-3.5 pl-4 text-[11px] font-semibold uppercase text-muted-foreground">Nombre</th>
+                <th className="text-left p-3.5 text-[11px] font-semibold uppercase text-muted-foreground">Celular</th>
+                <th className="text-left p-3.5 text-[11px] font-semibold uppercase text-muted-foreground">Email</th>
+                <th className="text-left p-3.5 text-[11px] font-semibold uppercase text-muted-foreground">Perfil</th>
+                <th className="text-left p-3.5 pr-4 text-[11px] font-semibold uppercase text-muted-foreground">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -342,15 +292,10 @@ function Clients() {
                       </p>
                     )}
                   </td>
-                  <td className="p-3.5 font-mono text-xs text-muted-foreground font-medium">
-                    {c.phone}
-                  </td>
+                  <td className="p-3.5 font-mono text-xs text-muted-foreground font-medium">{c.phone}</td>
                   <td className="p-3.5 text-xs text-muted-foreground">
                     {c.email ? (
-                      <a
-                        href={`mailto:${c.email}`}
-                        className="flex items-center gap-1 hover:text-primary transition-colors"
-                      >
+                      <a href={`mailto:${c.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
                         <Mail className="h-3 w-3" /> {c.email}
                       </a>
                     ) : (
@@ -389,9 +334,7 @@ function Clients() {
               {filteredClients.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-10 text-center text-muted-foreground">
-                    {searchClient
-                      ? `Sin resultados para "${searchClient}"`
-                      : "Sin clientes registrados."}
+                    {searchClient ? `Sin resultados para "${searchClient}"` : "Sin clientes registrados."}
                   </td>
                 </tr>
               )}
@@ -441,22 +384,12 @@ function Clients() {
             </div>
             <div>
               <Label className="text-sm font-medium mb-1.5 block">Perfil</Label>
-              <Select
-                value={editForm.profile}
-                onValueChange={(v) => setEditForm({ ...editForm, profile: v })}
-              >
+              <Select value={editForm.profile} onValueChange={(v) => setEditForm({ ...editForm, profile: v })}>
                 <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[
-                    "particular",
-                    "pimvs",
-                    "uma",
-                    "veterinaria",
-                    "comercializadora",
-                    "uso_propio",
-                  ].map((p) => (
+                  {["particular", "pimvs", "uma", "veterinaria", "comercializadora", "uso_propio"].map((p) => (
                     <SelectItem key={p} value={p} className="capitalize">
                       {p.replace("_", " ")}
                     </SelectItem>
@@ -479,8 +412,8 @@ function Clients() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminará permanentemente a <strong>{deletingClient?.name}</strong>. Esta acción no
-              se puede deshacer.
+              Se eliminará permanentemente a <strong>{deletingClient?.name}</strong>. Esta acción no se puede
+              deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

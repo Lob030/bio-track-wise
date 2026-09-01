@@ -1,7 +1,1 @@
 project_id = "txqjjghyqlwteiiinzwy"
-
-[functions.evaluate-alerts]
-verify_jwt = false
-
-[functions.generate-operational-tasks]
-verify_jwt = false

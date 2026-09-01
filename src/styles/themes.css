@@ -15,7 +15,7 @@
 
 /* ── Body defaults — font family follows the active theme ───────────────── */
 body {
-  font-family: var(--font-family, "Inter", system-ui, sans-serif);
+  font-family: var(--font-family, 'Inter', system-ui, sans-serif);
   font-weight: var(--font-weight-regular, 400);
   line-height: var(--line-height-normal, 1.5);
   letter-spacing: var(--letter-spacing-normal, 0);
@@ -28,12 +28,7 @@ html {
   scroll-behavior: smooth;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-heading, var(--font-family, inherit));
   font-weight: var(--font-weight-bold, 700);
   line-height: var(--line-height-tight, 1.2);
@@ -90,7 +85,7 @@ h6 {
 
 /* ── Scanline / glitch effect (opt-in via .theme-glitch on <html>) ──────── */
 :root.theme-glitch body::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   background: linear-gradient(
@@ -106,22 +101,14 @@ h6 {
 }
 
 @keyframes scanline {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(100vh);
-  }
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
 }
 
 /* ── Loading shimmer utility ───────────────────────────────────────────── */
 @keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+  0%   { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
 }
 
 .skeleton-shimmer {
@@ -137,9 +124,7 @@ h6 {
 
 /* ── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

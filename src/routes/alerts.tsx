@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
-import { Bell, Plus, Trash2, Check, CircleCheckBig, Power } from "lucide-react";
+import { Bell, Plus, Trash2, Check, Power } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/page-shell";
 import { Card } from "@/components/ui/card";
@@ -10,144 +10,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { toUserFriendlyError } from "@/lib/errors";
-import { useIsAdmin } from "@/hooks/use-role";
 
 export const Route = createFileRoute("/alerts")({
   head: () => ({
     meta: [
-      { title: "Alertas — BioTrack" },
-      {
-        name: "description",
-        content: "Configura reglas de alertas y notificaciones para tu bioterio en BioTrack.",
-      },
-      { property: "og:title", content: "Alertas — BioTrack" },
-      {
-        property: "og:description",
-        content: "Configura reglas de alertas y notificaciones para tu bioterio en BioTrack.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/alerts" },
+      { title: 'Alertas — BioTrack' },
+      { name: "description", content: 'Configura reglas de alertas y notificaciones para tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Alertas — BioTrack' },
+      { property: "og:description", content: 'Configura reglas de alertas y notificaciones para tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/alerts' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/alerts" }],
-  }),
-  component: Page,
-});
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/alerts' }],
+  }), component: Page });
 
 type RuleForm = {
   scope: "all" | "lot";
   lot_id: string;
   lot_type: "birth" | "engorda" | "breeder";
-  metric:
-    | "population"
-    | "biomass"
-    | "age_days"
-    | "days_active"
-    | "stock_min"
-    | "expiry_days"
-    | "mortality";
-  operator: ">" | "<" | "=" | ">=" | "<=";
+  metric: "age_days" | "days_active" | "weight";
+  operator: ">" | "<" | "=";
   threshold: number;
   priority: "high" | "medium";
   frequency: "once" | "recurrent";
   frequency_days: number;
-  evaluation_window_days: number;
   animal_kind: "rodent" | "insect" | "both";
   species_id: string;
 };
 
-const METRIC_LABEL: Record<string, string> = {
-  age_days: "edad en días",
-  days_active: "días activo",
-  population: "población",
-  biomass: "biomasa en gramos",
-  stock_min: "stock mínimo en gramos",
-  expiry_days: "días para vencimiento",
-  mortality: "mortalidad en la ventana",
-};
-const TYPE_LABEL: Record<string, string> = {
-  birth: "nacimiento",
-  engorda: "engorda",
-  breeder: "reproductor",
-};
+const METRIC_LABEL: Record<string, string> = { age_days: "edad en días", days_active: "días activo", weight: "peso" };
+const TYPE_LABEL: Record<string, string> = { birth: "nacimiento", engorda: "engorda", breeder: "reproductor" };
 const SCOPE_LABEL: Record<string, string> = { all: "todos los lotes", lot: "el lote específico" };
 
 const DEFAULT_FORM: RuleForm = {
-  scope: "all",
-  lot_id: "",
-  lot_type: "engorda",
-  metric: "age_days",
-  operator: ">",
-  threshold: 21,
-  priority: "medium",
-  frequency: "once",
-  frequency_days: 0,
-  evaluation_window_days: 7,
-  animal_kind: "both",
-  species_id: "",
+  scope: "all", lot_id: "", lot_type: "engorda", metric: "age_days",
+  operator: ">", threshold: 21, priority: "medium", frequency: "once", frequency_days: 0,
+  animal_kind: "both", species_id: "",
 };
 
 function Page() {
   const qc = useQueryClient();
-  const isAdmin = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [alertName, setAlertName] = useState("");
   const [form, setForm] = useState<RuleForm>(DEFAULT_FORM);
 
   const { data: rules } = useQuery({
     queryKey: ["alert_rules"],
-    queryFn: async () =>
-      (await supabase.from("alert_rules").select("*").order("created_at", { ascending: false }))
-        .data ?? [],
+    queryFn: async () => (await supabase.from("alert_rules").select("*").order("created_at", { ascending: false })).data ?? [],
   });
   const { data: alerts } = useQuery({
     queryKey: ["alerts"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("alerts")
-          .select("*")
-          .order("generated_at", { ascending: false })
-          .limit(50)
-      ).data ?? [],
-  });
-  const { data: lastRun } = useQuery({
-    queryKey: ["alert_evaluation_runs", "latest"],
-    enabled: isAdmin,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("alert_evaluation_runs")
-          .select("*")
-          .order("started_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      ).data,
+    queryFn: async () => (await supabase.from("alerts").select("*").order("created_at", { ascending: false }).limit(50)).data ?? [],
   });
   const { data: lots } = useQuery({
     queryKey: ["lots", "all", "min"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("lots")
-          .select("id,lot_code,kind,lot_type,species_id")
-          .eq("status", "active")
-      ).data ?? [],
+    queryFn: async () => (await supabase.from("lots").select("id,lot_code,kind,lot_type,species_id").eq("status", "active")).data ?? [],
   });
   const { data: species } = useQuery({
     queryKey: ["species"],
@@ -217,17 +137,9 @@ function Page() {
     const selectedLot = lots?.find((l: any) => l.id === form.lot_id);
     const lotLabel = selectedLot ? selectedLot.lot_code : form.lot_id;
 
-    if (form.metric === "stock_min") {
-      return "Alimento {entity}: stock disponible {value} g, mínimo {threshold} g";
-    }
-    if (form.metric === "expiry_days") {
-      return "Insumo {entity}: vence en {value} días (umbral {threshold})";
-    }
-
-    const scopeText =
-      form.scope === "all"
-        ? `${animalDesc} de tipo ${TYPE_LABEL[form.lot_type] || form.lot_type}`
-        : `El lote específico ${lotLabel || "desconocido"} (${animalDesc}) de tipo ${TYPE_LABEL[form.lot_type] || form.lot_type}`;
+    const scopeText = form.scope === "all"
+      ? `${animalDesc} de tipo ${TYPE_LABEL[form.lot_type] || form.lot_type}`
+      : `El lote específico ${lotLabel || "desconocido"} (${animalDesc}) de tipo ${TYPE_LABEL[form.lot_type] || form.lot_type}`;
 
     return `${scopeText}: ${METRIC_LABEL[form.metric] || form.metric} ${form.operator} ${form.threshold}`;
   }, [form, species, lots]);
@@ -236,6 +148,7 @@ function Page() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("alert_rules").insert({
+      owner_id: u.user.id,
       name: alertName.trim() || null,
       scope: form.scope,
       lot_id: form.scope === "lot" ? form.lot_id || null : null,
@@ -245,43 +158,26 @@ function Page() {
       threshold: form.threshold,
       priority: form.priority,
       frequency_days: form.frequency === "once" ? 0 : form.frequency_days,
-      evaluation_window_days: form.evaluation_window_days,
       template_text: template,
       animal_kind: form.animal_kind,
       species_id: form.animal_kind !== "both" && form.species_id ? form.species_id : null,
     });
     if (error) return toast.error(toUserFriendlyError(error));
     toast.success("Regla creada");
-    setOpen(false);
-    setForm(DEFAULT_FORM);
-    setAlertName("");
+    setOpen(false); setForm(DEFAULT_FORM); setAlertName("");
     qc.invalidateQueries({ queryKey: ["alert_rules"] });
   };
 
   const toggleEnabled = async (id: string, enabled: boolean) => {
-    const { error } = await supabase.from("alert_rules").update({ enabled }).eq("id", id);
-    if (error) return toast.error(toUserFriendlyError(error));
+    await supabase.from("alert_rules").update({ enabled }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["alert_rules"] });
   };
   const deleteRule = async (id: string) => {
-    const { error } = await supabase.from("alert_rules").delete().eq("id", id);
-    if (error) return toast.error(toUserFriendlyError(error));
-    toast.success("Regla eliminada");
+    await supabase.from("alert_rules").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["alert_rules"] });
   };
   const ack = async (id: string) => {
-    const { error } = await supabase.rpc("acknowledge_alert", { _alert_id: id });
-    if (error) return toast.error(toUserFriendlyError(error));
-    toast.success("Alerta reconocida");
-    qc.invalidateQueries({ queryKey: ["alerts"] });
-  };
-  const resolve = async (id: string) => {
-    const { error } = await supabase.rpc("resolve_alert", {
-      _alert_id: id,
-      _reason: "Resolución manual desde BioTrack",
-    });
-    if (error) return toast.error(toUserFriendlyError(error));
-    toast.success("Alerta resuelta");
+    await supabase.from("alerts").update({ acknowledged: true }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["alerts"] });
   };
 
@@ -299,172 +195,65 @@ function Page() {
           </DialogTrigger>
           <DialogContent className="max-w-4xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
-                Construye tu regla
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold tracking-tight text-foreground">Construye tu regla</DialogTitle>
             </DialogHeader>
             <div className="grid lg:grid-cols-[1fr_320px] gap-6">
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="alertName">Nombre de la alerta</Label>
-                  <Input
+                  <Input 
                     id="alertName"
-                    placeholder="Ej: Lotes en engorda > 21 días"
-                    value={alertName}
-                    onChange={(e) => setAlertName(e.target.value)}
+                    placeholder="Ej: Lotes en engorda > 21 días" 
+                    value={alertName} 
+                    onChange={(e) => setAlertName(e.target.value)} 
                   />
                 </div>
                 <Card className="p-4 border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
-                  <p className="text-xs uppercase text-muted-foreground mb-3 font-semibold tracking-wider">
-                    Completa la oración
-                  </p>
+                  <p className="text-xs uppercase text-muted-foreground mb-3 font-semibold tracking-wider">Completa la oración</p>
                   <div className="flex flex-wrap items-center gap-2 text-sm leading-loose">
                     <Pill>SI la categoría es</Pill>
-                    <PillSelect
-                      value={form.animal_kind}
-                      onChange={(v) => handleAnimalKindChange(v as any)}
-                      options={[
-                        { v: "both", l: "Ambos (Roedores e Insectos)" },
-                        { v: "rodent", l: "Roedores" },
-                        { v: "insect", l: "Insectos" },
-                      ]}
-                    />
+                    <PillSelect value={form.animal_kind} onChange={(v) => handleAnimalKindChange(v as any)}
+                      options={[{ v: "both", l: "Ambos (Roedores e Insectos)" }, { v: "rodent", l: "Roedores" }, { v: "insect", l: "Insectos" }]} />
 
                     {form.animal_kind !== "both" && (
                       <>
                         <Pill>y de la especie</Pill>
-                        <PillSelect
-                          value={form.species_id || "todas"}
-                          onChange={(v) => handleSpeciesChange(v === "todas" ? "" : v)}
+                        <PillSelect value={form.species_id || "todas"} onChange={(v) => handleSpeciesChange(v === "todas" ? "" : v)}
                           options={[
-                            {
-                              v: "todas",
-                              l:
-                                form.animal_kind === "rodent"
-                                  ? "Todas las especies de roedores"
-                                  : "Todas las especies de insectos",
-                            },
-                            ...(species ?? [])
-                              .filter((s: any) => s.kind === form.animal_kind)
-                              .map((s: any) => ({ v: s.id, l: s.name })),
-                          ]}
-                        />
+                            { v: "todas", l: form.animal_kind === "rodent" ? "Todas las especies de roedores" : "Todas las especies de insectos" },
+                            ...(species ?? []).filter((s: any) => s.kind === form.animal_kind).map((s: any) => ({ v: s.id, l: s.name }))
+                          ]} />
                       </>
                     )}
 
                     <Pill>para</Pill>
-                    <PillSelect
-                      value={form.scope}
-                      onChange={(v) => handleScopeChange(v as any)}
-                      options={[
-                        { v: "all", l: "todos los lotes" },
-                        { v: "lot", l: "un lote específico" },
-                      ]}
-                    />
+                    <PillSelect value={form.scope} onChange={(v) => handleScopeChange(v as any)}
+                      options={[{ v: "all", l: "todos los lotes" }, { v: "lot", l: "un lote específico" }]} />
 
                     {form.scope === "lot" && (
-                      <PillSelect
-                        value={form.lot_id}
-                        onChange={(v) => setForm({ ...form, lot_id: v })}
-                        options={filteredLots.map((l: any) => ({
-                          v: l.id,
-                          l: l.lot_code ?? l.id.slice(0, 8),
-                        }))}
-                        placeholder="elige lote"
-                      />
+                      <PillSelect value={form.lot_id} onChange={(v) => setForm({ ...form, lot_id: v })}
+                        options={filteredLots.map((l: any) => ({ v: l.id, l: l.lot_code ?? l.id.slice(0, 8) }))} placeholder="elige lote" />
                     )}
 
                     <Pill>de tipo</Pill>
-                    <PillSelect
-                      value={form.lot_type}
-                      onChange={(v) => setForm({ ...form, lot_type: v as any })}
-                      options={[
-                        { v: "birth", l: "nacimiento" },
-                        { v: "engorda", l: "engorda" },
-                        { v: "breeder", l: "reproductor" },
-                      ]}
-                    />
+                    <PillSelect value={form.lot_type} onChange={(v) => setForm({ ...form, lot_type: v as any })}
+                      options={[{ v: "birth", l: "nacimiento" }, { v: "engorda", l: "engorda" }, { v: "breeder", l: "reproductor" }]} />
                     <Pill>cumple condición</Pill>
-                    <PillSelect
-                      value={form.metric}
-                      onChange={(v) =>
-                        setForm({
-                          ...form,
-                          metric: v as RuleForm["metric"],
-                          scope: v === "stock_min" || v === "expiry_days" ? "all" : form.scope,
-                          operator: v === "stock_min" || v === "expiry_days" ? "<=" : form.operator,
-                        })
-                      }
-                      options={[
-                        { v: "population", l: "población" },
-                        { v: "biomass", l: "biomasa en gramos" },
-                        { v: "age_days", l: "edad en días" },
-                        { v: "days_active", l: "días activo" },
-                        { v: "stock_min", l: "stock mínimo de alimento" },
-                        { v: "expiry_days", l: "días para vencimiento" },
-                        { v: "mortality", l: "mortalidad" },
-                      ]}
-                    />
-                    <PillSelect
-                      value={form.operator}
-                      onChange={(v) => setForm({ ...form, operator: v as any })}
-                      options={[
-                        { v: ">", l: ">" },
-                        { v: "<", l: "<" },
-                        { v: "=", l: "=" },
-                        { v: ">=", l: ">=" },
-                        { v: "<=", l: "<=" },
-                      ]}
-                    />
-                    <Input
-                      type="number"
-                      className="h-7 w-20 inline-flex"
-                      value={form.threshold}
-                      onChange={(e) => setForm({ ...form, threshold: +e.target.value })}
-                    />
-                    {form.metric === "mortality" && (
-                      <>
-                        <Pill>durante los últimos</Pill>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={3650}
-                          className="h-7 w-20 inline-flex"
-                          value={form.evaluation_window_days}
-                          onChange={(e) =>
-                            setForm({ ...form, evaluation_window_days: +e.target.value })
-                          }
-                        />
-                        <Pill>días</Pill>
-                      </>
-                    )}
+                    <PillSelect value={form.metric} onChange={(v) => setForm({ ...form, metric: v as any })}
+                      options={[{ v: "age_days", l: "edad en días" }, { v: "days_active", l: "días activo" }, { v: "weight", l: "peso" }]} />
+                    <PillSelect value={form.operator} onChange={(v) => setForm({ ...form, operator: v as any })}
+                      options={[{ v: ">", l: ">" }, { v: "<", l: "<" }, { v: "=", l: "=" }]} />
+                    <Input type="number" className="h-7 w-20 inline-flex" value={form.threshold} onChange={(e) => setForm({ ...form, threshold: +e.target.value })} />
                     <Pill>ENTONCES</Pill>
                     <Pill>generar alerta con prioridad</Pill>
-                    <PillSelect
-                      value={form.priority}
-                      onChange={(v) => setForm({ ...form, priority: v as any })}
-                      options={[
-                        { v: "high", l: "Alta (Rojo)" },
-                        { v: "medium", l: "Media (Ámbar)" },
-                      ]}
-                    />
+                    <PillSelect value={form.priority} onChange={(v) => setForm({ ...form, priority: v as any })}
+                      options={[{ v: "high", l: "Alta (Rojo)" }, { v: "medium", l: "Media (Ámbar)" }]} />
                     <Pill>y frecuencia</Pill>
-                    <PillSelect
-                      value={form.frequency}
-                      onChange={(v) => setForm({ ...form, frequency: v as any })}
-                      options={[
-                        { v: "once", l: "una sola vez" },
-                        { v: "recurrent", l: "recurrente cada X días" },
-                      ]}
-                    />
+                    <PillSelect value={form.frequency} onChange={(v) => setForm({ ...form, frequency: v as any })}
+                      options={[{ v: "once", l: "una sola vez" }, { v: "recurrent", l: "recurrente cada X días" }]} />
                     {form.frequency === "recurrent" && (
                       <>
-                        <Input
-                          type="number"
-                          className="h-7 w-20 inline-flex"
-                          value={form.frequency_days}
-                          onChange={(e) => setForm({ ...form, frequency_days: +e.target.value })}
-                        />
+                        <Input type="number" className="h-7 w-20 inline-flex" value={form.frequency_days} onChange={(e) => setForm({ ...form, frequency_days: +e.target.value })} />
                         <Pill>días</Pill>
                       </>
                     )}
@@ -474,26 +263,12 @@ function Page() {
 
               <div className="space-y-2">
                 <Label className="text-xs uppercase text-muted-foreground">Vista previa</Label>
-                <AlertPreview
-                  priority={form.priority}
-                  text={template}
-                  frequency={
-                    form.frequency === "once" ? "Una sola vez" : `Cada ${form.frequency_days} días`
-                  }
-                />
+                <AlertPreview priority={form.priority} text={template} frequency={form.frequency === "once" ? "Una sola vez" : `Cada ${form.frequency_days} días`} />
               </div>
             </div>
             <DialogFooter className="border-t border-border/20 pt-4 flex gap-2">
-              <Button
-                variant="outline"
-                className="h-10 transition-all duration-200"
-                onClick={() => setOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button className="h-10 transition-all duration-200" onClick={submit}>
-                Crear regla
-              </Button>
+              <Button variant="outline" className="h-10 transition-all duration-200" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button className="h-10 transition-all duration-200" onClick={submit}>Crear regla</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -501,9 +276,7 @@ function Page() {
     >
       <div className="grid lg:grid-cols-2 gap-4">
         <div>
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">
-            Reglas configuradas
-          </h2>
+          <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Reglas configuradas</h2>
           <div className="space-y-2">
             {(rules ?? []).length === 0 && (
               <Card className="p-8 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
@@ -511,33 +284,17 @@ function Page() {
               </Card>
             )}
             {(rules ?? []).map((r) => (
-              <Card
-                key={r.id}
-                className="p-3 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-200"
-              >
+              <Card key={r.id} className="p-3 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-200">
                 <AlertDot priority={r.priority as any} />
                 <div className="flex-1">
-                  <div className="text-sm font-semibold text-foreground">
-                    {r.name || r.template_text}
-                  </div>
-                  {r.name && (
-                    <div className="text-xs text-muted-foreground mt-0.5">{r.template_text}</div>
-                  )}
+                  <div className="text-sm font-semibold text-foreground">{r.name || r.template_text}</div>
+                  {r.name && <div className="text-xs text-muted-foreground mt-0.5">{r.template_text}</div>}
                   <div className="text-[10px] text-muted-foreground mt-1 font-medium">
-                    {r.frequency_days > 0
-                      ? `Recurrente cada ${r.frequency_days} días`
-                      : "Una sola vez"}{" "}
-                    · prioridad {r.priority}
+                    {r.frequency_days > 0 ? `Recurrente cada ${r.frequency_days} días` : "Una sola vez"} · prioridad {r.priority}
                   </div>
                 </div>
                 <Switch checked={r.enabled} onCheckedChange={(v) => toggleEnabled(r.id, v)} />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Eliminar regla de alerta"
-                  className="h-9 w-9 text-muted-foreground hover:text-destructive transition-all duration-200"
-                  onClick={() => deleteRule(r.id)}
-                >
+                <Button size="icon" variant="ghost" aria-label="Eliminar regla de alerta" className="h-9 w-9 text-muted-foreground hover:text-destructive transition-all duration-200" onClick={() => deleteRule(r.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </Card>
@@ -545,15 +302,7 @@ function Page() {
           </div>
         </div>
         <div>
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">
-            Alertas e historial
-          </h2>
-          {isAdmin && lastRun && (
-            <p className="text-xs text-muted-foreground mb-2">
-              Última evaluación: {new Date(lastRun.started_at).toLocaleString("es-MX")} ·{" "}
-              {lastRun.status}
-            </p>
-          )}
+          <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Alertas activas</h2>
           <div className="space-y-2">
             {(alerts ?? []).length === 0 && (
               <Card className="p-8 text-center text-muted-foreground border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 shadow-sm">
@@ -561,50 +310,17 @@ function Page() {
               </Card>
             )}
             {(alerts ?? []).map((a) => (
-              <Card
-                key={a.id}
-                className="p-3 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-200"
-              >
+              <Card key={a.id} className="p-3 border-border/50 bg-gradient-to-br from-card to-card/40 flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-200">
                 <AlertDot priority={a.priority as any} />
                 <div className="flex-1">
                   <div className="text-sm text-foreground font-medium">{a.message}</div>
-                  <div className="text-[10px] text-muted-foreground">
-                    Generada {new Date(a.generated_at).toLocaleString("es-MX")}
-                    {a.acknowledged_at &&
-                      ` · reconocida ${new Date(a.acknowledged_at).toLocaleString("es-MX")}`}
-                    {a.resolved_at &&
-                      ` · resuelta ${new Date(a.resolved_at).toLocaleString("es-MX")}`}
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleString("es-MX")}</div>
                 </div>
-                {a.status === "resolved" ? (
-                  <Badge variant="outline" className="text-[10px] border-emerald-500/40">
-                    resuelta
-                  </Badge>
-                ) : a.status === "acknowledged" ? (
-                  <div className="flex items-center gap-1">
-                    <Badge variant="outline" className="text-[10px] border-border/40 bg-accent/15">
-                      reconocida
-                    </Badge>
-                    {isAdmin && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => resolve(a.id)}
-                        title="Resolver alerta"
-                      >
-                        <CircleCheckBig className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                {a.acknowledged ? (
+                  <Badge variant="outline" className="text-[10px] border-border/40 bg-accent/15">✓ vista</Badge>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-9 min-h-9 transition-all duration-200"
-                    onClick={() => ack(a.id)}
-                  >
-                    <Check className="h-4 w-4 mr-1 text-emerald-400" />
-                    Marcar
+                  <Button size="sm" variant="ghost" className="h-9 min-h-9 transition-all duration-200" onClick={() => ack(a.id)}>
+                    <Check className="h-4 w-4 mr-1 text-emerald-400" />Marcar
                   </Button>
                 )}
               </Card>
@@ -620,52 +336,24 @@ function Pill({ children }: { children: React.ReactNode }) {
   return <span className="text-muted-foreground">{children}</span>;
 }
 
-function PillSelect({
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: { v: string; l: string }[];
-  placeholder?: string;
-}) {
+function PillSelect({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { v: string; l: string }[]; placeholder?: string }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="h-7 w-auto inline-flex gap-1 border-emerald-glow/40 bg-emerald-glow/10 text-emerald-glow font-medium">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
-        {options.map((o) => (
-          <SelectItem key={o.v} value={o.v}>
-            {o.l}
-          </SelectItem>
-        ))}
-      </SelectContent>
+      <SelectContent>{options.map((o) => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}</SelectContent>
     </Select>
   );
 }
 
 function AlertDot({ priority }: { priority: "high" | "medium" | "low" }) {
-  const color =
-    priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-info";
+  const color = priority === "high" ? "bg-destructive" : priority === "medium" ? "bg-warning" : "bg-info";
   return <span className={`h-2.5 w-2.5 rounded-full ${color} shrink-0`} />;
 }
 
-function AlertPreview({
-  priority,
-  text,
-  frequency,
-}: {
-  priority: "high" | "medium";
-  text: string;
-  frequency: string;
-}) {
-  const ring =
-    priority === "high"
-      ? "border-destructive/50 bg-destructive/10"
-      : "border-warning/50 bg-warning/10";
+function AlertPreview({ priority, text, frequency }: { priority: "high" | "medium"; text: string; frequency: string }) {
+  const ring = priority === "high" ? "border-destructive/50 bg-destructive/10" : "border-warning/50 bg-warning/10";
   const dotCol = priority === "high" ? "bg-destructive" : "bg-warning";
   return (
     <Card className={`p-4 border-2 shadow-sm transition-all duration-200 ${ring}`}>

@@ -27,17 +27,7 @@ function extractGoogleFontNames(fontFamily: string): string[] {
   return fontFamily
     .split(",")
     .map((f) => f.trim().replace(/['"]/g, ""))
-    .filter(
-      (f) =>
-        ![
-          "sans-serif",
-          "serif",
-          "monospace",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "system-ui",
-        ].includes(f),
-    )
+    .filter((f) => !["sans-serif", "serif", "monospace", "-apple-system", "BlinkMacSystemFont", "system-ui"].includes(f))
     .map((f) => `${f}:wght@300;400;500;600;700;900`);
 }
 
@@ -68,7 +58,10 @@ export function useTheme() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Not authenticated");
 
-      await supabase.from("profiles").update({ preferred_theme: themeId }).eq("id", user.user.id);
+      await supabase
+        .from("profiles")
+        .update({ preferred_theme: themeId })
+        .eq("id", user.user.id);
 
       return themeId;
     },
@@ -178,8 +171,9 @@ export function useTheme() {
 
   // Initialize theme on mount
   useEffect(() => {
-    const savedTheme =
-      (localStorage.getItem("preferred-theme") as ThemeId) || userPreference || "dark-slate";
+    const savedTheme = (localStorage.getItem("preferred-theme") as ThemeId) ||
+                       userPreference ||
+                       "dark-slate";
     setCurrentTheme(savedTheme);
     applyTheme(savedTheme);
   }, [userPreference]);

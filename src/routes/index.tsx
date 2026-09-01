@@ -8,69 +8,46 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Activity,
-  Users,
-  ShoppingCart,
-  Wallet,
-  Boxes,
-  Bell,
-  TrendingUp,
-  FlaskConical,
-  AlertTriangle,
-  Check,
-  ClipboardList,
+  Activity, Users, ShoppingCart, Wallet, Boxes, Bell,
+  TrendingUp, FlaskConical, AlertTriangle, Check,
 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
+  BarChart, Bar, XAxis, YAxis,
   Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  CartesianGrid,
+  ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { toast } from "sonner";
-import { operationsDb } from "@/lib/operations-client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "BioTrack — Panel de gestión de bioterio" },
-      {
-        name: "description",
-        content: "Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.",
-      },
-      { property: "og:title", content: "BioTrack — Panel de gestión de bioterio" },
-      {
-        property: "og:description",
-        content: "Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/" },
+      { title: 'BioTrack — Panel de gestión de bioterio' },
+      { name: "description", content: 'Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.' },
+      { property: "og:title", content: 'BioTrack — Panel de gestión de bioterio' },
+      { property: "og:description", content: 'Resumen de roedores, insectos, ventas y alertas de tu bioterio en un solo panel.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/" }],
-  }),
-  component: Dashboard,
-});
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/' }],
+  }), component: Dashboard });
 
 function KPI({ icon: Icon, label, value, sub, tone = "default" }: any) {
-  const toneClass =
-    {
-      default: "text-foreground",
-      success: "text-emerald-glow",
-      warning: "text-amber-glow",
-      danger: "text-red-glow",
-    }[tone as string] ?? "text-foreground";
+  const toneClass = {
+    default: "text-foreground",
+    success: "text-emerald-glow",
+    warning: "text-amber-glow",
+    danger: "text-red-glow",
+  }[tone as string] ?? "text-foreground";
   return (
-    <Card className="premium-kpi p-5 border-border bg-card/70">
+    <Card className="p-5 border-border bg-card/60 hover:bg-card transition-colors">
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
           <div className={`mt-2 text-3xl font-bold ${toneClass}`}>{value}</div>
           {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
         </div>
-        <div className="premium-kpi-icon h-10 w-10 rounded-lg grid place-items-center">
-          <Icon className="h-5 w-5" />
+        <div className="h-10 w-10 rounded-lg bg-accent/40 grid place-items-center">
+          <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
       </div>
     </Card>
@@ -107,79 +84,45 @@ function compTone(change: { direction: "up" | "down" | "flat" }) {
 function Dashboard() {
   const { data: profile } = useProfile();
   const qc = useQueryClient();
-  const { data: executive } = useQuery({
-    queryKey: ["dashboard", "executive"],
-    queryFn: async () => {
-      const { data, error } = await operationsDb.from("executive_dashboard").select("*").single();
-      if (error) throw error;
-      return data as Record<string, number>;
-    },
-  });
 
-  const month = useMemo(() => {
-    const d = new Date();
-    d.setDate(1);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-  const prevMonth = useMemo(() => {
-    const d = new Date(month);
-    d.setMonth(d.getMonth() - 1);
-    return d;
-  }, [month]);
+  const month = useMemo(() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; }, []);
+  const prevMonth = useMemo(() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); return d; }, [month]);
 
   const { data } = useQuery({
     queryKey: ["dashboard", month.toISOString()],
     queryFn: async () => {
       const [
-        lots,
-        clients,
-        orders,
-        alerts,
-        boxes,
-        purchases,
-        foodItems,
-        pendingOrders,
-        prevOrders,
-        prevPurchases,
+        lots, clients, orders, alerts, boxes, purchases,
+        foodItems, pendingOrders, prevOrders, prevPurchases,
       ] = await Promise.all([
         supabase
           .from("lots")
-          .select(
-            "id, lot_type, status, kind, started_at, lot_code, box_id, species_id, species(name)",
-          )
+          .select("id, lot_type, status, kind, started_at, lot_code, box_id, species_id, species(name)")
           .eq("status", "active"),
         supabase.from("clients").select("id, created_at").gte("created_at", month.toISOString()),
-        supabase
-          .from("orders")
-          .select("id, total_mxn, created_at, status")
-          .gte("created_at", month.toISOString())
-          .eq("status", "historial"),
+        supabase.from("orders").select("id, total_mxn, created_at, status").gte("created_at", month.toISOString()).eq("status", "historial"),
         supabase.from("alerts").select("id").eq("acknowledged", false),
         supabase.from("boxes").select("id"),
-        supabase
-          .from("warehouse_purchases")
+        supabase.from("warehouse_purchases")
           .select("id, total_cost, created_at")
           .gte("created_at", month.toISOString()),
         /* critical supplies — fetch all, filter client-side because PostgREST
            can't compare two columns directly */
-        supabase.from("warehouse_food").select("id, name, quantity_grams, min_stock_grams"),
+        supabase.from("warehouse_food")
+          .select("id, name, quantity_grams, min_stock_grams"),
         /* pending orders with client name */
-        supabase
-          .from("orders")
+        supabase.from("orders")
           .select("id, total_mxn, created_at, client_id, clients(name)")
           .eq("status", "preparando")
           .order("created_at", { ascending: true }),
         /* previous-month orders */
-        supabase
-          .from("orders")
+        supabase.from("orders")
           .select("id, total_mxn, created_at, status")
           .gte("created_at", prevMonth.toISOString())
           .lt("created_at", month.toISOString())
           .eq("status", "historial"),
         /* previous-month purchases */
-        supabase
-          .from("warehouse_purchases")
+        supabase.from("warehouse_purchases")
           .select("id, total_cost, created_at")
           .gte("created_at", prevMonth.toISOString())
           .lt("created_at", month.toISOString()),
@@ -212,12 +155,14 @@ function Dashboard() {
   });
 
   /* ── derived: current month ── */
-  const lots = useMemo(() => data?.lots ?? [], [data?.lots]);
-  const orders = useMemo(() => data?.orders ?? [], [data?.orders]);
+  const lots = data?.lots ?? [];
+  const orders = data?.orders ?? [];
   const sales = orders.reduce((a, o) => a + Number(o.total_mxn || 0), 0);
   const paidOrders = orders.filter((o) => Number(o.total_mxn || 0) > 0);
   const avgTicket = paidOrders.length > 0 ? sales / paidOrders.length : 0;
-  const gastos = (data?.purchases ?? []).reduce((sum, p) => sum + Number(p.total_cost || 0), 0);
+  const gastos = (data?.purchases ?? []).reduce(
+    (sum, p) => sum + Number(p.total_cost || 0), 0
+  );
   const breeders = lots.filter((l) => l.lot_type === "breeder").length;
   const occupiedBoxes = new Set(lots.map((l) => l.box_id).filter(Boolean)).size;
   const totalBoxes = data?.boxes.length ?? 0;
@@ -235,10 +180,7 @@ function Dashboard() {
   /* ── previous month comparisons ── */
   const prevSales = (data?.prevOrders ?? []).reduce((a, o) => a + Number(o.total_mxn || 0), 0);
   const prevOrdersCount = (data?.prevOrders ?? []).length;
-  const prevGastos = (data?.prevPurchases ?? []).reduce(
-    (sum, p) => sum + Number(p.total_cost || 0),
-    0,
-  );
+  const prevGastos = (data?.prevPurchases ?? []).reduce((sum, p) => sum + Number(p.total_cost || 0), 0);
 
   const salesChange = pctChange(sales, prevSales);
   const ordersChange = pctChange(orders.length, prevOrdersCount);
@@ -249,7 +191,7 @@ function Dashboard() {
     (f: any) =>
       f.min_stock_grams != null &&
       Number(f.min_stock_grams) > 0 &&
-      Number(f.quantity_grams ?? 0) < Number(f.min_stock_grams),
+      Number(f.quantity_grams ?? 0) < Number(f.min_stock_grams)
   ).length;
 
   /* ── pending orders ── */
@@ -281,11 +223,7 @@ function Dashboard() {
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     const total = lots.length || 1;
     if (sorted.length <= 5) {
-      return sorted.map(([name, count]) => ({
-        name,
-        count,
-        pct: Math.round((count / total) * 100),
-      }));
+      return sorted.map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) }));
     }
     const top = sorted.slice(0, 4);
     const restCount = sorted.slice(4).reduce((sum, [, c]) => sum + c, 0);
@@ -312,71 +250,20 @@ function Dashboard() {
   /* ──────────────────── RENDER ──────────────────── */
 
   return (
-    <div className="premium-page p-4 sm:p-6 space-y-6 max-w-[1600px] mx-auto">
-      <div className="dashboard-hero flex items-start justify-between flex-wrap gap-4">
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-2">
-            Centro operativo
-          </div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
             Bienvenido, {profile?.full_name ?? "operador"}. Resumen operativo del mes.
           </p>
         </div>
-        <Badge variant="outline" className="premium-plan-badge capitalize">
-          Plan {profile?.tier ?? "bronze"}
-        </Badge>
+        <Badge variant="outline" className="capitalize">Plan {profile?.tier ?? "bronze"}</Badge>
       </div>
-
-      {executive && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
-          <KPI
-            icon={ClipboardList}
-            label="Tareas vencidas"
-            value={executive.overdue_tasks ?? 0}
-            tone={executive.overdue_tasks ? "danger" : "success"}
-          />
-          <KPI
-            icon={Activity}
-            label="Tareas completadas"
-            value={executive.completed_tasks_month ?? 0}
-            sub="Este mes"
-          />
-          <KPI
-            icon={AlertTriangle}
-            label="Casos sanitarios"
-            value={executive.open_health_cases ?? 0}
-            tone={executive.critical_health_cases ? "danger" : "default"}
-          />
-          <KPI
-            icon={Boxes}
-            label="Stock crítico"
-            value={executive.low_stock_items ?? 0}
-            tone={executive.low_stock_items ? "warning" : "success"}
-          />
-          <KPI
-            icon={FlaskConical}
-            label="Programas activos"
-            value={executive.active_breeding_programs ?? 0}
-          />
-          <KPI
-            icon={Wallet}
-            label="Margen acumulado"
-            value={`$${Number(executive.gross_margin ?? 0).toLocaleString("es-MX", { maximumFractionDigits: 0 })}`}
-            tone="success"
-          />
-        </div>
-      )}
 
       {/* ── KPI grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPI
-          icon={Activity}
-          label="Lotes activos"
-          value={lots.length}
-          sub={`${byKind.rodent} roedores · ${byKind.insect} insectos`}
-          tone="success"
-        />
+        <KPI icon={Activity} label="Lotes activos" value={lots.length} sub={`${byKind.rodent} roedores · ${byKind.insect} insectos`} tone="success" />
         <KPI icon={Users} label="Nuevos clientes (mes)" value={data?.clients.length ?? 0} />
         <KPI
           icon={ShoppingCart}
@@ -388,32 +275,13 @@ function Dashboard() {
         <KPI
           icon={Wallet}
           label="Gastos (mes)"
-          value={
-            gastos > 0 ? `$${gastos.toLocaleString("es-MX", { maximumFractionDigits: 0 })}` : "$0"
-          }
+          value={gastos > 0 ? `$${gastos.toLocaleString("es-MX", { maximumFractionDigits: 0 })}` : "$0"}
           sub={compSub(gastosChange)}
           tone={compTone(gastosChange)}
         />
-        <KPI
-          icon={Boxes}
-          label="Ocupación de cajas"
-          value={`${occupancyPct}%`}
-          sub={`${occupiedBoxes}/${totalBoxes} ocupadas · ${free} libres`}
-          tone={occupancyPct >= 90 ? "warning" : "default"}
-        />
-        <KPI
-          icon={Wallet}
-          label="Ticket promedio (mes)"
-          value={`$${avgTicket.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`}
-          sub={`${paidOrders.length} órdenes con venta`}
-          tone="success"
-        />
-        <KPI
-          icon={Bell}
-          label="Alertas pendientes"
-          value={data?.alerts.length ?? 0}
-          tone={(data?.alerts.length ?? 0) > 0 ? "warning" : "default"}
-        />
+        <KPI icon={Boxes} label="Ocupación de cajas" value={`${occupancyPct}%`} sub={`${occupiedBoxes}/${totalBoxes} ocupadas · ${free} libres`} tone={occupancyPct >= 90 ? "warning" : "default"} />
+        <KPI icon={Wallet} label="Ticket promedio (mes)" value={`$${avgTicket.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`} sub={`${paidOrders.length} órdenes con venta`} tone="success" />
+        <KPI icon={Bell} label="Alertas pendientes" value={data?.alerts.length ?? 0} tone={(data?.alerts.length ?? 0) > 0 ? "warning" : "default"} />
         <KPI
           icon={TrendingUp}
           label="Ventas (mes)"
@@ -439,7 +307,7 @@ function Dashboard() {
       </div>
 
       {/* ── Pending orders ── */}
-      <Card className="p-5 border-border bg-card/70">
+      <Card className="p-5 border-border bg-card/60">
         <h2 className="font-semibold mb-3">Pendientes de entrega</h2>
         {pendingOrders.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
@@ -448,27 +316,19 @@ function Dashboard() {
         ) : (
           <div className="divide-y divide-border">
             {pendingOrders.map((o: any) => (
-              <div
-                key={o.id}
-                className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
-              >
+              <div key={o.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
                 <div className="flex items-center gap-3 flex-wrap min-w-0">
                   <span className="font-medium text-sm truncate">
                     {(o as any).clients?.name ?? "Sin cliente"}
                   </span>
                   <span className="text-emerald-400 font-semibold text-sm whitespace-nowrap">
-                    $
-                    {Number(o.total_mxn ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    ${Number(o.total_mxn ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                   </span>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(o.created_at).toLocaleDateString("es-MX")}
                   </span>
                 </div>
-                <Button
-                  size="sm"
-                  className="h-9 w-full sm:w-auto sm:h-8 shrink-0"
-                  onClick={() => handleDeliver(o.id)}
-                >
+                <Button size="sm" className="h-9 w-full sm:w-auto sm:h-8 shrink-0" onClick={() => handleDeliver(o.id)}>
                   <Check className="mr-1 h-3.5 w-3.5" /> Entregar
                 </Button>
               </div>
@@ -480,7 +340,7 @@ function Dashboard() {
       {/* ── Charts + demographics ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Weekly sales bar chart */}
-        <Card className="p-5 border-border bg-card/70 lg:col-span-2">
+        <Card className="p-5 border-border bg-card/60 lg:col-span-2">
           <h2 className="font-semibold mb-3">Ventas del mes por semana</h2>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={weeklyData}>
@@ -517,7 +377,7 @@ function Dashboard() {
         </Card>
 
         {/* Species distribution */}
-        <Card className="p-5 border-border bg-card/70">
+        <Card className="p-5 border-border bg-card/60">
           <h2 className="font-semibold mb-4">Distribución demográfica</h2>
           <div className="space-y-4">
             {speciesDistribution.length === 0 ? (
@@ -527,9 +387,7 @@ function Dashboard() {
                 <div key={sp.name}>
                   <div className="flex justify-between text-sm mb-1.5">
                     <span>{sp.name}</span>
-                    <span className="text-muted-foreground">
-                      {sp.count} ({sp.pct}%)
-                    </span>
+                    <span className="text-muted-foreground">{sp.count} ({sp.pct}%)</span>
                   </div>
                   <Progress value={sp.pct} />
                 </div>

@@ -4,10 +4,14 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 function supabaseForUser(ctx: ToolContext) {
-  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
 }
 
 export default defineTool({
@@ -26,9 +30,7 @@ export default defineTool({
     }
     let q = supabaseForUser(ctx)
       .from("lots")
-      .select(
-        "lot_code, kind, species_id, box_id, males, females, unsexed, mass_grams, started_at, status",
-      )
+      .select("lot_code, kind, species_id, box_id, males, females, unsexed, mass_grams, started_at, status")
       .eq("owner_id", ctx.getUserId()!)
       .eq("status", "active")
       .order("started_at", { ascending: false })

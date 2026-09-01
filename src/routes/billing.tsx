@@ -3,74 +3,46 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown } from "lucide-react";
-import { useOrgTier, type Tier } from "@/hooks/use-profile";
+import { useProfile, type Tier } from "@/hooks/use-profile";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/billing")({
   head: () => ({
     meta: [
-      { title: "Suscripción y planes — BioTrack" },
-      {
-        name: "description",
-        content: "Consulta y cambia tu plan de BioTrack: Bronze, Silver, Gold o Diamond.",
-      },
-      { property: "og:title", content: "Suscripción y planes — BioTrack" },
-      {
-        property: "og:description",
-        content: "Consulta y cambia tu plan de BioTrack: Bronze, Silver, Gold o Diamond.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/billing" },
+      { title: 'Suscripción y planes — BioTrack' },
+      { name: "description", content: 'Consulta y cambia tu plan de BioTrack: Bronze, Silver, Gold o Diamond.' },
+      { property: "og:title", content: 'Suscripción y planes — BioTrack' },
+      { property: "og:description", content: 'Consulta y cambia tu plan de BioTrack: Bronze, Silver, Gold o Diamond.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/billing' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/billing" }],
-  }),
-  component: Billing,
-});
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/billing' }],
+  }), component: Billing });
+
 
 const PLANS: { tier: Tier; price: string; name: string; features: string[]; accent: string }[] = [
-  {
-    tier: "bronze",
-    price: "Gratis",
-    name: "Bronze",
+  { tier: "bronze", price: "Gratis", name: "Bronze",
     features: ["5 lotes roedores", "5 lotes insectos", "Alertas básicas", "Dashboard"],
-    accent: "border-amber-700/40",
-  },
-  {
-    tier: "silver",
-    price: "$33 MXN/mes",
-    name: "Silver",
+    accent: "border-amber-700/40" },
+  { tier: "silver", price: "$33 MXN/mes", name: "Silver",
     features: ["20 lotes roedores", "20 lotes insectos", "Alertas avanzadas", "Dashboard"],
-    accent: "border-slate-500/40",
-  },
-  {
-    tier: "gold",
-    price: "$199 MXN/mes",
-    name: "Gold",
-    features: [
-      "Lotes ilimitados",
-      "Almacén + Stock",
-      "Ventas + 60 clientes",
-      "Reportes (sin avanzados)",
-      "IA: 20 prompts/mes",
-    ],
-    accent: "border-yellow-500/40",
-  },
-  {
-    tier: "diamond",
-    price: "$477 MXN/mes",
-    name: "Diamond",
+    accent: "border-slate-500/40" },
+  { tier: "gold", price: "$199 MXN/mes", name: "Gold",
+    features: ["Lotes ilimitados", "Almacén + Stock", "Ventas + 60 clientes", "Reportes (sin avanzados)", "IA: 20 prompts/mes"],
+    accent: "border-yellow-500/40" },
+  { tier: "diamond", price: "$477 MXN/mes", name: "Diamond",
     features: ["Todo ilimitado", "Reportes avanzados", "IA ilimitada", "Soporte prioritario"],
-    accent: "border-cyan-500/40",
-  },
+    accent: "border-cyan-500/40" },
 ];
 
 function Billing() {
-  const current = useOrgTier();
+  const { data: profile } = useProfile();
+  const current = (profile?.tier ?? "bronze") as Tier;
 
   const setTier = async (_t: Tier) => {
-    toast.info(
-      "El cambio de plan se procesa mediante pago verificado. Contacta a soporte para actualizar tu suscripción.",
-    );
+    toast.info("El cambio de plan se procesa mediante pago verificado. Contacta a soporte para actualizar tu suscripción.");
   };
+
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -82,33 +54,21 @@ function Billing() {
         {PLANS.map((p) => {
           const active = current === p.tier;
           return (
-            <Card
-              key={p.tier}
-              className={`p-5 border bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 ${p.accent} ${active ? "ring-2 ring-primary" : ""}`}
-            >
+            <Card key={p.tier} className={`p-5 border bg-gradient-to-br from-card to-card/40 shadow-sm hover:shadow-md transition-all duration-200 ${p.accent} ${active ? "ring-2 ring-primary" : ""}`}>
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
                   {p.tier === "diamond" && <Crown className="h-4 w-4 text-cyan-300" />}
                   {p.name}
                 </h2>
-                {active && (
-                  <Badge className="bg-primary text-primary-foreground font-semibold">Actual</Badge>
-                )}
+                {active && <Badge className="bg-primary text-primary-foreground font-semibold">Actual</Badge>}
               </div>
               <div className="text-2xl font-bold mb-4 text-foreground">{p.price}</div>
               <ul className="space-y-1.5 mb-5 text-sm">
                 {p.features.map((f) => (
-                  <li key={f} className="flex gap-2 text-muted-foreground">
-                    <Check className="h-4 w-4 text-emerald-glow mt-0.5 shrink-0" /> {f}
-                  </li>
+                  <li key={f} className="flex gap-2 text-muted-foreground"><Check className="h-4 w-4 text-emerald-glow mt-0.5 shrink-0" /> {f}</li>
                 ))}
               </ul>
-              <Button
-                variant={active ? "outline" : "default"}
-                className="w-full h-10 transition-all duration-200"
-                disabled={active}
-                onClick={() => setTier(p.tier)}
-              >
+              <Button variant={active ? "outline" : "default"} className="w-full h-10 transition-all duration-200" disabled={active} onClick={() => setTier(p.tier)}>
                 {active ? "Plan actual" : "Cambiar a " + p.name}
               </Button>
             </Card>

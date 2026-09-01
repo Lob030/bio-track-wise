@@ -2,10 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTransactionRequest } from "@/hooks/use-transaction-request";
 import { supabase } from "@/integrations/supabase/client";
 import { TierGate } from "@/components/tier-gate";
-import { AdminPageOnly } from "@/components/role-gate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +70,6 @@ function SalesPage() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { new: autoNew } = Route.useSearch();
   const qc = useQueryClient();
-  const { getRequestId, resetRequestId } = useTransactionRequest();
   const [activeTab, setActiveTab] = useState<SalesTab>("nueva-venta");
 
   const { data: futureOrders, isLoading: loadingFutureOrders } = useQuery({
@@ -116,7 +113,9 @@ function SalesPage() {
   const { data: clients } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name");
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id,name");
       if (error) throw error;
       return data;
     },
@@ -134,6 +133,7 @@ function SalesPage() {
 
   const [historialSearch, setHistorialSearch] = useState("");
   const [historialMonth, setHistorialMonth] = useState("all");
+
 
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
@@ -156,7 +156,9 @@ function SalesPage() {
     // Filter by client name (partial match, case insensitive)
     if (historialSearch.trim()) {
       const q = historialSearch.trim().toLowerCase();
-      result = result.filter((o: any) => (o.clients?.name ?? "").toLowerCase().includes(q));
+      result = result.filter((o: any) =>
+        (o.clients?.name ?? "").toLowerCase().includes(q)
+      );
     }
 
     // Filter by month
@@ -173,7 +175,7 @@ function SalesPage() {
   // Total of filtered results
   const filteredTotal = useMemo(
     () => filteredHistorial.reduce((sum: number, o: any) => sum + Number(o.total_mxn ?? 0), 0),
-    [filteredHistorial],
+    [filteredHistorial]
   );
 
   /* ── modal state ── */
@@ -191,6 +193,7 @@ function SalesPage() {
     }
   }, [autoNew]);
 
+
   function resetForm() {
     setDate(todayISO());
     setClientId("");
@@ -207,15 +210,23 @@ function SalesPage() {
   }
 
   function updateItem(idx: number, patch: Partial<LineItem>) {
-    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)),
+    );
   }
 
   function removeItem(idx: number) {
     setItems((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  const subtotal = useMemo(() => items.reduce((s, it) => s + it.qty * it.unit_price, 0), [items]);
-  const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
+  const subtotal = useMemo(
+    () => items.reduce((s, it) => s + it.qty * it.unit_price, 0),
+    [items],
+  );
+  const total = useMemo(
+    () => subtotal * (1 - discount / 100),
+    [subtotal, discount],
+  );
 
   /* ── submit sale ── */
   async function handleSubmit() {
@@ -236,28 +247,121 @@ function SalesPage() {
 
     setSubmitting(true);
     try {
-      const operation = "sale:create";
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        setSubmitting(false);
+        return;
+      }
 
-      /* La RPC crea el pedido, sus partidas y el consumo FIFO en una transacción. */
-      const { error } = await supabase.rpc("create_sale_tx", {
-        _request_id: getRequestId(operation),
-        _client_id: clientId,
-        _items: items.map((item) => ({
-          kind: item.kind,
-          species_id: item.species_id,
-          size_label: item.size_label,
-          quantity: item.qty,
-          unit_price: item.unit_price,
-        })),
-        _discount_pct: discount,
-        _notes: notes || null,
-        _delivered_at: null,
-        _consume_inventory: true,
-      });
-      if (error) throw error;
+      /* 1 ─ insert order */
+      const { data: order, error: oErr } = await supabase
+        .from("orders")
+        .insert({
+          owner_id: u.user.id,
+          client_id: clientId,
+          discount_pct: discount,
+          subtotal_mxn: subtotal,
+          total_mxn: total,
+          notes,
+          status: "preparando",
+        })
+        .select("id")
+        .single();
+      if (oErr) throw oErr;
 
-      resetRequestId(operation);
-      toast.success("Venta registrada");
+      const unfulfilledItems: string[] = [];
+
+      /* 2 ─ process each line item */
+      for (const item of items) {
+        /* a ─ fifo RPC */
+        const rpcName =
+          item.kind === "rodent"
+            ? "fifo_consume_rodents"
+            : "fifo_consume_insects";
+        const rpcParams =
+          item.kind === "rodent"
+            ? {
+                _owner: u.user.id,
+                _species: item.species_id,
+                _size: item.size_label,
+                _qty: item.qty,
+              }
+            : {
+                _owner: u.user.id,
+                _species: item.species_id,
+                _size: item.size_label,
+                _grams: item.qty,
+              };
+
+        const rpcResult = await supabase.rpc(rpcName, rpcParams);
+        if (rpcResult.error) throw rpcResult.error;
+
+        /* b ─ insert order_item */
+        const { data: orderItem, error: oiErr } = await supabase
+          .from("order_items")
+          .insert({
+            owner_id: u.user.id,
+            order_id: order.id,
+            species_id: item.species_id,
+            kind: item.kind,
+            size_label: item.size_label,
+            requested_qty: item.qty,
+            unit_price: item.unit_price,
+            line_total: item.qty * item.unit_price,
+          })
+          .select("id")
+          .single();
+        if (oiErr) throw oiErr;
+
+        /* c ─ parse allocations */
+        const result = (typeof rpcResult.data === "string"
+          ? JSON.parse(rpcResult.data)
+          : rpcResult.data) as {
+          allocations?: Array<{
+            lot_id: string;
+            qty: number;
+            finalized: boolean;
+          }>;
+          unfulfilled?: number;
+        } | null;
+
+        /* d ─ insert allocations */
+        if (result?.allocations?.length) {
+          const rows = result.allocations.map((alloc) => ({
+            owner_id: u.user.id,
+            order_item_id: orderItem.id,
+            lot_id: alloc.lot_id,
+            qty_taken: alloc.qty,
+            finalized_lot: alloc.finalized,
+          }));
+          const { error: aErr } = await supabase
+            .from("order_item_allocations")
+            .insert(rows);
+          if (aErr) throw aErr;
+        }
+
+        /* e ─ check unfulfilled */
+        const unfulfilled = Number(result?.unfulfilled) || 0;
+        if (unfulfilled > 0) {
+          const spName =
+            (species ?? []).find((s: any) => s.id === item.species_id)?.name ??
+            "Especie";
+          const unit = item.kind === "rodent" ? "ind." : "g";
+          unfulfilledItems.push(
+            `${spName} (${item.size_label}): faltaron ${unfulfilled} ${unit}`,
+          );
+        }
+      }
+
+      /* 3 ─ toasts */
+      if (unfulfilledItems.length > 0) {
+        toast.warning("Venta registrada con stock insuficiente", {
+          description: `No se pudo surtir por completo: ${unfulfilledItems.join(", ")}`,
+          duration: 6000,
+        });
+      } else {
+        toast.success("Venta registrada");
+      }
 
       /* 4 ─ invalidate */
       qc.invalidateQueries({ queryKey: ["orders"] });
@@ -311,22 +415,18 @@ function SalesPage() {
         <button
           onClick={() => setActiveTab("nueva-venta")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer
-            ${
-              activeTab === "nueva-venta"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            ${activeTab === "nueva-venta"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"}`}
         >
           Nueva Venta
         </button>
         <button
           onClick={() => setActiveTab("pedidos-futuros")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5
-            ${
-              activeTab === "pedidos-futuros"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            ${activeTab === "pedidos-futuros"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"}`}
         >
           📅 Pedidos Futuros
           {(futureOrders ?? []).length > 0 && (
@@ -339,572 +439,542 @@ function SalesPage() {
 
       {activeTab === "nueva-venta" ? (
         <div className="space-y-6">
-          {/* header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Ventas</h1>
-              <p className="text-sm text-muted-foreground">
-                Pipeline de pedidos y entrega con vaciado FIFO de lotes.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 h-9"
-                onClick={() =>
-                  exportToCSV(
-                    `ventas-${new Date().toISOString().slice(0, 10)}.csv`,
-                    ["Pedido", "Cliente", "Total MXN", "Estado", "Fecha"],
-                    (orders ?? []).map((o: any) => [
-                      o.id.slice(0, 8),
-                      o.clients?.name ?? "—",
-                      o.total_mxn,
-                      o.status,
-                      new Date(o.created_at).toLocaleDateString("es-MX"),
-                    ]),
-                  )
-                }
-              >
-                <Download className="h-4 w-4" /> Exportar CSV
-              </Button>
-              <Dialog
-                open={open}
-                onOpenChange={(v) => {
-                  setOpen(v);
-                  if (!v) resetForm();
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200"
-                  >
-                    <Plus className="mr-1 h-5 md:h-4 w-5 md:w-4" /> Nueva Venta
-                  </Button>
-                </DialogTrigger>
+      {/* header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Ventas</h1>
+          <p className="text-sm text-muted-foreground">
+            Pipeline de pedidos y entrega con vaciado FIFO de lotes.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="gap-1.5 h-9"
+          onClick={() => exportToCSV(
+            `ventas-${new Date().toISOString().slice(0,10)}.csv`,
+            ["Pedido", "Cliente", "Total MXN", "Estado", "Fecha"],
+            (orders ?? []).map((o: any) => [
+              o.id.slice(0, 8),
+              o.clients?.name ?? "—",
+              o.total_mxn,
+              o.status,
+              new Date(o.created_at).toLocaleDateString("es-MX"),
+            ])
+          )}>
+          <Download className="h-4 w-4" /> Exportar CSV
+        </Button>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) resetForm();
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button size="sm" className="h-10 md:h-9 min-h-10 md:min-h-9 transition-all duration-200">
+              <Plus className="mr-1 h-5 md:h-4 w-5 md:w-4" /> Nueva Venta
+            </Button>
+          </DialogTrigger>
 
-                {/* ─── NEW SALE MODAL ─── */}
-                <DialogContent className="max-w-4xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
-                      <ShoppingCart className="h-5 w-5" /> Nueva Venta
-                    </DialogTitle>
-                  </DialogHeader>
+          {/* ─── NEW SALE MODAL ─── */}
+          <DialogContent className="max-w-4xl p-6 gap-6 max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
+                <ShoppingCart className="h-5 w-5" /> Nueva Venta
+              </DialogTitle>
+            </DialogHeader>
 
-                  <div className="space-y-4">
-                    {/* date + client */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-sm font-medium block text-foreground/90">
-                          Fecha
-                        </Label>
-                        <Input
-                          type="date"
-                          className="h-10 focus-visible:ring-2 focus-visible:ring-primary"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-sm font-medium block text-foreground/90">
-                          Cliente
-                        </Label>
-                        <Select value={clientId} onValueChange={setClientId}>
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Seleccionar cliente" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(clients ?? []).map((c: any) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+            <div className="space-y-4">
+              {/* date + client */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium block text-foreground/90">Fecha</Label>
+                  <Input
+                    type="date"
+                    className="h-10 focus-visible:ring-2 focus-visible:ring-primary"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium block text-foreground/90">Cliente</Label>
+                  <Select value={clientId} onValueChange={setClientId}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Seleccionar cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(clients ?? []).map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-                    {/* line items */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold block text-foreground/90">
-                        Productos
-                      </Label>
-                      {items.map((item, idx) => {
-                        const filteredSpecies = speciesForKind(item.kind);
-                        const sizes = sizesForSpecies(item.species_id);
-                        return (
-                          <Card
-                            key={idx}
-                            className="border-border/50 bg-gradient-to-br from-card to-card/40 p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-200"
+              {/* line items */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold block text-foreground/90">Productos</Label>
+                {items.map((item, idx) => {
+                  const filteredSpecies = speciesForKind(item.kind);
+                  const sizes = sizesForSpecies(item.species_id);
+                  return (
+                    <Card
+                      key={idx}
+                      className="border-border/50 bg-gradient-to-br from-card to-card/40 p-4 space-y-3 shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                        {/* kind */}
+                        <div className="col-span-2 space-y-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            Tipo
+                          </span>
+                          <Select
+                            value={item.kind}
+                            onValueChange={(v: "rodent" | "insect") =>
+                              updateItem(idx, {
+                                kind: v,
+                                species_id: "",
+                                size_label: "",
+                              })
+                            }
                           >
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                              {/* kind */}
-                              <div className="col-span-2 space-y-1">
-                                <span className="text-[10px] uppercase text-muted-foreground">
-                                  Tipo
-                                </span>
-                                <Select
-                                  value={item.kind}
-                                  onValueChange={(v: "rodent" | "insect") =>
-                                    updateItem(idx, {
-                                      kind: v,
-                                      species_id: "",
-                                      size_label: "",
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="rodent">Roedor</SelectItem>
-                                    <SelectItem value="insect">Insecto</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="rodent">Roedor</SelectItem>
+                              <SelectItem value="insect">Insecto</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                              {/* species */}
-                              <div className="col-span-3 space-y-1">
-                                <span className="text-[10px] uppercase text-muted-foreground">
-                                  Especie
-                                </span>
-                                <Select
-                                  value={item.species_id}
-                                  onValueChange={(v) => {
-                                    const sp = (species ?? []).find((s: any) => s.id === v);
-                                    updateItem(idx, {
-                                      species_id: v,
-                                      size_label: "",
-                                      unit_price: sp?.unit_price_mxn ?? 0,
-                                    });
-                                  }}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Especie" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {filteredSpecies.map((s: any) => (
-                                      <SelectItem key={s.id} value={s.id}>
-                                        {s.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                        {/* species */}
+                        <div className="col-span-3 space-y-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            Especie
+                          </span>
+                          <Select
+                            value={item.species_id}
+                            onValueChange={(v) => {
+                              const sp = (species ?? []).find((s: any) => s.id === v);
+                              updateItem(idx, {
+                                species_id: v,
+                                size_label: "",
+                                unit_price: sp?.unit_price_mxn ?? 0,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Especie" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {filteredSpecies.map((s: any) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  {s.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                              {/* size */}
-                              <div className="col-span-2 space-y-1">
-                                <span className="text-[10px] uppercase text-muted-foreground">
-                                  Tamaño
-                                </span>
-                                <Select
-                                  value={item.size_label}
-                                  onValueChange={(v) => {
-                                    const sp = (species ?? []).find(
-                                      (s: any) => s.id === item.species_id,
-                                    );
-                                    const rules = (sp?.size_rules as any[]) ?? [];
-                                    const matchedRule = rules.find((r) => r.label === v);
-                                    const price = matchedRule?.price_mxn ?? sp?.unit_price_mxn ?? 0;
-                                    updateItem(idx, {
-                                      size_label: v,
-                                      unit_price: price,
-                                    });
-                                  }}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Tamaño" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {sizes.map((r) => (
-                                      <SelectItem key={r.label} value={r.label}>
-                                        {r.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                        {/* size */}
+                        <div className="col-span-2 space-y-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            Tamaño
+                          </span>
+                          <Select
+                            value={item.size_label}
+                            onValueChange={(v) => {
+                              const sp = (species ?? []).find((s: any) => s.id === item.species_id);
+                              const rules = (sp?.size_rules as any[]) ?? [];
+                              const matchedRule = rules.find((r) => r.label === v);
+                              const price = matchedRule?.price_mxn ?? sp?.unit_price_mxn ?? 0;
+                              updateItem(idx, {
+                                size_label: v,
+                                unit_price: price,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Tamaño" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {sizes.map((r) => (
+                                <SelectItem key={r.label} value={r.label}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                              {/* qty */}
-                              <div className="col-span-2 space-y-1">
-                                <span className="text-[10px] uppercase text-muted-foreground">
-                                  {item.kind === "rodent" ? "Cantidad (ind.)" : "Gramos"}
-                                </span>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  className="h-8 text-xs"
-                                  value={item.qty}
-                                  onChange={(e) =>
-                                    updateItem(idx, {
-                                      qty: parseFloat(e.target.value) || 0,
-                                    })
-                                  }
-                                />
-                              </div>
+                        {/* qty */}
+                        <div className="col-span-2 space-y-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            {item.kind === "rodent"
+                              ? "Cantidad (ind.)"
+                              : "Gramos"}
+                          </span>
+                          <Input
+                            type="number"
+                            min={0}
+                            className="h-8 text-xs"
+                            value={item.qty}
+                            onChange={(e) =>
+                              updateItem(idx, {
+                                qty: parseFloat(e.target.value) || 0,
+                              })
+                            }
+                          />
+                        </div>
 
-                              {/* unit price */}
-                              <div className="col-span-2 space-y-1">
-                                <span className="text-[10px] uppercase text-muted-foreground">
-                                  Precio unit.
-                                </span>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  min={0}
-                                  className="h-8 text-xs"
-                                  value={item.unit_price}
-                                  onChange={(e) =>
-                                    updateItem(idx, {
-                                      unit_price: parseFloat(e.target.value) || 0,
-                                    })
-                                  }
-                                />
-                              </div>
+                        {/* unit price */}
+                        <div className="col-span-2 space-y-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            Precio unit.
+                          </span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min={0}
+                            className="h-8 text-xs"
+                            value={item.unit_price}
+                            onChange={(e) =>
+                              updateItem(idx, {
+                                unit_price: parseFloat(e.target.value) || 0,
+                              })
+                            }
+                          />
+                        </div>
 
-                              {/* subtotal + delete */}
-                              <div className="col-span-1 flex items-end gap-1">
-                                <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">
-                                  {fmtMXN(item.qty * item.unit_price)}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-destructive"
-                                  onClick={() => removeItem(idx)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      })}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full border-dashed"
-                        onClick={addItem}
-                      >
-                        <Plus className="mr-1 h-3.5 w-3.5" /> Agregar producto
-                      </Button>
-                    </div>
-
-                    {/* discount + notes */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label>Descuento</Label>
-                        <Select
-                          value={String(discount)}
-                          onValueChange={(v) => setDiscount(Number(v))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[0, 5, 10, 15, 20].map((d) => (
-                              <SelectItem key={d} value={String(d)}>
-                                {d}%
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {/* subtotal + delete */}
+                        <div className="col-span-1 flex items-end gap-1">
+                          <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">
+                            {fmtMXN(item.qty * item.unit_price)}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => removeItem(idx)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label>Notas (opcional)</Label>
-                        <Input
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Observaciones…"
-                        />
-                      </div>
-                    </div>
+                    </Card>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed"
+                  onClick={addItem}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Agregar producto
+                </Button>
+              </div>
 
-                    {/* totals */}
-                    <div className="flex items-center justify-between rounded-md bg-accent/30 px-4 py-3">
-                      <div className="text-sm text-muted-foreground">
-                        Subtotal: {fmtMXN(subtotal)}
-                        {discount > 0 && <span className="ml-2">− {discount}%</span>}
-                      </div>
-                      <div className="text-lg font-bold text-emerald-400">
-                        Total: {fmtMXN(total)}
-                      </div>
-                    </div>
+              {/* discount + notes */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Descuento</Label>
+                  <Select
+                    value={String(discount)}
+                    onValueChange={(v) => setDiscount(Number(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[0, 5, 10, 15, 20].map((d) => (
+                        <SelectItem key={d} value={String(d)}>
+                          {d}%
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Notas (opcional)</Label>
+                  <Input
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Observaciones…"
+                  />
+                </div>
+              </div>
+
+              {/* totals */}
+              <div className="flex items-center justify-between rounded-md bg-accent/30 px-4 py-3">
+                <div className="text-sm text-muted-foreground">
+                  Subtotal: {fmtMXN(subtotal)}
+                  {discount > 0 && (
+                    <span className="ml-2">
+                      − {discount}%
+                    </span>
+                  )}
+                </div>
+                <div className="text-lg font-bold text-emerald-400">
+                  Total: {fmtMXN(total)}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-full"
+              >
+                {submitting ? "Registrando…" : "Registrar Venta"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        </div>
+      </div>
+
+      {/* ─── TABS ─── */}
+      <Tabs defaultValue="preparando">
+        <TabsList>
+          <TabsTrigger value="preparando">
+            <Package className="mr-1 h-4 w-4" /> Preparando
+            {preparando.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                {preparando.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="historial">
+            <ShoppingCart className="mr-1 h-4 w-4" /> Historial
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── PREPARANDO ── */}
+        <TabsContent value="preparando" className="space-y-3 mt-4">
+          {preparando.length === 0 ? (
+            <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
+              Sin pedidos en preparación.
+            </Card>
+          ) : (
+            preparando.map((o: any) => (
+              <Card
+                key={o.id}
+                className="border-border/50 bg-gradient-to-br from-card to-card/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-muted-foreground font-semibold">
+                      #{o.id.slice(0, 8)}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] border-border/40 bg-accent/10">
+                      preparando
+                    </Badge>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {(o as any).clients?.name ?? "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {fmtDate(o.created_at)} · {o.order_items?.length ?? 0}{" "}
+                    productos
+                  </p>
+                </div>
+                <div className="flex items-center justify-between sm:justify-end gap-4">
+                  <span className="font-bold text-emerald-400 text-base">
+                    {fmtMXN(o.total_mxn ?? 0)}
+                  </span>
+                  <Button size="sm" className="h-10 sm:h-9 min-h-10 sm:min-h-9 transition-all duration-200" onClick={() => handleDeliver(o.id)}>
+                    <Check className="mr-1.5 h-4.5 w-4.5 sm:h-4 sm:w-4" /> Marcar como Entregado
+                  </Button>
+                </div>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        {/* ── HISTORIAL ── */}
+        <TabsContent value="historial" className="mt-4">
+          {historial.length === 0 ? (
+            <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
+              Sin pedidos entregados.
+            </Card>
+          ) : (
+            <>
+              {historial.length > 0 && (
+                <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                  {/* Client search */}
+                  <div className="relative flex-1 max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por cliente..."
+                      value={historialSearch}
+                      onChange={e => setHistorialSearch(e.target.value)}
+                      className="pl-9 h-9"
+                    />
                   </div>
 
-                  <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={submitting} className="w-full">
-                      {submitting ? "Registrando…" : "Registrar Venta"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-
-          {/* ─── TABS ─── */}
-          <Tabs defaultValue="preparando">
-            <TabsList>
-              <TabsTrigger value="preparando">
-                <Package className="mr-1 h-4 w-4" /> Preparando
-                {preparando.length > 0 && (
-                  <Badge variant="secondary" className="ml-1.5 text-[10px]">
-                    {preparando.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="historial">
-                <ShoppingCart className="mr-1 h-4 w-4" /> Historial
-              </TabsTrigger>
-            </TabsList>
-
-            {/* ── PREPARANDO ── */}
-            <TabsContent value="preparando" className="space-y-3 mt-4">
-              {preparando.length === 0 ? (
-                <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
-                  Sin pedidos en preparación.
-                </Card>
-              ) : (
-                preparando.map((o: any) => (
-                  <Card
-                    key={o.id}
-                    className="border-border/50 bg-gradient-to-br from-card to-card/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-muted-foreground font-semibold">
-                          #{o.id.slice(0, 8)}
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] border-border/40 bg-accent/10"
-                        >
-                          preparando
-                        </Badge>
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {(o as any).clients?.name ?? "—"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {fmtDate(o.created_at)} · {o.order_items?.length ?? 0} productos
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-4">
-                      <span className="font-bold text-emerald-400 text-base">
-                        {fmtMXN(o.total_mxn ?? 0)}
-                      </span>
-                      <Button
-                        size="sm"
-                        className="h-10 sm:h-9 min-h-10 sm:min-h-9 transition-all duration-200"
-                        onClick={() => handleDeliver(o.id)}
-                      >
-                        <Check className="mr-1.5 h-4.5 w-4.5 sm:h-4 sm:w-4" /> Marcar como Entregado
-                      </Button>
-                    </div>
-                  </Card>
-                ))
-              )}
-            </TabsContent>
-
-            {/* ── HISTORIAL ── */}
-            <TabsContent value="historial" className="mt-4">
-              {historial.length === 0 ? (
-                <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
-                  Sin pedidos entregados.
-                </Card>
-              ) : (
-                <>
-                  {historial.length > 0 && (
-                    <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                      {/* Client search */}
-                      <div className="relative flex-1 max-w-xs">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar por cliente..."
-                          value={historialSearch}
-                          onChange={(e) => setHistorialSearch(e.target.value)}
-                          className="pl-9 h-9"
-                        />
-                      </div>
-
-                      {/* Month filter */}
-                      <Select value={historialMonth} onValueChange={setHistorialMonth}>
-                        <SelectTrigger className="h-9 w-44">
-                          <SelectValue placeholder="Todos los meses" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos los meses</SelectItem>
-                          {availableMonths.map((m) => {
-                            let label = m;
-                            try {
-                              const parts = m.split("-");
-                              if (parts.length === 2) {
-                                const year = parseInt(parts[0], 10);
-                                const month = parseInt(parts[1], 10);
-                                if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
-                                  const date = new Date(Date.UTC(year, month - 1, 15));
-                                  if (!isNaN(date.getTime())) {
-                                    label = date.toLocaleDateString("es-MX", {
-                                      month: "long",
-                                      year: "numeric",
-                                      timeZone: "UTC",
-                                    });
-                                  }
-                                }
+                  {/* Month filter */}
+                  <Select value={historialMonth} onValueChange={setHistorialMonth}>
+                    <SelectTrigger className="h-9 w-44">
+                      <SelectValue placeholder="Todos los meses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los meses</SelectItem>
+                      {availableMonths.map(m => {
+                        let label = m;
+                        try {
+                          const parts = m.split("-");
+                          if (parts.length === 2) {
+                            const year = parseInt(parts[0], 10);
+                            const month = parseInt(parts[1], 10);
+                            if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
+                              const date = new Date(Date.UTC(year, month - 1, 15));
+                              if (!isNaN(date.getTime())) {
+                                label = date.toLocaleDateString("es-MX", {
+                                  month: "long",
+                                  year: "numeric",
+                                  timeZone: "UTC",
+                                });
                               }
-                            } catch (e) {
-                              console.error("Error formatting month:", e);
                             }
-                            return (
-                              <SelectItem key={m} value={m}>
-                                {label}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-
-                      {/* Clear filters button — only shows when filters are active */}
-                      {(historialSearch || historialMonth !== "all") && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 text-muted-foreground"
-                          onClick={() => {
-                            setHistorialSearch("");
-                            setHistorialMonth("all");
-                          }}
-                        >
-                          ✕ Limpiar
-                        </Button>
-                      )}
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5 h-9 sm:ml-auto"
-                        onClick={() =>
-                          exportToCSV(
-                            `ventas-historial-${new Date().toISOString().slice(0, 10)}.csv`,
-                            ["Pedido", "Cliente", "Fecha entrega", "Items", "Total MXN"],
-                            filteredHistorial.map((o: any) => [
-                              o.id.slice(0, 8),
-                              o.clients?.name ?? "—",
-                              o.delivered_at
-                                ? new Date(o.delivered_at).toLocaleDateString("es-MX")
-                                : "—",
-                              o.order_items?.length ?? 0,
-                              o.total_mxn,
-                            ]),
-                          )
+                          }
+                        } catch (e) {
+                          console.error("Error formatting month:", e);
                         }
-                      >
-                        <Download className="h-4 w-4" /> Exportar CSV
-                      </Button>
-                    </div>
+                        return (
+                          <SelectItem key={m} value={m}>
+                            {label}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Clear filters button — only shows when filters are active */}
+                  {(historialSearch || historialMonth !== "all") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 text-muted-foreground"
+                      onClick={() => { setHistorialSearch(""); setHistorialMonth("all"); }}
+                    >
+                      ✕ Limpiar
+                    </Button>
                   )}
 
-                  {historial.length > 0 && (
-                    <div className="flex justify-between items-center text-xs text-muted-foreground mb-2 px-1">
-                      <span>
-                        {filteredHistorial.length} de {historial.length} órdenes
-                      </span>
-                      <span className="font-semibold text-emerald-400">
-                        Total: {fmtMXN(filteredTotal)}
-                      </span>
-                    </div>
-                  )}
-
-                  {filteredHistorial.length === 0 ? (
-                    <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
-                      Sin resultados para los filtros aplicados.
-                    </Card>
-                  ) : isMobile ? (
-                    <div className="space-y-3">
-                      {filteredHistorial.map((o: any) => (
-                        <div
-                          key={o.id}
-                          className="rounded-lg border border-border bg-card p-3 space-y-2"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="font-semibold text-sm truncate">
-                                {(o as any).clients?.name ?? "—"}
-                              </div>
-                              <div className="text-[10px] font-mono text-muted-foreground">
-                                #{o.id.slice(0, 8)}
-                              </div>
-                            </div>
-                            <span className="font-bold text-emerald-400 text-sm whitespace-nowrap shrink-0">
-                              {fmtMXN(o.total_mxn ?? 0)}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{fmtDate(o.delivered_at)}</span>
-                            <span>{o.order_items?.length ?? 0} productos</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="bg-accent/20 border-b border-border/30">
-                              <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                                Pedido #
-                              </th>
-                              <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                                Cliente
-                              </th>
-                              <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                                Fecha entrega
-                              </th>
-                              <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
-                                Items
-                              </th>
-                              <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-right">
-                                Total MXN
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredHistorial.map((o: any, i: number) => (
-                              <tr
-                                key={o.id}
-                                className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
-                              >
-                                <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
-                                  #{o.id.slice(0, 8)}
-                                </td>
-                                <td className="px-4 py-3 text-foreground font-medium">
-                                  {(o as any).clients?.name ?? "—"}
-                                </td>
-                                <td className="px-4 py-3 text-muted-foreground">
-                                  {fmtDate(o.delivered_at)}
-                                </td>
-                                <td className="px-4 py-3 text-muted-foreground">
-                                  {o.order_items?.length ?? 0} productos
-                                </td>
-                                <td className="px-4 py-3 text-right font-bold text-emerald-400">
-                                  {fmtMXN(o.total_mxn ?? 0)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </Card>
-                  )}
-                </>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-9 sm:ml-auto"
+                    onClick={() => exportToCSV(
+                      `ventas-historial-${new Date().toISOString().slice(0,10)}.csv`,
+                      ["Pedido", "Cliente", "Fecha entrega", "Items", "Total MXN"],
+                      filteredHistorial.map((o: any) => [
+                        o.id.slice(0, 8),
+                        o.clients?.name ?? "—",
+                        o.delivered_at ? new Date(o.delivered_at).toLocaleDateString("es-MX") : "—",
+                        o.order_items?.length ?? 0,
+                        o.total_mxn
+                      ])
+                    )}>
+                    <Download className="h-4 w-4" /> Exportar CSV
+                  </Button>
+                </div>
               )}
-            </TabsContent>
-          </Tabs>
+
+              {historial.length > 0 && (
+                <div className="flex justify-between items-center text-xs text-muted-foreground mb-2 px-1">
+                  <span>
+                    {filteredHistorial.length} de {historial.length} órdenes
+                  </span>
+                  <span className="font-semibold text-emerald-400">
+                    Total: {fmtMXN(filteredTotal)}
+                  </span>
+                </div>
+              )}
+
+              {filteredHistorial.length === 0 ? (
+                <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center text-sm text-muted-foreground shadow-sm">
+                  Sin resultados para los filtros aplicados.
+                </Card>
+              ) : isMobile ? (
+                <div className="space-y-3">
+                  {filteredHistorial.map((o: any) => (
+                    <div key={o.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm truncate">{(o as any).clients?.name ?? "—"}</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">#{o.id.slice(0, 8)}</div>
+                        </div>
+                        <span className="font-bold text-emerald-400 text-sm whitespace-nowrap shrink-0">{fmtMXN(o.total_mxn ?? 0)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{fmtDate(o.delivered_at)}</span>
+                        <span>{o.order_items?.length ?? 0} productos</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Card className="border-border/50 bg-gradient-to-br from-card to-card/40 overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-accent/20 border-b border-border/30">
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Pedido #
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Cliente
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Fecha entrega
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-left">
+                            Items
+                          </th>
+                          <th className="text-[11px] uppercase text-muted-foreground font-semibold px-4 py-3 text-right">
+                            Total MXN
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredHistorial.map((o: any, i: number) => (
+                          <tr 
+                            key={o.id} 
+                            className={`border-b border-border/40 hover:bg-accent/15 transition-all duration-200 ${i % 2 === 0 ? "bg-accent/5" : ""}`}
+                          >
+                            <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
+                              #{o.id.slice(0, 8)}
+                            </td>
+                            <td className="px-4 py-3 text-foreground font-medium">
+                              {(o as any).clients?.name ?? "—"}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {fmtDate(o.delivered_at)}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {o.order_items?.length ?? 0} productos
+                            </td>
+                            <td className="px-4 py-3 text-right font-bold text-emerald-400">
+                              {fmtMXN(o.total_mxn ?? 0)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
         </div>
       ) : (
-        <PedidosFuturosPanel futureOrders={futureOrders ?? []} isLoading={loadingFutureOrders} />
+        <PedidosFuturosPanel
+          futureOrders={futureOrders ?? []}
+          isLoading={loadingFutureOrders}
+        />
       )}
     </div>
   );
@@ -913,29 +983,21 @@ function SalesPage() {
 export const Route = createFileRoute("/sales")({
   head: () => ({
     meta: [
-      { title: "Ventas — BioTrack" },
-      {
-        name: "description",
-        content: "Registra y consulta las ventas y pedidos de tu bioterio en BioTrack.",
-      },
-      { property: "og:title", content: "Ventas — BioTrack" },
-      {
-        property: "og:description",
-        content: "Registra y consulta las ventas y pedidos de tu bioterio en BioTrack.",
-      },
-      { property: "og:url", content: "https://biostrack.lovable.app/sales" },
+      { title: 'Ventas — BioTrack' },
+      { name: "description", content: 'Registra y consulta las ventas y pedidos de tu bioterio en BioTrack.' },
+      { property: "og:title", content: 'Ventas — BioTrack' },
+      { property: "og:description", content: 'Registra y consulta las ventas y pedidos de tu bioterio en BioTrack.' },
+      { property: "og:url", content: 'https://biostrack.lovable.app/sales' },
     ],
-    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/sales" }],
+    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/sales' }],
   }),
   validateSearch: (search: Record<string, unknown>): { new?: boolean } => ({
     new: search.new === "1" ? true : undefined,
   }),
   component: () => (
-    <AdminPageOnly>
-      <TierGate min="gold" module="Ventas">
-        <SalesPage />
-      </TierGate>
-    </AdminPageOnly>
+    <TierGate min="gold" module="Ventas">
+      <SalesPage />
+    </TierGate>
   ),
 });
 
@@ -949,18 +1011,16 @@ function PedidosFuturosPanel({
   const [newOrderDialog, setNewOrderDialog] = useState(false);
   const qc = useQueryClient();
 
-  if (isLoading)
-    return <div className="p-8 text-center text-muted-foreground">Cargando pedidos...</div>;
+  if (isLoading) return (
+    <div className="p-8 text-center text-muted-foreground">Cargando pedidos...</div>
+  );
 
   const markAsDelivered = async (orderId: string) => {
     const { error } = await supabase
       .from("orders")
       .update({ status: "historial", delivered_at: new Date().toISOString() })
       .eq("id", orderId);
-    if (error) {
-      toast.error("Error al marcar como entregado");
-      return;
-    }
+    if (error) { toast.error("Error al marcar como entregado"); return; }
     toast.success("Pedido marcado como entregado ✓");
     qc.invalidateQueries({ queryKey: ["future-orders"] });
     qc.invalidateQueries({ queryKey: ["orders"] });
@@ -971,7 +1031,9 @@ function PedidosFuturosPanel({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Pedidos Programados</h3>
-        <Button onClick={() => setNewOrderDialog(true)}>+ Nuevo Pedido Futuro</Button>
+        <Button onClick={() => setNewOrderDialog(true)}>
+          + Nuevo Pedido Futuro
+        </Button>
       </div>
 
       {futureOrders.length === 0 ? (
@@ -980,7 +1042,7 @@ function PedidosFuturosPanel({
         </Card>
       ) : (
         <div className="grid gap-3">
-          {futureOrders.map((order) => {
+          {futureOrders.map(order => {
             const daysUntil = order.delivered_at
               ? Math.ceil((new Date(order.delivered_at).getTime() - Date.now()) / 86400000)
               : null;
@@ -991,11 +1053,9 @@ function PedidosFuturosPanel({
               <Card
                 key={order.id}
                 className={`p-4 border ${
-                  isOverdue
-                    ? "border-destructive/50 bg-destructive/5"
-                    : isUrgent
-                      ? "border-amber-500/50 bg-amber-500/5"
-                      : "border-border/50 bg-card/45"
+                  isOverdue ? "border-destructive/50 bg-destructive/5"
+                  : isUrgent ? "border-amber-500/50 bg-amber-500/5"
+                  : "border-border/50 bg-card/45"
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -1006,11 +1066,9 @@ function PedidosFuturosPanel({
                   <Badge variant={isOverdue ? "destructive" : isUrgent ? "secondary" : "outline"}>
                     {isOverdue
                       ? `⚠️ Vencido hace ${Math.abs(daysUntil!)} días`
-                      : daysUntil === 0
-                        ? "🔴 Hoy"
-                        : daysUntil === 1
-                          ? "🟡 Mañana"
-                          : `📅 En ${daysUntil} días`}
+                      : daysUntil === 0 ? "🔴 Hoy"
+                      : daysUntil === 1 ? "🟡 Mañana"
+                      : `📅 En ${daysUntil} días`}
                   </Badge>
                 </div>
 
@@ -1057,7 +1115,6 @@ function CreateFutureOrderDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const qc = useQueryClient();
-  const { getRequestId, resetRequestId } = useTransactionRequest();
   const [selectedClient, setSelectedClient] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -1069,7 +1126,9 @@ function CreateFutureOrderDialog({
   const { data: clients } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name");
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id,name");
       if (error) throw error;
       return data;
     },
@@ -1089,7 +1148,8 @@ function CreateFutureOrderDialog({
   const addItem = () =>
     setItems([...items, { speciesId: "", sizeLabel: "", quantity: 1, unitPrice: 0 }]);
 
-  const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
+  const removeItem = (idx: number) =>
+    setItems(items.filter((_, i) => i !== idx));
 
   const updateItem = (idx: number, field: string, value: any) => {
     const updated = [...items];
@@ -1106,35 +1166,50 @@ function CreateFutureOrderDialog({
     }
     setSubmitting(true);
     try {
-      const operation = "future-order:create";
-      const { error } = await supabase.rpc("create_sale_tx", {
-        _request_id: getRequestId(operation),
-        _client_id: selectedClient,
-        _items: items.map((item) => {
-          const selectedSpecies = (species ?? []).find((entry) => entry.id === item.speciesId);
-          return {
-            kind: selectedSpecies?.kind ?? "rodent",
-            species_id: item.speciesId,
-            size_label: item.sizeLabel,
-            quantity: item.quantity,
-            unit_price: item.unitPrice,
-          };
-        }),
-        _discount_pct: 0,
-        _notes: notes || null,
-        _delivered_at: deliveryDate,
-        _consume_inventory: false,
-      });
-      if (error) throw error;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
 
-      resetRequestId(operation);
+      const { data: order, error: orderErr } = await supabase
+        .from("orders")
+        .insert({
+          client_id: selectedClient,
+          delivered_at: deliveryDate,
+          status: "preparando",
+          subtotal_mxn: total,
+          total_mxn: total,
+          discount_pct: 0,
+          notes: notes || null,
+          owner_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (orderErr) throw orderErr;
+
+      const { error: itemsErr } = await supabase
+        .from("order_items")
+        .insert(
+          items.map(i => {
+            const sp = (species ?? []).find(s => s.id === i.speciesId);
+            const kind = sp?.kind ?? "rodent";
+            return {
+              owner_id: user.id,
+              order_id: order.id,
+              species_id: i.speciesId,
+              kind: kind,
+              size_label: i.sizeLabel,
+              requested_qty: i.quantity,
+              unit_price: i.unitPrice,
+              line_total: i.quantity * i.unitPrice,
+            };
+          })
+        );
+
+      if (itemsErr) throw itemsErr;
 
       toast.success("Pedido futuro creado ✓");
       onOpenChange(false);
-      setSelectedClient("");
-      setDeliveryDate("");
-      setNotes("");
-      setItems([]);
+      setSelectedClient(""); setDeliveryDate(""); setNotes(""); setItems([]);
       qc.invalidateQueries({ queryKey: ["future-orders"] });
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -1157,9 +1232,7 @@ function CreateFutureOrderDialog({
           <div>
             <Label>Cliente</Label>
             <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un cliente" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
               <SelectContent>
                 {(clients ?? []).map((c: any) => (
                   <SelectItem key={c.id} value={c.id}>
@@ -1173,21 +1246,13 @@ function CreateFutureOrderDialog({
           {/* Delivery date */}
           <div>
             <Label>Fecha de Entrega</Label>
-            <Input
-              type="date"
-              value={deliveryDate}
-              onChange={(e) => setDeliveryDate(e.target.value)}
-            />
+            <Input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} />
           </div>
 
           {/* Notes */}
           <div>
             <Label>Notas (opcional)</Label>
-            <Input
-              placeholder="Instrucciones especiales..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
+            <Input placeholder="Instrucciones especiales..." value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
 
           {/* Items */}
@@ -1196,16 +1261,13 @@ function CreateFutureOrderDialog({
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
               {items.map((item, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
-                  <Select
-                    value={item.speciesId}
-                    onValueChange={(v) => {
-                      const sp = (species ?? []).find((s) => s.id === v);
-                      updateItem(idx, "speciesId", v);
-                      if (sp) {
-                        updateItem(idx, "unitPrice", sp.unit_price_mxn ?? 0);
-                      }
-                    }}
-                  >
+                  <Select value={item.speciesId} onValueChange={v => {
+                    const sp = (species ?? []).find(s => s.id === v);
+                    updateItem(idx, "speciesId", v);
+                    if (sp) {
+                      updateItem(idx, "unitPrice", sp.unit_price_mxn ?? 0);
+                    }
+                  }}>
                     <SelectTrigger className="flex-1 min-w-0">
                       <SelectValue placeholder="Especie" />
                     </SelectTrigger>
@@ -1217,36 +1279,18 @@ function CreateFutureOrderDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input
-                    placeholder="Talla"
-                    value={item.sizeLabel}
-                    onChange={(e) => updateItem(idx, "sizeLabel", e.target.value)}
-                    className="w-24"
-                  />
-                  <Input
-                    placeholder="Qty"
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(idx, "quantity", parseInt(e.target.value) || 1)}
-                    className="w-20"
-                  />
-                  <Input
-                    placeholder="$Precio"
-                    type="number"
-                    step="0.01"
-                    value={item.unitPrice}
-                    onChange={(e) => updateItem(idx, "unitPrice", parseFloat(e.target.value) || 0)}
-                    className="w-24"
-                  />
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <Input placeholder="Talla" value={item.sizeLabel}
+                    onChange={e => updateItem(idx, "sizeLabel", e.target.value)}
+                    className="w-24" />
+                  <Input placeholder="Qty" type="number" min="1" value={item.quantity}
+                    onChange={e => updateItem(idx, "quantity", parseInt(e.target.value) || 1)}
+                    className="w-20" />
+                  <Input placeholder="$Precio" type="number" step="0.01" value={item.unitPrice}
+                    onChange={e => updateItem(idx, "unitPrice", parseFloat(e.target.value) || 0)}
+                    className="w-24" />
+                  <Button size="sm" variant="ghost"
                     className="text-destructive shrink-0"
-                    onClick={() => removeItem(idx)}
-                  >
-                    ✕
-                  </Button>
+                    onClick={() => removeItem(idx)}>✕</Button>
                 </div>
               ))}
             </div>
@@ -1265,9 +1309,7 @@ function CreateFutureOrderDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Creando..." : "Crear Pedido"}
           </Button>
