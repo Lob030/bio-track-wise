@@ -1264,6 +1264,11 @@ export type Database = {
         Args: { _owner: string; _qty: number; _size: string; _species: string }
         Returns: Json
       }
+      get_my_org_id: { Args: never; Returns: string }
+      get_org_tier: {
+        Args: never
+        Returns: Database["public"]["Enums"]["subscription_tier"]
+      }
       get_tier: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["subscription_tier"]
@@ -1275,6 +1280,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_org_admin: { Args: never; Returns: boolean }
+      is_org_member: { Args: never; Returns: boolean }
+      is_org_operator: { Args: never; Returns: boolean }
       tier_rank: {
         Args: { _t: Database["public"]["Enums"]["subscription_tier"] }
         Returns: number
