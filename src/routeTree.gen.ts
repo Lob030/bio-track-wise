@@ -9,141 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WarehouseRouteImport } from './routes/warehouse'
-import { Route as TeamRouteImport } from './routes/team'
-import { Route as StockRouteImport } from './routes/stock'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SalesRouteImport } from './routes/sales'
-import { Route as ReproductionRouteImport } from './routes/reproduction'
-import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as ProfessionalRouteImport } from './routes/professional'
-import { Route as OperationsRouteImport } from './routes/operations'
-import { Route as OperateRouteImport } from './routes/operate'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as KanbanRouteImport } from './routes/kanban'
-import { Route as CostsRouteImport } from './routes/costs'
-import { Route as ClientsRouteImport } from './routes/clients'
-import { Route as CalendarRouteImport } from './routes/calendar'
-import { Route as BillingRouteImport } from './routes/billing'
-import { Route as AuditLogRouteImport } from './routes/audit-log'
-import { Route as AlertsRouteImport } from './routes/alerts'
-import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as RodentsTreeRouteImport } from './routes/rodents.tree'
-import { Route as RodentsSpeciesRouteImport } from './routes/rodents.species'
-import { Route as RodentsLotsRouteImport } from './routes/rodents.lots'
-import { Route as RodentsLinesRouteImport } from './routes/rodents.lines'
-import { Route as RodentsBoxesRouteImport } from './routes/rodents.boxes'
-import { Route as InsectsTreeRouteImport } from './routes/insects.tree'
-import { Route as InsectsSpeciesRouteImport } from './routes/insects.species'
-import { Route as InsectsLotsRouteImport } from './routes/insects.lots'
-import { Route as InsectsLinesRouteImport } from './routes/insects.lines'
-import { Route as InsectsBoxesRouteImport } from './routes/insects.boxes'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
+import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AuditLogRouteImport } from './routes/audit-log'
+import { Route as BillingRouteImport } from './routes/billing'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as CostsRouteImport } from './routes/costs'
+import { Route as KanbanRouteImport } from './routes/kanban'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as OperateRouteImport } from './routes/operate'
+import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as ProfessionalRouteImport } from './routes/professional'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ReproductionRouteImport } from './routes/reproduction'
+import { Route as SalesRouteImport } from './routes/sales'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StockRouteImport } from './routes/stock'
+import { Route as TeamRouteImport } from './routes/team'
+import { Route as WarehouseRouteImport } from './routes/warehouse'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as InsectsBoxesRouteImport } from './routes/insects.boxes'
+import { Route as InsectsLinesRouteImport } from './routes/insects.lines'
+import { Route as InsectsLotsRouteImport } from './routes/insects.lots'
+import { Route as InsectsSpeciesRouteImport } from './routes/insects.species'
+import { Route as InsectsTreeRouteImport } from './routes/insects.tree'
+import { Route as RodentsBoxesRouteImport } from './routes/rodents.boxes'
+import { Route as RodentsLinesRouteImport } from './routes/rodents.lines'
+import { Route as RodentsLotsRouteImport } from './routes/rodents.lots'
+import { Route as RodentsSpeciesRouteImport } from './routes/rodents.species'
+import { Route as RodentsTreeRouteImport } from './routes/rodents.tree'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
-const WarehouseRoute = WarehouseRouteImport.update({
-  id: '/warehouse',
-  path: '/warehouse',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TeamRoute = TeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StockRoute = StockRouteImport.update({
-  id: '/stock',
-  path: '/stock',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalesRoute = SalesRouteImport.update({
-  id: '/sales',
-  path: '/sales',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReproductionRoute = ReproductionRouteImport.update({
-  id: '/reproduction',
-  path: '/reproduction',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfessionalRoute = ProfessionalRouteImport.update({
-  id: '/professional',
-  path: '/professional',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OperationsRoute = OperationsRouteImport.update({
-  id: '/operations',
-  path: '/operations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OperateRoute = OperateRouteImport.update({
-  id: '/operate',
-  path: '/operate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KanbanRoute = KanbanRouteImport.update({
-  id: '/kanban',
-  path: '/kanban',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CostsRoute = CostsRouteImport.update({
-  id: '/costs',
-  path: '/costs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientsRoute = ClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarRoute = CalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingRoute = BillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuditLogRoute = AuditLogRouteImport.update({
-  id: '/audit-log',
-  path: '/audit-log',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlertsRoute = AlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInviteRoute = AcceptInviteRouteImport.update({
@@ -151,49 +56,121 @@ const AcceptInviteRoute = AcceptInviteRouteImport.update({
   path: '/accept-invite',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RodentsTreeRoute = RodentsTreeRouteImport.update({
-  id: '/rodents/tree',
-  path: '/rodents/tree',
+const AuditLogRoute = AuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RodentsSpeciesRoute = RodentsSpeciesRouteImport.update({
-  id: '/rodents/species',
-  path: '/rodents/species',
+const BillingRoute = BillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RodentsLotsRoute = RodentsLotsRouteImport.update({
-  id: '/rodents/lots',
-  path: '/rodents/lots',
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RodentsLinesRoute = RodentsLinesRouteImport.update({
-  id: '/rodents/lines',
-  path: '/rodents/lines',
+const ClientsRoute = ClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RodentsBoxesRoute = RodentsBoxesRouteImport.update({
-  id: '/rodents/boxes',
-  path: '/rodents/boxes',
+const CostsRoute = CostsRouteImport.update({
+  id: '/costs',
+  path: '/costs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InsectsTreeRoute = InsectsTreeRouteImport.update({
-  id: '/insects/tree',
-  path: '/insects/tree',
+const KanbanRoute = KanbanRouteImport.update({
+  id: '/kanban',
+  path: '/kanban',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InsectsSpeciesRoute = InsectsSpeciesRouteImport.update({
-  id: '/insects/species',
-  path: '/insects/species',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InsectsLotsRoute = InsectsLotsRouteImport.update({
-  id: '/insects/lots',
-  path: '/insects/lots',
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperateRoute = OperateRouteImport.update({
+  id: '/operate',
+  path: '/operate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperationsRoute = OperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfessionalRoute = ProfessionalRouteImport.update({
+  id: '/professional',
+  path: '/professional',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReproductionRoute = ReproductionRouteImport.update({
+  id: '/reproduction',
+  path: '/reproduction',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesRoute = SalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StockRoute = StockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WarehouseRoute = WarehouseRouteImport.update({
+  id: '/warehouse',
+  path: '/warehouse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const InsectsBoxesRoute = InsectsBoxesRouteImport.update({
+  id: '/insects/boxes',
+  path: '/insects/boxes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsectsLinesRoute = InsectsLinesRouteImport.update({
@@ -201,34 +178,57 @@ const InsectsLinesRoute = InsectsLinesRouteImport.update({
   path: '/insects/lines',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InsectsBoxesRoute = InsectsBoxesRouteImport.update({
-  id: '/insects/boxes',
-  path: '/insects/boxes',
+const InsectsLotsRoute = InsectsLotsRouteImport.update({
+  id: '/insects/lots',
+  path: '/insects/lots',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const InsectsSpeciesRoute = InsectsSpeciesRouteImport.update({
+  id: '/insects/species',
+  path: '/insects/species',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsectsTreeRoute = InsectsTreeRouteImport.update({
+  id: '/insects/tree',
+  path: '/insects/tree',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsBoxesRoute = RodentsBoxesRouteImport.update({
+  id: '/rodents/boxes',
+  path: '/rodents/boxes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsLinesRoute = RodentsLinesRouteImport.update({
+  id: '/rodents/lines',
+  path: '/rodents/lines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsLotsRoute = RodentsLotsRouteImport.update({
+  id: '/rodents/lots',
+  path: '/rodents/lots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsSpeciesRoute = RodentsSpeciesRouteImport.update({
+  id: '/rodents/species',
+  path: '/rodents/species',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RodentsTreeRoute = RodentsTreeRouteImport.update({
+  id: '/rodents/tree',
+  path: '/rodents/tree',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -503,144 +503,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/warehouse': {
-      id: '/warehouse'
-      path: '/warehouse'
-      fullPath: '/warehouse'
-      preLoaderRoute: typeof WarehouseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/team': {
-      id: '/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof TeamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/stock': {
-      id: '/stock'
-      path: '/stock'
-      fullPath: '/stock'
-      preLoaderRoute: typeof StockRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sales': {
-      id: '/sales'
-      path: '/sales'
-      fullPath: '/sales'
-      preLoaderRoute: typeof SalesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reproduction': {
-      id: '/reproduction'
-      path: '/reproduction'
-      fullPath: '/reproduction'
-      preLoaderRoute: typeof ReproductionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/professional': {
-      id: '/professional'
-      path: '/professional'
-      fullPath: '/professional'
-      preLoaderRoute: typeof ProfessionalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/operations': {
-      id: '/operations'
-      path: '/operations'
-      fullPath: '/operations'
-      preLoaderRoute: typeof OperationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/operate': {
-      id: '/operate'
-      path: '/operate'
-      fullPath: '/operate'
-      preLoaderRoute: typeof OperateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kanban': {
-      id: '/kanban'
-      path: '/kanban'
-      fullPath: '/kanban'
-      preLoaderRoute: typeof KanbanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/costs': {
-      id: '/costs'
-      path: '/costs'
-      fullPath: '/costs'
-      preLoaderRoute: typeof CostsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clients': {
-      id: '/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof ClientsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendar': {
-      id: '/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof CalendarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing': {
-      id: '/billing'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof BillingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/audit-log': {
-      id: '/audit-log'
-      path: '/audit-log'
-      fullPath: '/audit-log'
-      preLoaderRoute: typeof AuditLogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alerts': {
-      id: '/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AlertsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-invite': {
@@ -650,88 +517,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcceptInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rodents/tree': {
-      id: '/rodents/tree'
-      path: '/rodents/tree'
-      fullPath: '/rodents/tree'
-      preLoaderRoute: typeof RodentsTreeRouteImport
+    '/audit-log': {
+      id: '/audit-log'
+      path: '/audit-log'
+      fullPath: '/audit-log'
+      preLoaderRoute: typeof AuditLogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rodents/species': {
-      id: '/rodents/species'
-      path: '/rodents/species'
-      fullPath: '/rodents/species'
-      preLoaderRoute: typeof RodentsSpeciesRouteImport
+    '/billing': {
+      id: '/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rodents/lots': {
-      id: '/rodents/lots'
-      path: '/rodents/lots'
-      fullPath: '/rodents/lots'
-      preLoaderRoute: typeof RodentsLotsRouteImport
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rodents/lines': {
-      id: '/rodents/lines'
-      path: '/rodents/lines'
-      fullPath: '/rodents/lines'
-      preLoaderRoute: typeof RodentsLinesRouteImport
+    '/clients': {
+      id: '/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ClientsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rodents/boxes': {
-      id: '/rodents/boxes'
-      path: '/rodents/boxes'
-      fullPath: '/rodents/boxes'
-      preLoaderRoute: typeof RodentsBoxesRouteImport
+    '/costs': {
+      id: '/costs'
+      path: '/costs'
+      fullPath: '/costs'
+      preLoaderRoute: typeof CostsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/insects/tree': {
-      id: '/insects/tree'
-      path: '/insects/tree'
-      fullPath: '/insects/tree'
-      preLoaderRoute: typeof InsectsTreeRouteImport
+    '/kanban': {
+      id: '/kanban'
+      path: '/kanban'
+      fullPath: '/kanban'
+      preLoaderRoute: typeof KanbanRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/insects/species': {
-      id: '/insects/species'
-      path: '/insects/species'
-      fullPath: '/insects/species'
-      preLoaderRoute: typeof InsectsSpeciesRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/insects/lots': {
-      id: '/insects/lots'
-      path: '/insects/lots'
-      fullPath: '/insects/lots'
-      preLoaderRoute: typeof InsectsLotsRouteImport
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/insects/lines': {
-      id: '/insects/lines'
-      path: '/insects/lines'
-      fullPath: '/insects/lines'
-      preLoaderRoute: typeof InsectsLinesRouteImport
+    '/operate': {
+      id: '/operate'
+      path: '/operate'
+      fullPath: '/operate'
+      preLoaderRoute: typeof OperateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/insects/boxes': {
-      id: '/insects/boxes'
-      path: '/insects/boxes'
-      fullPath: '/insects/boxes'
-      preLoaderRoute: typeof InsectsBoxesRouteImport
+    '/operations': {
+      id: '/operations'
+      path: '/operations'
+      fullPath: '/operations'
+      preLoaderRoute: typeof OperationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/professional': {
+      id: '/professional'
+      path: '/professional'
+      fullPath: '/professional'
+      preLoaderRoute: typeof ProfessionalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reproduction': {
+      id: '/reproduction'
+      path: '/reproduction'
+      fullPath: '/reproduction'
+      preLoaderRoute: typeof ReproductionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales': {
+      id: '/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof SalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stock': {
+      id: '/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/warehouse': {
+      id: '/warehouse'
+      path: '/warehouse'
+      fullPath: '/warehouse'
+      preLoaderRoute: typeof WarehouseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -741,11 +664,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/boxes': {
+      id: '/insects/boxes'
+      path: '/insects/boxes'
+      fullPath: '/insects/boxes'
+      preLoaderRoute: typeof InsectsBoxesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/lines': {
+      id: '/insects/lines'
+      path: '/insects/lines'
+      fullPath: '/insects/lines'
+      preLoaderRoute: typeof InsectsLinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/lots': {
+      id: '/insects/lots'
+      path: '/insects/lots'
+      fullPath: '/insects/lots'
+      preLoaderRoute: typeof InsectsLotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/species': {
+      id: '/insects/species'
+      path: '/insects/species'
+      fullPath: '/insects/species'
+      preLoaderRoute: typeof InsectsSpeciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insects/tree': {
+      id: '/insects/tree'
+      path: '/insects/tree'
+      fullPath: '/insects/tree'
+      preLoaderRoute: typeof InsectsTreeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/boxes': {
+      id: '/rodents/boxes'
+      path: '/rodents/boxes'
+      fullPath: '/rodents/boxes'
+      preLoaderRoute: typeof RodentsBoxesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/lines': {
+      id: '/rodents/lines'
+      path: '/rodents/lines'
+      fullPath: '/rodents/lines'
+      preLoaderRoute: typeof RodentsLinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/lots': {
+      id: '/rodents/lots'
+      path: '/rodents/lots'
+      fullPath: '/rodents/lots'
+      preLoaderRoute: typeof RodentsLotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/species': {
+      id: '/rodents/species'
+      path: '/rodents/species'
+      fullPath: '/rodents/species'
+      preLoaderRoute: typeof RodentsSpeciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rodents/tree': {
+      id: '/rodents/tree'
+      path: '/rodents/tree'
+      fullPath: '/rodents/tree'
+      preLoaderRoute: typeof RodentsTreeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -753,6 +746,13 @@ declare module '@tanstack/react-router' {
       path: '/.lovable/oauth/consent'
       fullPath: '/.lovable/oauth/consent'
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
