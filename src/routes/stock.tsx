@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { RefreshCw, Rat, Bug, Download } from "lucide-react";
-import html2canvas from "html2canvas";
 
 type KindType = "rodent" | "insect";
 
@@ -36,7 +35,13 @@ interface RodentCardProps {
   onDownload: (id: string, name: string, el: HTMLDivElement | null) => void;
 }
 
-function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpeciesId, onDownload }: RodentCardProps) {
+function RodentSpeciesCard({
+  species,
+  rows,
+  totalIndividuals,
+  downloadingSpeciesId,
+  onDownload,
+}: RodentCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   return (
     <Card
@@ -48,14 +53,18 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
       <div className="px-5 py-4 border-b border-border bg-muted/30">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-xl shrink-0" aria-hidden>🐭</span>
+            <span className="text-xl shrink-0" aria-hidden>
+              🐭
+            </span>
             <div className="min-w-0">
               <h3 className="text-base font-bold text-foreground tracking-tight truncate">
                 {species.name}
               </h3>
               {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Precio base: <span className="font-semibold text-primary">${species.unit_price_mxn}</span> / unidad
+                  Precio base:{" "}
+                  <span className="font-semibold text-primary">${species.unit_price_mxn}</span> /
+                  unidad
                 </p>
               )}
             </div>
@@ -71,11 +80,21 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Tamaño</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Días</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Peso (g)</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Precio</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right px-4 py-2.5">Stock</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Tamaño
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Días
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Peso (g)
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Precio
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right px-4 py-2.5">
+                Stock
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -88,12 +107,18 @@ function RodentSpeciesCard({ species, rows, totalIndividuals, downloadingSpecies
                 <td className="px-4 py-2.5 text-muted-foreground tabular-nums">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
-                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{row.weight_g ?? "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">
+                  {row.weight_g ?? "—"}
+                </td>
                 <td className="px-4 py-2.5 text-primary font-semibold tabular-nums">
                   {row.price_mxn != null ? `$${row.price_mxn}` : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-right font-bold text-foreground tabular-nums">
-                  {row.stock > 0 ? row.stock.toLocaleString("es-MX") : <span className="text-muted-foreground/60 font-normal">—</span>}
+                  {row.stock > 0 ? (
+                    row.stock.toLocaleString("es-MX")
+                  ) : (
+                    <span className="text-muted-foreground/60 font-normal">—</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -133,7 +158,13 @@ interface InsectCardProps {
   onDownload: (id: string, name: string, el: HTMLDivElement | null) => void;
 }
 
-function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, onDownload }: InsectCardProps) {
+function InsectSpeciesCard({
+  species,
+  rows,
+  totalGrams,
+  downloadingSpeciesId,
+  onDownload,
+}: InsectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   return (
     <Card
@@ -145,20 +176,28 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
       <div className="px-5 py-4 border-b border-border bg-muted/30">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-xl shrink-0" aria-hidden>🐛</span>
+            <span className="text-xl shrink-0" aria-hidden>
+              🐛
+            </span>
             <div className="min-w-0">
               <h3 className="text-base font-bold text-foreground tracking-tight truncate">
                 {species.name}
               </h3>
               {species.unit_price_mxn !== undefined && species.unit_price_mxn !== null && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Precio base: <span className="font-semibold text-primary">${species.unit_price_mxn}</span> / gramo
+                  Precio base:{" "}
+                  <span className="font-semibold text-primary">${species.unit_price_mxn}</span> /
+                  gramo
                 </p>
               )}
             </div>
           </div>
           <Badge variant="secondary" className="text-xs font-semibold tabular-nums shrink-0">
-            {totalGrams.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} g
+            {totalGrams.toLocaleString("es-MX", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}{" "}
+            g
           </Badge>
         </div>
       </div>
@@ -168,11 +207,21 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Tamaño</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Días</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Ind. / 1g</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">Precio</th>
-              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right px-4 py-2.5">Stock (g)</th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Tamaño
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Días
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Ind. / 1g
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-left px-4 py-2.5">
+                Precio
+              </th>
+              <th className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right px-4 py-2.5">
+                Stock (g)
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -185,14 +234,21 @@ function InsectSpeciesCard({ species, rows, totalGrams, downloadingSpeciesId, on
                 <td className="px-4 py-2.5 text-muted-foreground tabular-nums">
                   {row.isUnmatched ? "Fuera de rango" : `${row.min_days}–${row.max_days}`}
                 </td>
-                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{row.individuals_per_gram ?? "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground tabular-nums">
+                  {row.individuals_per_gram ?? "—"}
+                </td>
                 <td className="px-4 py-2.5 text-primary font-semibold tabular-nums">
                   {row.price_mxn != null ? `$${row.price_mxn}` : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-right font-bold text-foreground tabular-nums">
-                  {row.stock > 0
-                    ? row.stock.toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-                    : <span className="text-muted-foreground/60 font-normal">—</span>}
+                  {row.stock > 0 ? (
+                    row.stock.toLocaleString("es-MX", {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })
+                  ) : (
+                    <span className="text-muted-foreground/60 font-normal">—</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -239,7 +295,9 @@ function computeRodentStock(species: any, lotsForKind: any[], getLotAge: (lot: a
       const age = getLotAge(lot);
       if (age >= rule.min_days && age <= rule.max_days) {
         matchedLotIds.add(lot.id);
-        return sum + (Number(lot.males) || 0) + (Number(lot.females) || 0) + (Number(lot.unsexed) || 0);
+        return (
+          sum + (Number(lot.males) || 0) + (Number(lot.females) || 0) + (Number(lot.unsexed) || 0)
+        );
       }
       return sum;
     }, 0);
@@ -249,7 +307,8 @@ function computeRodentStock(species: any, lotsForKind: any[], getLotAge: (lot: a
 
   speciesLots.forEach((lot: any) => {
     if (!matchedLotIds.has(lot.id)) {
-      unmatchedIndividuals += (Number(lot.males) || 0) + (Number(lot.females) || 0) + (Number(lot.unsexed) || 0);
+      unmatchedIndividuals +=
+        (Number(lot.males) || 0) + (Number(lot.females) || 0) + (Number(lot.unsexed) || 0);
     }
   });
 
@@ -319,15 +378,13 @@ function StockPage() {
   // ── Queries ──────────────────────────────────────────────────────────
   const { data: allSpecies, refetch: refetchSpecies } = useQuery({
     queryKey: ["species"],
-    queryFn: async () =>
-      (await supabase.from("species").select("*")).data ?? [],
+    queryFn: async () => (await supabase.from("species").select("*")).data ?? [],
   });
 
   const { data: allLots, refetch: refetchLots } = useQuery({
     queryKey: ["lots", "stock"],
     queryFn: async () =>
-      (await supabase.from("lots").select("*").eq("status", "active")).data ??
-      [],
+      (await supabase.from("lots").select("*").eq("status", "active")).data ?? [],
   });
 
   // ── Refresh handler ──────────────────────────────────────────────────
@@ -346,14 +403,10 @@ function StockPage() {
     const lots = allLots ?? [];
     if (activeKind === "rodent") {
       return lots.filter(
-        (l: any) =>
-          l.kind === "rodent" &&
-          (l.lot_type === "birth" || l.lot_type === "engorda"),
+        (l: any) => l.kind === "rodent" && (l.lot_type === "birth" || l.lot_type === "engorda"),
       );
     }
-    return lots.filter(
-      (l: any) => l.kind === "insect" && l.lot_type === "engorda",
-    );
+    return lots.filter((l: any) => l.kind === "insect" && l.lot_type === "engorda");
   }, [allLots, activeKind]);
 
   // ── Filtered by species chip ─────────────────────────────────────────
@@ -369,16 +422,8 @@ function StockPage() {
     if (isNaN(started.getTime())) return 0;
 
     const today = new Date();
-    const todayMidnight = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-    );
-    const startedMidnight = new Date(
-      started.getFullYear(),
-      started.getMonth(),
-      started.getDate(),
-    );
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startedMidnight = new Date(started.getFullYear(), started.getMonth(), started.getDate());
 
     const diffTime = todayMidnight.getTime() - startedMidnight.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
@@ -387,13 +432,19 @@ function StockPage() {
 
   // ── Rodent stock computation ─────────────────────────────────────────
   const rodentStockData = useMemo(
-    () => (activeKind === "rodent" ? filteredSpecies.map((s: any) => computeRodentStock(s, lotsForKind, getLotAge)) : []),
+    () =>
+      activeKind === "rodent"
+        ? filteredSpecies.map((s: any) => computeRodentStock(s, lotsForKind, getLotAge))
+        : [],
     [filteredSpecies, lotsForKind, activeKind],
   );
 
   // ── Insect stock computation ─────────────────────────────────────────
   const insectStockData = useMemo(
-    () => (activeKind === "insect" ? filteredSpecies.map((s: any) => computeInsectStock(s, lotsForKind, getLotAge)) : []),
+    () =>
+      activeKind === "insect"
+        ? filteredSpecies.map((s: any) => computeInsectStock(s, lotsForKind, getLotAge))
+        : [],
     [filteredSpecies, lotsForKind, activeKind],
   );
 
@@ -409,11 +460,12 @@ function StockPage() {
   const downloadSpeciesCard = async (
     speciesId: string,
     speciesName: string,
-    cardElement: HTMLDivElement | null
+    cardElement: HTMLDivElement | null,
   ) => {
     if (!cardElement) return;
     setDownloadingSpeciesId(speciesId);
     try {
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(cardElement, {
         backgroundColor: "oklch(0.12 0.015 250)",
         scale: 2,
@@ -439,19 +491,12 @@ function StockPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Stock
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Stock</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Vista en tiempo real del inventario por tamaño y especie.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          className="shrink-0"
-        >
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="shrink-0">
           <RefreshCw className="h-4 w-4 mr-2" />
           Actualizar
         </Button>
@@ -505,9 +550,7 @@ function StockPage() {
                 ? "bg-primary/20 text-primary border-primary/40"
                 : "bg-accent/40 text-muted-foreground hover:text-foreground"
             }`}
-            onClick={() =>
-              setSelectedSpeciesId(selectedSpeciesId === s.id ? null : s.id)
-            }
+            onClick={() => setSelectedSpeciesId(selectedSpeciesId === s.id ? null : s.id)}
           >
             {s.name}
           </Badge>
@@ -519,9 +562,7 @@ function StockPage() {
         <>
           {filteredSpecies.length === 0 ? (
             <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center shadow-sm">
-              <p className="text-muted-foreground">
-                No hay especies de roedores registradas.
-              </p>
+              <p className="text-muted-foreground">No hay especies de roedores registradas.</p>
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
@@ -542,9 +583,7 @@ function StockPage() {
         <>
           {filteredSpecies.length === 0 ? (
             <Card className="border-dashed border-border/50 bg-gradient-to-br from-card to-card/40 p-8 text-center shadow-sm">
-              <p className="text-muted-foreground">
-                No hay especies de insectos registradas.
-              </p>
+              <p className="text-muted-foreground">No hay especies de insectos registradas.</p>
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
@@ -569,13 +608,19 @@ function StockPage() {
 export const Route = createFileRoute("/stock")({
   head: () => ({
     meta: [
-      { title: 'Inventario — BioTrack' },
-      { name: "description", content: 'Controla el stock y los niveles de inventario de tu bioterio en BioTrack.' },
-      { property: "og:title", content: 'Inventario — BioTrack' },
-      { property: "og:description", content: 'Controla el stock y los niveles de inventario de tu bioterio en BioTrack.' },
-      { property: "og:url", content: 'https://biostrack.lovable.app/stock' },
+      { title: "Inventario — BioTrack" },
+      {
+        name: "description",
+        content: "Controla el stock y los niveles de inventario de tu bioterio en BioTrack.",
+      },
+      { property: "og:title", content: "Inventario — BioTrack" },
+      {
+        property: "og:description",
+        content: "Controla el stock y los niveles de inventario de tu bioterio en BioTrack.",
+      },
+      { property: "og:url", content: "https://biostrack.lovable.app/stock" },
     ],
-    links: [{ rel: "canonical", href: 'https://biostrack.lovable.app/stock' }],
+    links: [{ rel: "canonical", href: "https://biostrack.lovable.app/stock" }],
   }),
   component: () => (
     <TierGate min="gold" module="Stock">

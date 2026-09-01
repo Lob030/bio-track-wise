@@ -1,26 +1,71 @@
 import { useState, useEffect } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Rat, Bug, Boxes, Warehouse, Bell, ShoppingCart,
-  Users, Users2, BarChart3, Sparkles, LogOut, Lock, ChevronDown, Settings, Download, CalendarDays, LayoutGrid
+  LayoutDashboard,
+  Rat,
+  Bug,
+  Boxes,
+  Warehouse,
+  Bell,
+  ShoppingCart,
+  Users,
+  Users2,
+  BarChart3,
+  Sparkles,
+  LogOut,
+  Lock,
+  ChevronDown,
+  Settings,
+  Download,
+  CalendarDays,
+  LayoutGrid,
+  ClipboardList,
+  Activity,
+  CircleDollarSign,
+  ScanLine,
+  ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton,
-  SidebarMenuSubItem, SidebarHeader, SidebarFooter, useSidebar,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarHeader,
+  SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { useProfile, tierAllows, type Tier } from "@/hooks/use-profile";
+import { useProfile, useOrgTier, tierAllows, type Tier } from "@/hooks/use-profile";
 import { useRole } from "@/hooks/use-role";
 import { supabase } from "@/integrations/supabase/client";
 
-type Item = { title: string; url: string; icon: any; minTier?: Tier; adminOnly?: boolean; children?: { title: string; url: string }[] };
+type Item = {
+  title: string;
+  url: string;
+  icon: any;
+  minTier?: Tier;
+  adminOnly?: boolean;
+  children?: { title: string; url: string }[];
+};
 
 const MENU: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Operar cajas", url: "/operate", icon: ScanLine },
+  { title: "Centro operativo", url: "/operations", icon: ClipboardCheck },
+  { title: "Control profesional", url: "/professional", icon: ShieldCheck },
   {
-    title: "Roedores", url: "/rodents", icon: Rat,
+    title: "Roedores",
+    url: "/rodents",
+    icon: Rat,
     children: [
       { title: "Especies", url: "/rodents/species" },
       { title: "Líneas Genéticas", url: "/rodents/lines" },
@@ -30,7 +75,9 @@ const MENU: Item[] = [
     ],
   },
   {
-    title: "Insectos", url: "/insects", icon: Bug,
+    title: "Insectos",
+    url: "/insects",
+    icon: Bug,
     children: [
       { title: "Especies", url: "/insects/species" },
       { title: "Líneas Genéticas", url: "/insects/lines" },
@@ -41,14 +88,17 @@ const MENU: Item[] = [
   },
   { title: "Stock", url: "/stock", icon: Boxes, minTier: "gold" },
   { title: "Almacén", url: "/warehouse", icon: Warehouse, minTier: "gold", adminOnly: true },
+  { title: "Costos", url: "/costs", icon: CircleDollarSign, minTier: "gold", adminOnly: true },
   { title: "Alertas", url: "/alerts", icon: Bell },
+  { title: "Reproduccion", url: "/reproduction", icon: Activity },
   { title: "Ventas", url: "/sales", icon: ShoppingCart, minTier: "gold", adminOnly: true },
   { title: "Clientes", url: "/clients", icon: Users, minTier: "gold", adminOnly: true },
   { title: "Reportes", url: "/reports", icon: BarChart3, minTier: "gold", adminOnly: true },
   { title: "Calendario", url: "/calendar", icon: CalendarDays, minTier: "gold", adminOnly: true },
   { title: "Kanban", url: "/kanban", icon: LayoutGrid, minTier: "silver" },
   { title: "Asistente IA", url: "/ai", icon: Sparkles, minTier: "gold" },
-  { title: "Equipo", url: "/team", icon: Users2 },
+  { title: "Equipo", url: "/team", icon: Users2, adminOnly: true },
+  { title: "Bitácora", url: "/audit-log", icon: ClipboardList, adminOnly: true },
 ];
 
 const sidebarStyle: React.CSSProperties = {
@@ -126,20 +176,18 @@ function useAlertCount() {
     // Real-time subscription
     const channel = supabase
       .channel("alerts-badge")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "alerts" },
-        () => {
-          supabase
-            .from("alerts")
-            .select("id", { count: "exact", head: true })
-            .eq("acknowledged", false)
-            .then(({ count: c }) => setCount(c ?? 0));
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "alerts" }, () => {
+        supabase
+          .from("alerts")
+          .select("id", { count: "exact", head: true })
+          .eq("acknowledged", false)
+          .then(({ count: c }) => setCount(c ?? 0));
+      })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return count;
@@ -150,7 +198,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { data: profile } = useProfile();
-  const tier = (profile?.tier ?? "bronze") as Tier;
+  const tier = useOrgTier();
   const alertCount = useAlertCount();
   const { data: role } = useRole();
   const isAdmin = role === "admin";
@@ -193,7 +241,8 @@ export function AppSidebar() {
           <div
             className="h-9 w-9 rounded-xl grid place-items-center font-bold text-base shrink-0"
             style={{
-              background: "var(--color-gradient, linear-gradient(135deg, var(--color-primary), var(--color-secondary)))",
+              background:
+                "var(--color-gradient, linear-gradient(135deg, var(--color-primary), var(--color-secondary)))",
               color: "var(--color-text-inverse)",
               boxShadow: "0 4px 12px color-mix(in srgb, var(--color-primary) 35%, transparent)",
             }}
@@ -208,7 +257,10 @@ export function AppSidebar() {
               >
                 BioTrack
               </div>
-              <Badge variant="outline" className={`mt-0.5 text-[10px] capitalize ${tierColor[tier]}`}>
+              <Badge
+                variant="outline"
+                className={`mt-0.5 text-[10px] capitalize ${tierColor[tier]}`}
+              >
                 {tier}
               </Badge>
             </div>
@@ -224,11 +276,15 @@ export function AppSidebar() {
           <SidebarGroupLabel style={groupLabelStyle}>Bioterio</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {MENU.filter(item => isAdmin || !item.adminOnly).map((item) => {
+              {MENU.filter((item) => isAdmin || !item.adminOnly).map((item) => {
                 const allowed = !item.minTier || tierAllows(tier, item.minTier);
                 if (item.children) {
                   return (
-                    <Collapsible key={item.title} defaultOpen={isActive(item.url)} className="group/collapsible">
+                    <Collapsible
+                      key={item.title}
+                      defaultOpen={isActive(item.url)}
+                      className="group/collapsible"
+                    >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <button
@@ -236,8 +292,17 @@ export function AppSidebar() {
                             className="w-full"
                             title={item.title}
                           >
-                            <item.icon className="h-4 w-4 shrink-0" style={{ color: isActive(item.url) ? "var(--color-primary)" : "var(--color-text-muted)" }} />
-                            {!collapsed && <span className="flex-1 text-left text-sm">{item.title}</span>}
+                            <item.icon
+                              className="h-4 w-4 shrink-0"
+                              style={{
+                                color: isActive(item.url)
+                                  ? "var(--color-primary)"
+                                  : "var(--color-text-muted)",
+                              }}
+                            />
+                            {!collapsed && (
+                              <span className="flex-1 text-left text-sm">{item.title}</span>
+                            )}
                             {!collapsed && (
                               <ChevronDown
                                 className="ml-auto h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180"
@@ -247,7 +312,12 @@ export function AppSidebar() {
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <SidebarMenuSub style={{ borderLeft: "1px solid var(--color-surface-border)", marginLeft: "1rem" }}>
+                          <SidebarMenuSub
+                            style={{
+                              borderLeft: "1px solid var(--color-surface-border)",
+                              marginLeft: "1rem",
+                            }}
+                          >
                             {item.children.map((c) => (
                               <SidebarMenuSubItem key={c.url}>
                                 <Link to={c.url} style={getSubBtnStyle(isActive(c.url))}>
@@ -263,10 +333,19 @@ export function AppSidebar() {
                 }
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <Link to={item.url} style={getMenuBtnStyle(isActive(item.url))} className="w-full" title={item.title}>
+                    <Link
+                      to={item.url}
+                      style={getMenuBtnStyle(isActive(item.url))}
+                      className="w-full"
+                      title={item.title}
+                    >
                       <item.icon
                         className="h-4 w-4 shrink-0"
-                        style={{ color: isActive(item.url) ? "var(--color-primary)" : "var(--color-text-muted)" }}
+                        style={{
+                          color: isActive(item.url)
+                            ? "var(--color-primary)"
+                            : "var(--color-text-muted)",
+                        }}
                       />
                       {!collapsed && <span className="flex-1 text-sm">{item.title}</span>}
                       {item.url === "/alerts" && alertCount > 0 && !collapsed && (
@@ -274,7 +353,12 @@ export function AppSidebar() {
                           {alertCount}
                         </Badge>
                       )}
-                      {!allowed && !collapsed && item.url !== "/alerts" && <Lock className="ml-auto h-3 w-3" style={{ color: "var(--color-text-muted)" }} />}
+                      {!allowed && !collapsed && item.url !== "/alerts" && (
+                        <Lock
+                          className="ml-auto h-3 w-3"
+                          style={{ color: "var(--color-text-muted)" }}
+                        />
+                      )}
                     </Link>
                   </SidebarMenuItem>
                 );
@@ -284,11 +368,27 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter style={{ borderTop: "1px solid var(--color-surface-border)", padding: "0.5rem", backgroundColor: "var(--color-surface)" }}>
+      <SidebarFooter
+        style={{
+          borderTop: "1px solid var(--color-surface-border)",
+          padding: "0.5rem",
+          backgroundColor: "var(--color-surface)",
+        }}
+      >
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link to="/settings" style={getMenuBtnStyle(isActive("/settings"))} className="w-full" title="Configuración">
-              <Settings className="h-4 w-4 shrink-0" style={{ color: isActive("/settings") ? "var(--color-primary)" : "var(--color-text-muted)" }} />
+            <Link
+              to="/settings"
+              style={getMenuBtnStyle(isActive("/settings"))}
+              className="w-full"
+              title="Configuración"
+            >
+              <Settings
+                className="h-4 w-4 shrink-0"
+                style={{
+                  color: isActive("/settings") ? "var(--color-primary)" : "var(--color-text-muted)",
+                }}
+              />
               {!collapsed && <span className="text-sm">Configuración</span>}
             </Link>
           </SidebarMenuItem>

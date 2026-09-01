@@ -1,11 +1,4 @@
-export type ThemeId =
-  | "dark-slate"
-  | "light"
-  | "cyberpunk"
-  | "forest"
-  | "ocean"
-  | "sunset"
-  | "nord";
+export type ThemeId = "dark-slate" | "light" | "cyberpunk" | "forest" | "ocean" | "sunset" | "nord";
 
 export interface ThemeConfig {
   id: ThemeId;
@@ -423,7 +416,11 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
         xl: "0 16px 36px rgba(0,0,0,0.32)",
       },
       borderRadius: { sm: "0.375rem", md: "0.5rem", lg: "0.625rem", xl: "0.875rem" },
-      transitions: { fast: "120ms ease-in-out", normal: "200ms ease-in-out", slow: "300ms ease-in-out" },
+      transitions: {
+        fast: "120ms ease-in-out",
+        normal: "200ms ease-in-out",
+        slow: "300ms ease-in-out",
+      },
     },
   },
 };

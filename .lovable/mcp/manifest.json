@@ -5,9 +5,7 @@
   "auth": {
     "type": "oauth",
     "issuer": "https://txqjjghyqlwteiiinzwy.supabase.co/auth/v1",
-    "accepted_audiences": [
-      "authenticated"
-    ]
+    "accepted_audiences": ["authenticated"]
   },
   "mcp": {
     "server": {
@@ -30,10 +28,7 @@
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "rodent",
-                "insect"
-              ],
+              "enum": ["rodent", "insect"],
               "description": "Filter by kind. Omit to list all."
             },
             "limit": {
@@ -62,10 +57,7 @@
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "rodent",
-                "insect"
-              ]
+              "enum": ["rodent", "insect"]
             },
             "limit": {
               "type": "integer",

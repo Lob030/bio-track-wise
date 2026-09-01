@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "user";
+export type AppRole = "admin" | "operator";
 
 export function useRole() {
   return useQuery({
@@ -9,15 +9,17 @@ export function useRole() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_roles")
-        .select("role")
+        .select("role, status")
         .eq("user_id", u.user.id)
+        .eq("status", "active")
         .maybeSingle();
-      // If no row in user_roles → owner/admin
-      return (data?.role ?? "admin") as AppRole;
+      if (error) throw error;
+      if (!data) return null;
+      return data.role as AppRole;
     },
-    staleTime: 5 * 60 * 1000, // 5 min — roles don't change often
+    staleTime: 5 * 60 * 1000,
   });
 }
 
