@@ -130,7 +130,7 @@ export type Database = {
           metric: string
           name: string | null
           operator: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           priority: Database["public"]["Enums"]["alert_priority"]
           scope: string
@@ -150,7 +150,7 @@ export type Database = {
           metric: string
           name?: string | null
           operator: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           scope?: string
@@ -170,7 +170,7 @@ export type Database = {
           metric?: string
           name?: string | null
           operator?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           scope?: string
@@ -202,7 +202,7 @@ export type Database = {
           id: string
           lot_id: string | null
           message: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           priority: Database["public"]["Enums"]["alert_priority"]
           rule_id: string | null
@@ -213,7 +213,7 @@ export type Database = {
           id?: string
           lot_id?: string | null
           message: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           rule_id?: string | null
@@ -224,7 +224,7 @@ export type Database = {
           id?: string
           lot_id?: string | null
           message?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           priority?: Database["public"]["Enums"]["alert_priority"]
           rule_id?: string | null
@@ -314,7 +314,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["kind_type"]
           location: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
         }
         Insert: {
@@ -324,7 +324,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["kind_type"]
           location?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
         }
         Update: {
@@ -334,7 +334,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["kind_type"]
           location?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
         }
         Relationships: [
@@ -354,7 +354,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           phone: string
           profile: Database["public"]["Enums"]["client_profile"]
@@ -365,7 +365,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           phone: string
           profile?: Database["public"]["Enums"]["client_profile"]
@@ -376,7 +376,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           phone?: string
           profile?: Database["public"]["Enums"]["client_profile"]
@@ -397,7 +397,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           species_id: string
         }
@@ -406,7 +406,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           species_id: string
         }
@@ -415,7 +415,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           species_id?: string
         }
@@ -511,7 +511,7 @@ export type Database = {
           males: number | null
           mass_grams: number | null
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           parent_lot_id: string | null
           provider_purchase_id: string | null
@@ -536,7 +536,7 @@ export type Database = {
           males?: number | null
           mass_grams?: number | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           parent_lot_id?: string | null
           provider_purchase_id?: string | null
@@ -561,7 +561,7 @@ export type Database = {
           males?: number | null
           mass_grams?: number | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           parent_lot_id?: string | null
           provider_purchase_id?: string | null
@@ -617,7 +617,7 @@ export type Database = {
           id: string
           lot_id: string | null
           order_item_id: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           qty_taken: number
         }
@@ -627,7 +627,7 @@ export type Database = {
           id?: string
           lot_id?: string | null
           order_item_id: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           qty_taken: number
         }
@@ -637,7 +637,7 @@ export type Database = {
           id?: string
           lot_id?: string | null
           order_item_id?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           qty_taken?: number
         }
@@ -672,7 +672,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["kind_type"]
           line_total: number
           order_id: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           requested_qty: number
           size_label: string | null
@@ -685,7 +685,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["kind_type"]
           line_total?: number
           order_id: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           requested_qty: number
           size_label?: string | null
@@ -698,7 +698,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["kind_type"]
           line_total?: number
           order_id?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           requested_qty?: number
           size_label?: string | null
@@ -737,7 +737,7 @@ export type Database = {
           discount_pct: number
           id: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           status: Database["public"]["Enums"]["order_status"]
           subtotal_mxn: number
@@ -750,7 +750,7 @@ export type Database = {
           discount_pct?: number
           id?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_mxn?: number
@@ -763,7 +763,7 @@ export type Database = {
           discount_pct?: number
           id?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_mxn?: number
@@ -922,7 +922,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["kind_type"]
           name: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           size_rules: Json
           unit_price_mxn: number | null
@@ -932,7 +932,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["kind_type"]
           name: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           size_rules?: Json
           unit_price_mxn?: number | null
@@ -942,7 +942,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["kind_type"]
           name?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           size_rules?: Json
           unit_price_mxn?: number | null
@@ -960,7 +960,7 @@ export type Database = {
       user_roles: {
         Row: {
           id: string
-          organization_id: string | null
+          organization_id: string
           role: Database["public"]["Enums"]["app_role"]
           status: Database["public"]["Enums"]["membership_status"]
           status_changed_at: string | null
@@ -969,7 +969,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          organization_id?: string | null
+          organization_id: string
           role: Database["public"]["Enums"]["app_role"]
           status?: Database["public"]["Enums"]["membership_status"]
           status_changed_at?: string | null
@@ -978,7 +978,7 @@ export type Database = {
         }
         Update: {
           id?: string
-          organization_id?: string | null
+          organization_id?: string
           role?: Database["public"]["Enums"]["app_role"]
           status?: Database["public"]["Enums"]["membership_status"]
           status_changed_at?: string | null
@@ -1002,7 +1002,7 @@ export type Database = {
           expiry_date: string | null
           id: string
           name: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           quantity: number
           unit: string | null
@@ -1013,7 +1013,7 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           name: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           quantity?: number
           unit?: string | null
@@ -1024,7 +1024,7 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           name?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           quantity?: number
           unit?: string | null
@@ -1047,7 +1047,7 @@ export type Database = {
           min_stock_grams: number | null
           name: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           quantity_grams: number
           unit_cost: number | null
@@ -1059,7 +1059,7 @@ export type Database = {
           min_stock_grams?: number | null
           name: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           quantity_grams?: number
           unit_cost?: number | null
@@ -1071,7 +1071,7 @@ export type Database = {
           min_stock_grams?: number | null
           name?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           quantity_grams?: number
           unit_cost?: number | null
@@ -1091,7 +1091,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           unit_cost: number | null
           units: number
@@ -1100,7 +1100,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           unit_cost?: number | null
           units?: number
@@ -1109,7 +1109,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           unit_cost?: number | null
           units?: number
@@ -1134,7 +1134,7 @@ export type Database = {
           line_id: string | null
           mass_grams: number | null
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           population: number | null
           provider: string | null
@@ -1150,7 +1150,7 @@ export type Database = {
           line_id?: string | null
           mass_grams?: number | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           population?: number | null
           provider?: string | null
@@ -1166,7 +1166,7 @@ export type Database = {
           line_id?: string | null
           mass_grams?: number | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           population?: number | null
           provider?: string | null
@@ -1211,7 +1211,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           value: number | null
         }
@@ -1221,7 +1221,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           value?: number | null
         }
@@ -1231,7 +1231,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           value?: number | null
         }
