@@ -1250,21 +1250,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { _token: string }; Returns: undefined }
       acknowledge_alert: { Args: { _alert_id: string }; Returns: undefined }
       consume_ai_prompt: { Args: { _uid: string }; Returns: undefined }
-      fifo_consume_insects: {
-        Args: {
-          _grams: number
-          _owner: string
-          _size: string
-          _species: string
-        }
-        Returns: Json
-      }
-      fifo_consume_rodents: {
-        Args: { _owner: string; _qty: number; _size: string; _species: string }
-        Returns: Json
-      }
+      fifo_consume_insects:
+        | {
+            Args: {
+              _grams: number
+              _owner: string
+              _size: string
+              _species: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { _grams: number; _size: string; _species: string }
+            Returns: Json
+          }
+      fifo_consume_rodents:
+        | {
+            Args: {
+              _owner: string
+              _qty: number
+              _size: string
+              _species: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { _qty: number; _size: string; _species: string }
+            Returns: Json
+          }
       get_my_org_id: { Args: never; Returns: string }
       get_org_tier: {
         Args: never
@@ -1284,6 +1300,14 @@ export type Database = {
       is_org_admin: { Args: never; Returns: boolean }
       is_org_member: { Args: never; Returns: boolean }
       is_org_operator: { Args: never; Returns: boolean }
+      manage_team_member: {
+        Args: {
+          _action: string
+          _new_role?: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: undefined
+      }
       move_lot: {
         Args: { _lot_id: string; _new_box_id: string; _notes?: string }
         Returns: undefined
