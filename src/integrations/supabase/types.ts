@@ -1250,20 +1250,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { _token: string }; Returns: undefined }
+      acknowledge_alert: { Args: { _alert_id: string }; Returns: undefined }
       consume_ai_prompt: { Args: { _uid: string }; Returns: undefined }
-      fifo_consume_insects: {
-        Args: {
-          _grams: number
-          _owner: string
-          _size: string
-          _species: string
-        }
-        Returns: Json
-      }
-      fifo_consume_rodents: {
-        Args: { _owner: string; _qty: number; _size: string; _species: string }
-        Returns: Json
-      }
+      fifo_consume_insects:
+        | {
+            Args: {
+              _grams: number
+              _owner: string
+              _size: string
+              _species: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { _grams: number; _size: string; _species: string }
+            Returns: Json
+          }
+      fifo_consume_rodents:
+        | {
+            Args: {
+              _owner: string
+              _qty: number
+              _size: string
+              _species: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { _qty: number; _size: string; _species: string }
+            Returns: Json
+          }
       get_my_org_id: { Args: never; Returns: string }
       get_org_tier: {
         Args: never
@@ -1283,6 +1300,45 @@ export type Database = {
       is_org_admin: { Args: never; Returns: boolean }
       is_org_member: { Args: never; Returns: boolean }
       is_org_operator: { Args: never; Returns: boolean }
+      manage_team_member: {
+        Args: {
+          _action: string
+          _new_role?: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: undefined
+      }
+      move_lot: {
+        Args: { _lot_id: string; _new_box_id: string; _notes?: string }
+        Returns: undefined
+      }
+      register_birth: {
+        Args: {
+          _box_id: string
+          _females?: number
+          _line_id?: string
+          _lot_code?: string
+          _males?: number
+          _notes?: string
+          _species_id: string
+          _unsexed?: number
+        }
+        Returns: string
+      }
+      register_mortality: {
+        Args: {
+          _females?: number
+          _lot_id: string
+          _males?: number
+          _notes?: string
+          _unsexed?: number
+        }
+        Returns: string
+      }
+      split_lot: {
+        Args: { _reason?: string; _source_lot_id: string; _sublots: Json }
+        Returns: Json
+      }
       tier_rank: {
         Args: { _t: Database["public"]["Enums"]["subscription_tier"] }
         Returns: number
