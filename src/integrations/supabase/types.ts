@@ -1252,6 +1252,17 @@ export type Database = {
     Functions: {
       accept_invite: { Args: { _token: string }; Returns: Json }
       acknowledge_alert: { Args: { _alert_id: string }; Returns: undefined }
+      adjust_lot: {
+        Args: {
+          _females?: number
+          _lot_id: string
+          _males?: number
+          _mass_grams?: number
+          _notes?: string
+          _unsexed?: number
+        }
+        Returns: undefined
+      }
       consume_ai_prompt: { Args: { _uid: string }; Returns: undefined }
       fifo_consume_insects: {
         Args: { _grams: number; _size: string; _species: string }
