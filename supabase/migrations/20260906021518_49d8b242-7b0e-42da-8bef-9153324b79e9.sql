@@ -1,0 +1,1 @@
+ALTER TYPE public.lot_event_type ADD VALUE IF NOT EXISTS 'adjustment';
