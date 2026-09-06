@@ -1252,6 +1252,17 @@ export type Database = {
     Functions: {
       accept_invite: { Args: { _token: string }; Returns: Json }
       acknowledge_alert: { Args: { _alert_id: string }; Returns: undefined }
+      adjust_lot: {
+        Args: {
+          _females?: number
+          _lot_id: string
+          _males?: number
+          _mass_grams?: number
+          _notes?: string
+          _unsexed?: number
+        }
+        Returns: undefined
+      }
       consume_ai_prompt: { Args: { _uid: string }; Returns: undefined }
       fifo_consume_insects: {
         Args: { _grams: number; _size: string; _species: string }
@@ -1364,7 +1375,13 @@ export type Database = {
         | "uso_propio"
       invite_status: "pending" | "accepted" | "revoked" | "expired"
       kind_type: "rodent" | "insect"
-      lot_event_type: "mortality" | "birth" | "move" | "split" | "finalize"
+      lot_event_type:
+        | "mortality"
+        | "birth"
+        | "move"
+        | "split"
+        | "finalize"
+        | "adjustment"
       lot_status: "active" | "finalizado"
       lot_type: "breeder" | "engorda" | "birth"
       membership_status: "active" | "invited" | "revoked" | "suspended"
@@ -1528,7 +1545,14 @@ export const Constants = {
       ],
       invite_status: ["pending", "accepted", "revoked", "expired"],
       kind_type: ["rodent", "insect"],
-      lot_event_type: ["mortality", "birth", "move", "split", "finalize"],
+      lot_event_type: [
+        "mortality",
+        "birth",
+        "move",
+        "split",
+        "finalize",
+        "adjustment",
+      ],
       lot_status: ["active", "finalizado"],
       lot_type: ["breeder", "engorda", "birth"],
       membership_status: ["active", "invited", "revoked", "suspended"],
